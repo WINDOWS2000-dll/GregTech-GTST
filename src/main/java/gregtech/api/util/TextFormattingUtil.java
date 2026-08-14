@@ -74,11 +74,21 @@ public class TextFormattingUtil {
             c++;
         }
 
-        return stb.append(value.divide(metricBigSuffixValues[c - 1]))
-                .append('.')
-                .append(value.toString(), 4, precision + 1)
-                .append(metricSuffixChars[c - 1])
-                .toString();
+        // The fractional digits are the characters of the full decimal string that come right after the whole
+        // part. The whole part's length varies (1-3 digits, since consecutive suffixes are 1000x apart), so it
+        // must be measured rather than assumed - a fixed start index here would slice an unrelated digit for
+        // any magnitude where the whole part isn't exactly that many digits long, making the printed value
+        // jitter independently of the real one as it changes.
+        String valueStr = value.toString();
+        String wholePart = value.divide(metricBigSuffixValues[c - 1]).toString();
+        stb.append(wholePart);
+
+        int fractionEnd = Math.min(valueStr.length(), Math.max(wholePart.length(), precision));
+        if (fractionEnd > wholePart.length()) {
+            stb.append('.').append(valueStr, wholePart.length(), fractionEnd);
+        }
+
+        return stb.append(metricSuffixChars[c - 1]).toString();
     }
 
     public static String formatLongToCompactString(long value) {
