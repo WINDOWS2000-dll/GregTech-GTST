@@ -18,7 +18,7 @@ import gregtech.api.util.GTLog;
 import gregtech.api.util.TextFormattingUtil;
 import gregtech.client.renderer.texture.Textures;
 import gregtech.client.utils.RenderUtil;
-import gregtech.common.gui.widget.prospector.widget.WidgetOreList;
+import gregtech.common.mui.widget.prospector.WidgetOreList;
 import gregtech.common.metatileentities.multi.electric.MetaTileEntityPowerSubstation;
 import gregtech.common.mui.widget.GTTextFieldWidget;
 

@@ -1,4 +1,4 @@
-package gregtech.common.gui.widget.prospector;
+package gregtech.common.mui.widget.prospector;
 
 import gregtech.api.unification.OreDictUnifier;
 import gregtech.api.unification.stack.MaterialStack;
@@ -27,7 +27,6 @@ public class ProspectingTexture extends AbstractTexture {
     public static final String SELECTED_ALL = "[all]";
 
     private String selected = SELECTED_ALL;
-    private boolean darkMode;
     private int imageWidth = -1;
     private int imageHeight = -1;
     public final Map<Byte, String>[][] map;
@@ -37,8 +36,7 @@ public class ProspectingTexture extends AbstractTexture {
     private final ProspectorMode mode;
     private final int radius;
 
-    public ProspectingTexture(ProspectorMode mode, int radius, boolean darkMode) {
-        this.darkMode = darkMode;
+    public ProspectingTexture(ProspectorMode mode, int radius) {
         this.radius = radius;
         this.mode = mode;
         if (this.mode == ProspectorMode.FLUID) {
@@ -106,7 +104,7 @@ public class ProspectingTexture extends AbstractTexture {
                 Map<Byte, String> data = this.map[this.mode == ProspectorMode.ORE ? i : i / 16][this.mode ==
                         ProspectorMode.ORE ? j : j / 16];
                 // draw bg
-                image.setRGB(i, j, ((data == null) ^ darkMode) ? Color.darkGray.getRGB() : Color.WHITE.getRGB());
+                image.setRGB(i, j, data == null ? Color.darkGray.getRGB() : Color.WHITE.getRGB());
                 // draw ore
                 if (this.mode == ProspectorMode.ORE && data != null) {
                     for (String orePrefix : data.values()) {
@@ -140,11 +138,6 @@ public class ProspectingTexture extends AbstractTexture {
 
     public void loadTexture(@Nullable IResourceManager resourceManager, String selected) {
         this.selected = selected;
-        loadTexture(resourceManager);
-    }
-
-    public void loadTexture(@Nullable IResourceManager resourceManager, boolean darkMode) {
-        this.darkMode = darkMode;
         loadTexture(resourceManager);
     }
 
