@@ -1,17 +1,12 @@
 package gregtech.common.metatileentities.electric;
 
 import gregtech.api.GTValues;
-import gregtech.api.gui.GuiTextures;
-import gregtech.api.gui.ModularUI;
-import gregtech.api.gui.ModularUI.Builder;
-import gregtech.api.gui.widgets.ClickButtonWidget;
-import gregtech.api.gui.widgets.ImageWidget;
-import gregtech.api.gui.widgets.SimpleTextWidget;
-import gregtech.api.gui.widgets.SlotWidget;
 import gregtech.api.items.itemhandlers.GTItemStackHandler;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.TieredMetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
+import gregtech.api.mui.GTGuiTextures;
+import gregtech.api.mui.GTGuis;
 import gregtech.api.util.GTTransferUtils;
 import gregtech.client.renderer.texture.Textures;
 import gregtech.client.renderer.texture.cube.SimpleOverlayRenderer;
@@ -19,7 +14,6 @@ import gregtech.common.covers.filter.ItemFilterContainer;
 
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.item.EntityItem;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
@@ -37,6 +31,17 @@ import net.minecraftforge.items.IItemHandlerModifiable;
 import codechicken.lib.render.CCRenderState;
 import codechicken.lib.render.pipeline.IVertexOperation;
 import codechicken.lib.vec.Matrix4;
+import com.cleanroommc.modularui.api.drawable.IKey;
+import com.cleanroommc.modularui.factory.PosGuiData;
+import com.cleanroommc.modularui.screen.ModularPanel;
+import com.cleanroommc.modularui.screen.UISettings;
+import com.cleanroommc.modularui.value.sync.IntSyncValue;
+import com.cleanroommc.modularui.value.sync.PanelSyncManager;
+import com.cleanroommc.modularui.widgets.ButtonWidget;
+import com.cleanroommc.modularui.widgets.SlotGroupWidget;
+import com.cleanroommc.modularui.widgets.layout.Grid;
+import com.cleanroommc.modularui.widgets.slot.ItemSlot;
+import com.cleanroommc.modularui.widgets.slot.ModularSlot;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -232,28 +237,49 @@ public class MetaTileEntityItemCollector extends TieredMetaTileEntity {
     }
 
     @Override
-    protected ModularUI createUI(EntityPlayer entityPlayer) {
+    public boolean usesMui2() {
+        return true;
+    }
+
+    @Override
+    public ModularPanel buildUI(PosGuiData guiData, PanelSyncManager panelSyncManager, UISettings settings) {
         int rowSize = (int) Math.sqrt(exportItems.getSlots());
-        Builder builder = ModularUI.builder(GuiTextures.BACKGROUND, 176,
-                45 + rowSize * 18 + 105 + 82)
-                .label(10, 5, getMetaFullName());
+        int backgroundHeight = 45 + rowSize * 18 + 105 + 82;
 
-        builder.widget(new ClickButtonWidget(10, 20, 20, 20, "-1", data -> adjustSuckingRange(-1)));
-        builder.widget(new ClickButtonWidget(146, 20, 20, 20, "+1", data -> adjustSuckingRange(+1)));
-        builder.widget(new ImageWidget(30, 20, 116, 20, GuiTextures.DISPLAY));
-        builder.widget(new SimpleTextWidget(88, 30, "gregtech.machine.item_collector.gui.collect_range", 0xFFFFFF,
-                () -> Integer.toString(itemSuckingRange)));
+        IntSyncValue rangeValue = new IntSyncValue(() -> itemSuckingRange, this::setItemSuckingRange);
+        panelSyncManager.syncValue("range", 0, rangeValue);
 
-        for (int y = 0; y < rowSize; y++) {
-            for (int x = 0; x < rowSize; x++) {
-                int index = y * rowSize + x;
-                builder.widget(new SlotWidget(exportItems, index, 89 - rowSize * 9 + x * 18, 45 + y * 18, true, false)
-                        .setBackgroundTexture(GuiTextures.SLOT));
-            }
-        }
-
-        // this.itemFilter.initUI(45 + rowSize * 18 + 5, builder::widget);
-        builder.bindPlayerInventory(entityPlayer.inventory, GuiTextures.SLOT, 7, 45 + rowSize * 18 + 105);
-        return builder.build(getHolder(), entityPlayer);
+        return GTGuis.createPanel(this, 176, backgroundHeight)
+                .child(IKey.lang(getMetaFullName()).asWidget().pos(10, 5))
+                .child(new ButtonWidget<>()
+                        .pos(10, 20).size(20, 20)
+                        .background(GTGuiTextures.SLOT)
+                        .overlay(IKey.str("-1"))
+                        .onMousePressed(data -> {
+                            rangeValue.setIntValue(MathHelper.clamp(rangeValue.getIntValue() - 1, 1,
+                                    maxItemSuckingRange));
+                            return true;
+                        }))
+                .child(new ButtonWidget<>()
+                        .pos(146, 20).size(20, 20)
+                        .background(GTGuiTextures.SLOT)
+                        .overlay(IKey.str("+1"))
+                        .onMousePressed(data -> {
+                            rangeValue.setIntValue(MathHelper.clamp(rangeValue.getIntValue() + 1, 1,
+                                    maxItemSuckingRange));
+                            return true;
+                        }))
+                .child(GTGuiTextures.DISPLAY.asWidget().pos(30, 20).size(116, 20))
+                .child(IKey.dynamic(() -> I18n.format("gregtech.machine.item_collector.gui.collect_range",
+                        rangeValue.getIntValue())).asWidget().pos(88, 30))
+                .child(new Grid()
+                        .top(45).height(rowSize * 18)
+                        .minElementMargin(0, 0)
+                        .minColWidth(18).minRowHeight(18)
+                        .alignX(0.5f)
+                        .mapTo(rowSize, exportItems.getSlots(), index -> new ItemSlot()
+                                .background(GTGuiTextures.SLOT)
+                                .slot(new ModularSlot(exportItems, index).accessibility(false, true))))
+                .child(SlotGroupWidget.playerInventory(false).left(7).bottom(7));
     }
 }

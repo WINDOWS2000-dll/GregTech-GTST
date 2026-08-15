@@ -2,14 +2,12 @@ package gregtech.common.metatileentities.storage;
 
 import gregtech.api.capability.DualHandler;
 import gregtech.api.capability.IQuantumController;
-import gregtech.api.gui.ModularUI;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.util.GTUtility;
 import gregtech.client.renderer.texture.Textures;
 
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.capabilities.Capability;
@@ -49,11 +47,6 @@ public class MetaTileEntityQuantumProxy extends MetaTileEntityQuantumStorage<Dua
     @Override
     public Pair<TextureAtlasSprite, Integer> getParticleTexture() {
         return Pair.of(Textures.QUANTUM_PROXY_INACTIVE.getParticleSprite(), getPaintingColorForRendering());
-    }
-
-    @Override
-    protected ModularUI createUI(EntityPlayer entityPlayer) {
-        return null;
     }
 
     @Override

@@ -1,5 +1,6 @@
 package gregtech.api.mui;
 
+import gregtech.api.GTValues;
 import gregtech.api.cover.CoverWithUI;
 import gregtech.common.ConfigHolder;
 
@@ -56,6 +57,7 @@ public class GTGuiTheme {
             .simpleToggleButton(IDs.STANDARD_BUTTON,
                     IDs.STANDARD_SLOT,
                     ConfigHolder.client.defaultUIColor)
+            .logo(() -> GTValues.XMAS.get() ? GREGTECH_LOGO_XMAS : GREGTECH_LOGO)
             .build();
 
     public static final GTGuiTheme COVER = templateBuilder(Names.COVER)
@@ -77,6 +79,7 @@ public class GTGuiTheme {
             .color(Colors.BRONZE)
             .simpleToggleButton(IDs.BRONZE_BUTTON, IDs.BRONZE_BUTTON_SELECTED,
                     ConfigHolder.client.defaultUIColor)
+            .logo(() -> GREGTECH_LOGO_BRONZE)
             .build();
 
     public static final GTGuiTheme STEEL = templateBuilder(Names.STEEL)
@@ -89,6 +92,7 @@ public class GTGuiTheme {
             .simpleToggleButton(IDs.STEEL_BUTTON, IDs.STEEL_BUTTON_SELECTED,
                     ConfigHolder.client.defaultUIColor)
             .color(Colors.STEEL)
+            .logo(() -> GREGTECH_LOGO_STEEL)
             .build();
 
     public static final GTGuiTheme PRIMITIVE = templateBuilder(Names.PRIMITIVE)

@@ -6,10 +6,8 @@ import gregtech.api.capability.impl.EnergyContainerHandler;
 import gregtech.api.capability.impl.FluidTankList;
 import gregtech.api.capability.impl.FuelRecipeLogic;
 import gregtech.api.capability.impl.RecipeLogicEnergy;
-import gregtech.api.gui.GuiTextures;
-import gregtech.api.gui.ModularUI;
-import gregtech.api.gui.widgets.LabelWidget;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
+import gregtech.api.mui.GTGuis;
 import gregtech.api.recipes.RecipeMap;
 import gregtech.client.renderer.ICubeRenderer;
 import gregtech.client.renderer.texture.Textures;
@@ -28,6 +26,13 @@ import net.minecraftforge.items.CapabilityItemHandler;
 import codechicken.lib.render.CCRenderState;
 import codechicken.lib.render.pipeline.IVertexOperation;
 import codechicken.lib.vec.Matrix4;
+import com.cleanroommc.modularui.api.drawable.IKey;
+import com.cleanroommc.modularui.factory.PosGuiData;
+import com.cleanroommc.modularui.screen.ModularPanel;
+import com.cleanroommc.modularui.screen.UISettings;
+import com.cleanroommc.modularui.value.sync.PanelSyncManager;
+import com.cleanroommc.modularui.widget.ParentWidget;
+import com.cleanroommc.modularui.widgets.SlotGroupWidget;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -95,24 +100,32 @@ public class SimpleGeneratorMetaTileEntity extends WorkableTieredMetaTileEntity 
         return super.getCapability(capability, side);
     }
 
-    protected ModularUI.Builder createGuiTemplate(EntityPlayer player) {
+    @Override
+    public boolean usesMui2() {
+        return true;
+    }
+
+    @Override
+    public ModularPanel buildUI(PosGuiData guiData, PanelSyncManager panelSyncManager, UISettings settings) {
         RecipeMap<?> workableRecipeMap = workable.getRecipeMap();
         int yOffset = 0;
         if (workableRecipeMap.getMaxInputs() >= 6 || workableRecipeMap.getMaxFluidInputs() >= 6 ||
                 workableRecipeMap.getMaxOutputs() >= 6 || workableRecipeMap.getMaxFluidOutputs() >= 6)
             yOffset = FONT_HEIGHT;
 
-        ModularUI.Builder builder;
-        if (handlesRecipeOutputs)
-            builder = workableRecipeMap.getRecipeMapUI().createUITemplate(workable::getProgressPercent,
-                    importItems, exportItems, importFluids, exportFluids, yOffset);
-        else builder = workableRecipeMap.getRecipeMapUI().createUITemplateNoOutputs(workable::getProgressPercent,
-                importItems,
-                exportItems, importFluids, exportFluids, yOffset);
-        builder.widget(new LabelWidget(6, 6, getMetaFullName()))
-                .bindPlayerInventory(player.inventory, GuiTextures.SLOT, yOffset);
+        ParentWidget<?> recipeWidgets;
+        if (handlesRecipeOutputs) {
+            recipeWidgets = workableRecipeMap.getRecipeMapUI().buildUITemplate(workable::getProgressPercent,
+                    importItems, exportItems, importFluids, exportFluids);
+        } else {
+            recipeWidgets = workableRecipeMap.getRecipeMapUI().buildUITemplateNoOutputs(workable::getProgressPercent,
+                    importItems, importFluids);
+        }
 
-        return builder;
+        return GTGuis.createPanel(this, 176, 166 + yOffset)
+                .child(IKey.lang(getMetaFullName()).asWidget().pos(6, 6))
+                .child(recipeWidgets.pos(0, yOffset))
+                .child(SlotGroupWidget.playerInventory(false).left(7).bottom(7));
     }
 
     @Override
@@ -126,11 +139,6 @@ public class SimpleGeneratorMetaTileEntity extends WorkableTieredMetaTileEntity 
     protected void renderOverlays(CCRenderState renderState, Matrix4 translation, IVertexOperation[] pipeline) {
         this.renderer.renderOrientedState(renderState, translation, pipeline, getFrontFacing(), workable.isActive(),
                 workable.isWorkingEnabled());
-    }
-
-    @Override
-    protected ModularUI createUI(EntityPlayer entityPlayer) {
-        return createGuiTemplate(entityPlayer).build(getHolder(), entityPlayer);
     }
 
     @Override

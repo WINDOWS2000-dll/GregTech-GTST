@@ -8,6 +8,7 @@ import gregtech.api.recipes.ui.RecipeMapUIFunction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
 
+import com.cleanroommc.modularui.drawable.UITexture;
 import it.unimi.dsi.fastutil.bytes.Byte2ObjectArrayMap;
 import it.unimi.dsi.fastutil.bytes.Byte2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
@@ -24,6 +25,7 @@ public class RecipeMapBuilder<B extends RecipeBuilder<B>> {
     private final B defaultRecipeBuilder;
 
     private final Byte2ObjectMap<TextureArea> slotOverlays = new Byte2ObjectArrayMap<>();
+    private final Byte2ObjectMap<UITexture> slotOverlaysMui2 = new Byte2ObjectArrayMap<>();
 
     private int itemInputs;
     private boolean modifyItemInputs = true;
@@ -37,6 +39,7 @@ public class RecipeMapBuilder<B extends RecipeBuilder<B>> {
     private boolean isGenerator;
 
     private @Nullable TextureArea progressBar;
+    private @Nullable UITexture progressBarMui2;
     private @Nullable ProgressWidget.MoveType moveType;
 
     private @Nullable TextureArea specialTexture;
@@ -164,6 +167,33 @@ public class RecipeMapBuilder<B extends RecipeBuilder<B>> {
     }
 
     /**
+     * @param progressBar     the MUI1 progress bar texture to use
+     * @param progressBarMui2 the MUI2 progress bar texture to use
+     * @return this
+     */
+    public @NotNull RecipeMapBuilder<B> progressBar(@Nullable TextureArea progressBar,
+                                                    @NotNull UITexture progressBarMui2) {
+        this.progressBar = progressBar;
+        this.progressBarMui2 = progressBarMui2;
+        return this;
+    }
+
+    /**
+     * @param progressBar     the MUI1 progress bar texture to use
+     * @param progressBarMui2 the MUI2 progress bar texture to use
+     * @param moveType        the progress bar move type to use
+     * @return this
+     */
+    public @NotNull RecipeMapBuilder<B> progressBar(@Nullable TextureArea progressBar,
+                                                    @NotNull UITexture progressBarMui2,
+                                                    @Nullable ProgressWidget.MoveType moveType) {
+        this.progressBar = progressBar;
+        this.progressBarMui2 = progressBarMui2;
+        this.moveType = moveType;
+        return this;
+    }
+
+    /**
      * @param texture  the texture to use
      * @param isOutput if the slot is an output slot
      * @return this
@@ -209,6 +239,62 @@ public class RecipeMapBuilder<B extends RecipeBuilder<B>> {
         return this;
     }
 
+    /**
+     * @param texture     the MUI1 texture to use
+     * @param textureMui2 the MUI2 texture to use
+     * @param isOutput    if the slot is an output slot
+     * @return this
+     */
+    public @NotNull RecipeMapBuilder<B> itemSlotOverlay(@NotNull TextureArea texture, @NotNull UITexture textureMui2,
+                                                        boolean isOutput) {
+        itemSlotOverlay(texture, isOutput);
+        this.slotOverlaysMui2.put(computeOverlayKey(isOutput, false, false), textureMui2);
+        this.slotOverlaysMui2.put(computeOverlayKey(isOutput, false, true), textureMui2);
+        return this;
+    }
+
+    /**
+     * @param texture     the MUI1 texture to use
+     * @param textureMui2 the MUI2 texture to use
+     * @param isOutput    if the slot is an output slot
+     * @param isLastSlot  if the slot is the last slot
+     * @return this
+     */
+    public @NotNull RecipeMapBuilder<B> itemSlotOverlay(@NotNull TextureArea texture, @NotNull UITexture textureMui2,
+                                                        boolean isOutput, boolean isLastSlot) {
+        itemSlotOverlay(texture, isOutput, isLastSlot);
+        this.slotOverlaysMui2.put(computeOverlayKey(isOutput, false, isLastSlot), textureMui2);
+        return this;
+    }
+
+    /**
+     * @param texture     the MUI1 texture to use
+     * @param textureMui2 the MUI2 texture to use
+     * @param isOutput    if the slot is an output slot
+     * @return this
+     */
+    public @NotNull RecipeMapBuilder<B> fluidSlotOverlay(@NotNull TextureArea texture, @NotNull UITexture textureMui2,
+                                                         boolean isOutput) {
+        fluidSlotOverlay(texture, isOutput);
+        this.slotOverlaysMui2.put(computeOverlayKey(isOutput, true, false), textureMui2);
+        this.slotOverlaysMui2.put(computeOverlayKey(isOutput, true, true), textureMui2);
+        return this;
+    }
+
+    /**
+     * @param texture     the MUI1 texture to use
+     * @param textureMui2 the MUI2 texture to use
+     * @param isOutput    if the slot is an output slot
+     * @param isLastSlot  if the slot is the last slot
+     * @return this
+     */
+    public @NotNull RecipeMapBuilder<B> fluidSlotOverlay(@NotNull TextureArea texture, @NotNull UITexture textureMui2,
+                                                         boolean isOutput, boolean isLastSlot) {
+        fluidSlotOverlay(texture, isOutput, isLastSlot);
+        this.slotOverlaysMui2.put(computeOverlayKey(isOutput, true, isLastSlot), textureMui2);
+        return this;
+    }
+
     public @NotNull RecipeMapBuilder<B> specialTexture(@NotNull TextureArea texture, int x, int y, int width,
                                                        int height) {
         this.specialTexture = texture;
@@ -235,6 +321,9 @@ public class RecipeMapBuilder<B extends RecipeBuilder<B>> {
         if (progressBar != null) {
             ui.setProgressBarTexture(progressBar);
         }
+        if (progressBarMui2 != null) {
+            ui.setProgressBarTextureMui2(progressBarMui2);
+        }
         if (moveType != null) {
             ui.setProgressBarMoveType(moveType);
         }
@@ -243,6 +332,9 @@ public class RecipeMapBuilder<B extends RecipeBuilder<B>> {
         }
         for (var entry : slotOverlays.byte2ObjectEntrySet()) {
             ui.setSlotOverlay(entry.getByteKey(), entry.getValue());
+        }
+        for (var entry : slotOverlaysMui2.byte2ObjectEntrySet()) {
+            ui.setSlotOverlayMui2(entry.getByteKey(), entry.getValue());
         }
 
         return ui;

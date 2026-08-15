@@ -32,6 +32,7 @@ public class GTGuiTextures {
         public static final String PRIMITIVE_BACKGROUND = id("primitive_bg");
 
         public static final String STANDARD_SLOT = id("standard_slot");
+        public static final String DARK_SLOT = id("dark_slot");
         public static final String BRONZE_SLOT = id("bronze_slot");
         public static final String STEEL_SLOT = id("steel_slot");
         public static final String PRIMITIVE_SLOT = id("primitive_slot");
@@ -59,6 +60,8 @@ public class GTGuiTextures {
     /** @apiNote You may want {@link GTGuiTextures#getLogo} instead. */
     public static final UITexture GREGTECH_LOGO_XMAS = fullImage("textures/gui/icon/gregtech_logo_xmas.png");
     public static final UITexture GREGTECH_LOGO_DARK = fullImage("textures/gui/icon/gregtech_logo_dark.png");
+    public static final UITexture GREGTECH_LOGO_BRONZE = fullImage("textures/gui/base/logo_bronze.png");
+    public static final UITexture GREGTECH_LOGO_STEEL = fullImage("textures/gui/base/logo_steel.png");
     public static final IDrawable GREGTECH_LOGO_BLINKING_YELLOW = animated(
             "textures/gui/icon/gregtech_logo_blinking_yellow.png", 17, 34, 60);
     public static final IDrawable GREGTECH_LOGO_BLINKING_RED = animated(
@@ -156,6 +159,14 @@ public class GTGuiTextures {
             .imageSize(18, 18)
             .adaptable(1)
             .name(IDs.STANDARD_SLOT)
+            .canApplyTheme()
+            .build();
+
+    public static final UITexture SLOT_DARK = new UITexture.Builder()
+            .location(GTValues.MODID, "textures/gui/base/slot_dark.png")
+            .imageSize(18, 18)
+            .adaptable(1)
+            .name(IDs.DARK_SLOT)
             .canApplyTheme()
             .build();
 
@@ -455,6 +466,7 @@ public class GTGuiTextures {
             ColorType.DEFAULT);
     public static final UITexture DUCT_TAPE_OVERLAY = fullImage("textures/gui/overlay/duct_tape_overlay.png",
             ColorType.DEFAULT);
+    public static final UITexture MAINTENANCE_ICON = fullImage("textures/gui/widget/button_maintenance.png");
     public static final UITexture RESEARCH_STATION_OVERLAY = fullImage(
             "textures/gui/overlay/research_station_overlay.png", ColorType.DEFAULT);
 
@@ -684,6 +696,10 @@ public class GTGuiTextures {
             "textures/gui/progress_bar/progress_bar_boiler_fuel_steel.png", 18, 36);
     public static final UITexture PROGRESS_BAR_BOILER_HEAT = progressBar(
             "textures/gui/progress_bar/progress_bar_boiler_heat.png");
+    public static final UITexture PROGRESS_BAR_SOLAR_STEAM_BRONZE = progressBar(
+            "textures/gui/progress_bar/progress_bar_solar_bronze.png");
+    public static final UITexture PROGRESS_BAR_SOLAR_STEAM_STEEL = progressBar(
+            "textures/gui/progress_bar/progress_bar_solar_steel.png");
     public static final UITexture PROGRESS_BAR_ASSEMBLY_LINE = progressBar(
             "textures/gui/progress_bar/progress_bar_assembly_line.png", 54, 144);
     public static final UITexture PROGRESS_BAR_ASSEMBLY_LINE_ARROW = progressBar(
@@ -724,6 +740,17 @@ public class GTGuiTextures {
             "textures/gui/progress_bar/progress_bar_fluid_rig_depletion.png", 190, 14);
 
     // MISC
+
+    // ME hatch/bus
+    public static final UITexture NUMBER_BACKGROUND = fullImage("textures/gui/widget/number_background.png");
+    public static final UITexture CONFIG_ARROW = fullImage("textures/gui/widget/config_arrow.png");
+    public static final UITexture CONFIG_ARROW_DARK = fullImage("textures/gui/widget/config_arrow_dark.png");
+    public static final UITexture SELECT_BOX = fullImage("textures/gui/widget/select_box.png");
+    public static final UITexture BUTTON_AUTO_PULL = fullImage("textures/gui/widget/button_me_auto_pull.png");
+    public static final UITexture ARROW_DOUBLE = fullImage("textures/gui/widget/arrow_double.png");
+    public static final UITexture ARROW_OPPOSITE = fullImage("textures/gui/widget/opposite_arrows.png");
+    public static final UITexture[] AUTO_PULL = slice("textures/gui/widget/button_me_auto_pull.png",
+            16, 32, 16, 16, ColorType.DEFAULT);
 
     public static void init() {/**/}
 
@@ -801,7 +828,7 @@ public class GTGuiTextures {
                 .build();
     }
 
-    // todo steam logos? multi indicator blinking logos?
+    // todo multi indicator blinking logos?
     public static @NotNull UITexture getLogo(GTGuiTheme theme) {
         if (theme != null) {
             UITexture logo = theme.getLogo();

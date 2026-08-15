@@ -1,22 +1,28 @@
 package gregtech.common.metatileentities.steam.boiler;
 
-import gregtech.api.gui.GuiTextures;
-import gregtech.api.gui.ModularUI;
-import gregtech.api.gui.widgets.ProgressWidget.MoveType;
 import gregtech.api.items.itemhandlers.GTItemStackHandler;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
+import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.recipes.ModHandler;
 import gregtech.api.recipes.category.ICategoryOverride;
 import gregtech.client.renderer.texture.Textures;
 
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntityFurnace;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.items.IItemHandlerModifiable;
 
+import com.cleanroommc.modularui.drawable.UITexture;
+import com.cleanroommc.modularui.factory.PosGuiData;
+import com.cleanroommc.modularui.screen.ModularPanel;
+import com.cleanroommc.modularui.screen.UISettings;
+import com.cleanroommc.modularui.value.sync.DoubleSyncValue;
+import com.cleanroommc.modularui.value.sync.PanelSyncManager;
+import com.cleanroommc.modularui.widgets.ProgressWidget;
+import com.cleanroommc.modularui.widgets.slot.ItemSlot;
+import com.cleanroommc.modularui.widgets.slot.ModularSlot;
 import org.jetbrains.annotations.NotNull;
 
 public class SteamCoalBoiler extends SteamBoiler implements ICategoryOverride {
@@ -83,15 +89,28 @@ public class SteamCoalBoiler extends SteamBoiler implements ICategoryOverride {
     }
 
     @Override
-    public ModularUI createUI(EntityPlayer player) {
-        return createUITemplate(player)
-                .slot(this.importItems, 0, 115, 62,
-                        GuiTextures.SLOT_STEAM.get(isHighPressure), GuiTextures.COAL_OVERLAY_STEAM.get(isHighPressure))
-                .slot(this.exportItems, 0, 115, 26, true, false,
-                        GuiTextures.SLOT_STEAM.get(isHighPressure), GuiTextures.DUST_OVERLAY_STEAM.get(isHighPressure))
-                .progressBar(this::getFuelLeftPercent, 115, 44, 18, 18,
-                        GuiTextures.PROGRESS_BAR_BOILER_FUEL.get(isHighPressure), MoveType.VERTICAL)
-                .build(getHolder(), player);
+    public ModularPanel buildUI(PosGuiData guiData, PanelSyncManager panelSyncManager, UISettings settings) {
+        UITexture slotBase = isHighPressure ? GTGuiTextures.SLOT_STEEL : GTGuiTextures.SLOT_BRONZE;
+        ModularPanel panel = buildUITemplate(guiData, panelSyncManager);
+        panel.child(new ItemSlot()
+                .pos(115, 62)
+                .background(slotBase,
+                        isHighPressure ? GTGuiTextures.COAL_OVERLAY_STEEL : GTGuiTextures.COAL_OVERLAY_BRONZE)
+                .slot(new ModularSlot(this.importItems, 0).accessibility(true, true)))
+                .child(new ItemSlot()
+                        .pos(115, 26)
+                        .background(slotBase,
+                                isHighPressure ? GTGuiTextures.DUST_OVERLAY_STEEL : GTGuiTextures.DUST_OVERLAY_BRONZE)
+                        .slot(new ModularSlot(this.exportItems, 0).accessibility(false, true)))
+                .child(new ProgressWidget()
+                        .pos(115, 44)
+                        .size(18, 18)
+                        .value(new DoubleSyncValue(this::getFuelLeftPercent))
+                        .texture(isHighPressure ? GTGuiTextures.PROGRESS_BAR_BOILER_FUEL_STEEL :
+                                GTGuiTextures.PROGRESS_BAR_BOILER_FUEL_BRONZE, 18)
+                        .direction(ProgressWidget.Direction.UP)); // texture(UITexture, int) uses top-half=empty,
+                                                                   // bottom-half=full layout
+        return panel;
     }
 
     @Override

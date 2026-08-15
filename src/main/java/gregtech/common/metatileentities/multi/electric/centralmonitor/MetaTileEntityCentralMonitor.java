@@ -5,9 +5,6 @@ import gregtech.api.capability.GregtechDataCodes;
 import gregtech.api.capability.IEnergyContainer;
 import gregtech.api.capability.impl.EnergyContainerList;
 import gregtech.api.cover.Cover;
-import gregtech.api.gui.GuiTextures;
-import gregtech.api.gui.ModularUI;
-import gregtech.api.gui.widgets.WidgetGroup;
 import gregtech.api.metatileentity.IFastRenderMetaTileEntity;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
@@ -30,7 +27,6 @@ import gregtech.common.ConfigHolder;
 import gregtech.common.blocks.BlockMetalCasing;
 import gregtech.common.blocks.MetaBlocks;
 import gregtech.common.covers.CoverDigitalInterface;
-import gregtech.common.gui.widget.monitor.WidgetScreenGrid;
 import gregtech.common.metatileentities.MetaTileEntities;
 import gregtech.common.pipelike.cable.net.EnergyNet;
 import gregtech.common.pipelike.cable.net.WorldENet;
@@ -622,46 +618,6 @@ public class MetaTileEntityCentralMonitor extends MultiblockWithDisplayBase impl
     @Override
     public boolean allowsFlip() {
         return false;
-    }
-
-    @Override
-    protected ModularUI createUI(EntityPlayer entityPlayer) {
-        if (!isActive()) {
-            return super.createUI(entityPlayer);
-        } else {
-            WidgetScreenGrid[][] screenGrids = new WidgetScreenGrid[width][height];
-            WidgetGroup group = new WidgetGroup();
-            for (int i = 0; i < width; i++) {
-                for (int j = 0; j < height; j++) {
-                    screenGrids[i][j] = new WidgetScreenGrid(4 * width, 4 * height, i, j);
-                    group.addWidget(screenGrids[i][j]);
-                }
-            }
-            if (!this.getWorld().isRemote) {
-                this.getMultiblockParts().forEach(part -> {
-                    if (part instanceof MetaTileEntityMonitorScreen) {
-                        int x = ((MetaTileEntityMonitorScreen) part).getX();
-                        int y = ((MetaTileEntityMonitorScreen) part).getY();
-                        screenGrids[x][y].setScreen((MetaTileEntityMonitorScreen) part);
-                    }
-                });
-            } else {
-                parts.forEach(partPos -> {
-                    TileEntity tileEntity = this.getWorld().getTileEntity(partPos);
-                    if (tileEntity instanceof IGregTechTileEntity && ((IGregTechTileEntity) tileEntity)
-                            .getMetaTileEntity() instanceof MetaTileEntityMonitorScreen) {
-                        MetaTileEntityMonitorScreen part = (MetaTileEntityMonitorScreen) ((IGregTechTileEntity) tileEntity)
-                                .getMetaTileEntity();
-                        int x = part.getX();
-                        int y = part.getY();
-                        screenGrids[x][y].setScreen(part);
-                    }
-                });
-            }
-            return ModularUI.builder(GuiTextures.BOXED_BACKGROUND, 28 * width, 28 * height)
-                    .widget(group)
-                    .build(this.getHolder(), entityPlayer);
-        }
     }
 
     @Override

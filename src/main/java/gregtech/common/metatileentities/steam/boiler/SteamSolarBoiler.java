@@ -1,17 +1,21 @@
 package gregtech.common.metatileentities.steam.boiler;
 
-import gregtech.api.gui.GuiTextures;
-import gregtech.api.gui.ModularUI;
-import gregtech.api.gui.widgets.ProgressWidget.MoveType;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
+import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.util.GTUtility;
 import gregtech.client.renderer.texture.Textures;
 
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+
+import com.cleanroommc.modularui.factory.PosGuiData;
+import com.cleanroommc.modularui.screen.ModularPanel;
+import com.cleanroommc.modularui.screen.UISettings;
+import com.cleanroommc.modularui.value.sync.DoubleSyncValue;
+import com.cleanroommc.modularui.value.sync.PanelSyncManager;
+import com.cleanroommc.modularui.widgets.ProgressWidget;
 
 public class SteamSolarBoiler extends SteamBoiler {
 
@@ -47,11 +51,16 @@ public class SteamSolarBoiler extends SteamBoiler {
     }
 
     @Override
-    protected ModularUI createUI(EntityPlayer entityPlayer) {
-        return createUITemplate(entityPlayer)
-                .progressBar(() -> GTUtility.canSeeSunClearly(getWorld(), getPos()) ? 1.0 : 0.0, 114, 44, 20, 20,
-                        GuiTextures.PROGRESS_BAR_SOLAR_STEAM.get(isHighPressure), MoveType.HORIZONTAL)
-                .build(getHolder(), entityPlayer);
+    public ModularPanel buildUI(PosGuiData guiData, PanelSyncManager panelSyncManager, UISettings settings) {
+        ModularPanel panel = buildUITemplate(guiData, panelSyncManager);
+        panel.child(new ProgressWidget()
+                .pos(114, 44)
+                .size(20, 20)
+                .value(new DoubleSyncValue(() -> GTUtility.canSeeSunClearly(getWorld(), getPos()) ? 1.0 : 0.0))
+                .texture(isHighPressure ? GTGuiTextures.PROGRESS_BAR_SOLAR_STEAM_STEEL :
+                        GTGuiTextures.PROGRESS_BAR_SOLAR_STEAM_BRONZE, 20)
+                .direction(ProgressWidget.Direction.RIGHT));
+        return panel;
     }
 
     @SideOnly(Side.CLIENT)

@@ -4,6 +4,7 @@ import gregtech.api.GTValues;
 import gregtech.api.gui.GuiTextures;
 import gregtech.api.gui.widgets.ProgressWidget;
 import gregtech.api.gui.widgets.ProgressWidget.MoveType;
+import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.recipes.builders.AssemblyLineRecipeBuilder;
 import gregtech.api.recipes.builders.BlastRecipeBuilder;
 import gregtech.api.recipes.builders.CircuitAssemblerRecipeBuilder;
@@ -77,8 +78,8 @@ public final class RecipeMaps {
             new SimpleRecipeBuilder())
                     .itemInputs(2)
                     .itemOutputs(1)
-                    .itemSlotOverlay(GuiTextures.FURNACE_OVERLAY_1, false)
-                    .progressBar(GuiTextures.PROGRESS_BAR_ARROW)
+                    .itemSlotOverlay(GuiTextures.FURNACE_OVERLAY_1, GTGuiTextures.FURNACE_OVERLAY_1, false)
+                    .progressBar(GuiTextures.PROGRESS_BAR_ARROW, GTGuiTextures.PROGRESS_BAR_ARROW)
                     .sound(GTSoundEvents.FURNACE)
                     .build();
 
@@ -118,7 +119,7 @@ public final class RecipeMaps {
                     .itemOutputs(9)
                     .fluidInputs(1)
                     .fluidOutputs(1)
-                    .progressBar(GuiTextures.PROGRESS_BAR_ARC_FURNACE)
+                    .progressBar(GuiTextures.PROGRESS_BAR_ARC_FURNACE, GTGuiTextures.PROGRESS_BAR_ARC_FURNACE)
                     .sound(GTSoundEvents.ARC)
                     .onBuild(gregtechId("arc_furnace_oxygen"), recipeBuilder -> {
                         if (recipeBuilder.getFluidInputs().isEmpty()) {
@@ -145,8 +146,8 @@ public final class RecipeMaps {
                     .itemInputs(9)
                     .itemOutputs(1)
                     .fluidInputs(1)
-                    .itemSlotOverlay(GuiTextures.CIRCUIT_OVERLAY, false)
-                    .progressBar(GuiTextures.PROGRESS_BAR_CIRCUIT)
+                    .itemSlotOverlay(GuiTextures.CIRCUIT_OVERLAY, GTGuiTextures.CIRCUIT_OVERLAY, false)
+                    .progressBar(GuiTextures.PROGRESS_BAR_CIRCUIT, GTGuiTextures.PROGRESS_BAR_CIRCUIT)
                     .sound(GTSoundEvents.ASSEMBLER)
                     .onBuild(gregtechId("assembler_solder"), recipeBuilder -> {
                         var fluidInputs = recipeBuilder.getFluidInputs();
@@ -206,9 +207,9 @@ public final class RecipeMaps {
                     .itemOutputs(2)
                     .fluidInputs(1)
                     .fluidOutputs(1)
-                    .itemSlotOverlay(GuiTextures.DUST_OVERLAY, false)
-                    .itemSlotOverlay(GuiTextures.CRYSTAL_OVERLAY, true)
-                    .progressBar(GuiTextures.PROGRESS_BAR_CRYSTALLIZATION)
+                    .itemSlotOverlay(GuiTextures.DUST_OVERLAY, GTGuiTextures.DUST_OVERLAY, false)
+                    .itemSlotOverlay(GuiTextures.CRYSTAL_OVERLAY, GTGuiTextures.CRYSTAL_OVERLAY, true)
+                    .progressBar(GuiTextures.PROGRESS_BAR_CRYSTALLIZATION, GTGuiTextures.PROGRESS_BAR_CRYSTALLIZATION)
                     .sound(GTSoundEvents.FURNACE)
                     .build();
 
@@ -232,9 +233,9 @@ public final class RecipeMaps {
             new SimpleRecipeBuilder())
                     .itemInputs(2)
                     .itemOutputs(1)
-                    .itemSlotOverlay(GuiTextures.BENDER_OVERLAY, false, false)
-                    .itemSlotOverlay(GuiTextures.INT_CIRCUIT_OVERLAY, false, true)
-                    .progressBar(GuiTextures.PROGRESS_BAR_BENDING)
+                    .itemSlotOverlay(GuiTextures.BENDER_OVERLAY, GTGuiTextures.BENDER_OVERLAY, false, false)
+                    .itemSlotOverlay(GuiTextures.INT_CIRCUIT_OVERLAY, GTGuiTextures.INT_CIRCUIT_OVERLAY, false, true)
+                    .progressBar(GuiTextures.PROGRESS_BAR_BENDING, GTGuiTextures.PROGRESS_BAR_BENDING)
                     .sound(GTSoundEvents.MOTOR)
                     .build();
 
@@ -292,8 +293,8 @@ public final class RecipeMaps {
                     .itemInputs(1)
                     .fluidInputs(1)
                     .fluidOutputs(1)
-                    .itemSlotOverlay(GuiTextures.BREWER_OVERLAY, false)
-                    .progressBar(GuiTextures.PROGRESS_BAR_ARROW_MULTIPLE)
+                    .itemSlotOverlay(GuiTextures.BREWER_OVERLAY, GTGuiTextures.BREWER_OVERLAY, false)
+                    .progressBar(GuiTextures.PROGRESS_BAR_ARROW_MULTIPLE, GTGuiTextures.PROGRESS_BAR_ARROW_MULTIPLE)
                     .sound(GTSoundEvents.CHEMICAL_REACTOR)
                     .build();
 
@@ -324,7 +325,12 @@ public final class RecipeMaps {
                 ui.setItemSlotOverlay(GuiTextures.CANISTER_OVERLAY, true);
                 ui.setFluidSlotOverlay(GuiTextures.DARK_CANISTER_OVERLAY, false);
                 ui.setFluidSlotOverlay(GuiTextures.DARK_CANISTER_OVERLAY, true);
-                ui.setProgressBar(GuiTextures.PROGRESS_BAR_CANNER, ProgressWidget.MoveType.HORIZONTAL);
+                ui.setItemSlotOverlayMui2(GTGuiTextures.CANNER_OVERLAY, false, false);
+                ui.setItemSlotOverlayMui2(GTGuiTextures.CANISTER_OVERLAY, false, true);
+                ui.setItemSlotOverlayMui2(GTGuiTextures.CANISTER_OVERLAY, true);
+                ui.setFluidSlotOverlayMui2(GTGuiTextures.DARK_CANISTER_OVERLAY, false);
+                ui.setFluidSlotOverlayMui2(GTGuiTextures.DARK_CANISTER_OVERLAY, true);
+                ui.setProgressBar(GuiTextures.PROGRESS_BAR_CANNER, GTGuiTextures.PROGRESS_BAR_CANNER, ProgressWidget.MoveType.HORIZONTAL);
                 return ui;
             });
 
@@ -354,10 +360,10 @@ public final class RecipeMaps {
                     .itemOutputs(6)
                     .fluidInputs(1)
                     .fluidOutputs(6)
-                    .itemSlotOverlay(GuiTextures.EXTRACTOR_OVERLAY, false, false)
-                    .itemSlotOverlay(GuiTextures.CANISTER_OVERLAY, false, true)
-                    .fluidSlotOverlay(GuiTextures.CENTRIFUGE_OVERLAY, false, true)
-                    .progressBar(GuiTextures.PROGRESS_BAR_EXTRACT)
+                    .itemSlotOverlay(GuiTextures.EXTRACTOR_OVERLAY, GTGuiTextures.EXTRACTOR_OVERLAY, false, false)
+                    .itemSlotOverlay(GuiTextures.CANISTER_OVERLAY, GTGuiTextures.CANISTER_OVERLAY, false, true)
+                    .fluidSlotOverlay(GuiTextures.CENTRIFUGE_OVERLAY, GTGuiTextures.CENTRIFUGE_OVERLAY, false, true)
+                    .progressBar(GuiTextures.PROGRESS_BAR_EXTRACT, GTGuiTextures.PROGRESS_BAR_EXTRACT)
                     .sound(GTSoundEvents.CENTRIFUGE)
                     .build();
 
@@ -380,9 +386,9 @@ public final class RecipeMaps {
                     .itemOutputs(6)
                     .fluidInputs(1)
                     .fluidOutputs(1)
-                    .itemSlotOverlay(GuiTextures.BREWER_OVERLAY, false, true)
-                    .itemSlotOverlay(GuiTextures.DUST_OVERLAY, true)
-                    .progressBar(GuiTextures.PROGRESS_BAR_MIXER, MoveType.CIRCULAR)
+                    .itemSlotOverlay(GuiTextures.BREWER_OVERLAY, GTGuiTextures.BREWER_OVERLAY, false, true)
+                    .itemSlotOverlay(GuiTextures.DUST_OVERLAY, GTGuiTextures.DUST_OVERLAY, true)
+                    .progressBar(GuiTextures.PROGRESS_BAR_MIXER, GTGuiTextures.PROGRESS_BAR_MIXER, MoveType.CIRCULAR)
                     .sound(GTSoundEvents.BATH)
                     .build();
 
@@ -416,13 +422,13 @@ public final class RecipeMaps {
                     .itemOutputs(2)
                     .fluidInputs(3)
                     .fluidOutputs(2)
-                    .itemSlotOverlay(GuiTextures.MOLECULAR_OVERLAY_1, false, false)
-                    .itemSlotOverlay(GuiTextures.MOLECULAR_OVERLAY_2, false, true)
-                    .itemSlotOverlay(GuiTextures.VIAL_OVERLAY_1, true)
-                    .fluidSlotOverlay(GuiTextures.MOLECULAR_OVERLAY_3, false, false)
-                    .fluidSlotOverlay(GuiTextures.MOLECULAR_OVERLAY_4, false, true)
-                    .fluidSlotOverlay(GuiTextures.VIAL_OVERLAY_2, true)
-                    .progressBar(GuiTextures.PROGRESS_BAR_ARROW_MULTIPLE)
+                    .itemSlotOverlay(GuiTextures.MOLECULAR_OVERLAY_1, GTGuiTextures.MOLECULAR_OVERLAY_1, false, false)
+                    .itemSlotOverlay(GuiTextures.MOLECULAR_OVERLAY_2, GTGuiTextures.MOLECULAR_OVERLAY_2, false, true)
+                    .itemSlotOverlay(GuiTextures.VIAL_OVERLAY_1, GTGuiTextures.VIAL_OVERLAY_1, true)
+                    .fluidSlotOverlay(GuiTextures.MOLECULAR_OVERLAY_3, GTGuiTextures.MOLECULAR_OVERLAY_3, false, false)
+                    .fluidSlotOverlay(GuiTextures.MOLECULAR_OVERLAY_4, GTGuiTextures.MOLECULAR_OVERLAY_4, false, true)
+                    .fluidSlotOverlay(GuiTextures.VIAL_OVERLAY_2, GTGuiTextures.VIAL_OVERLAY_2, true)
+                    .progressBar(GuiTextures.PROGRESS_BAR_ARROW_MULTIPLE, GTGuiTextures.PROGRESS_BAR_ARROW_MULTIPLE)
                     .sound(GTValues.FOOLS.get() ? GTSoundEvents.SCIENCE : GTSoundEvents.CHEMICAL_REACTOR)
                     .onBuild(gregtechId("lcr_copy"), recipeBuilder -> RecipeMaps.LARGE_CHEMICAL_RECIPES.recipeBuilder()
                             .inputs(recipeBuilder.getInputs().toArray(new GTRecipeInput[0]))
@@ -470,8 +476,8 @@ public final class RecipeMaps {
                     .itemInputs(6)
                     .itemOutputs(1)
                     .fluidInputs(1)
-                    .itemSlotOverlay(GuiTextures.CIRCUIT_OVERLAY, false)
-                    .progressBar(GuiTextures.PROGRESS_BAR_CIRCUIT_ASSEMBLER)
+                    .itemSlotOverlay(GuiTextures.CIRCUIT_OVERLAY, GTGuiTextures.CIRCUIT_OVERLAY, false)
+                    .progressBar(GuiTextures.PROGRESS_BAR_CIRCUIT_ASSEMBLER, GTGuiTextures.PROGRESS_BAR_CIRCUIT_ASSEMBLER)
                     .sound(GTSoundEvents.ASSEMBLER)
                     .onBuild(gregtechId("circuit_assembler_solder"), recipeBuilder -> {
                         if (recipeBuilder.getFluidInputs().isEmpty()) {
@@ -533,8 +539,8 @@ public final class RecipeMaps {
             new SimpleRecipeBuilder().duration(200).EUt(2))
                     .itemInputs(1)
                     .itemOutputs(1)
-                    .itemSlotOverlay(GuiTextures.COMPRESSOR_OVERLAY, false)
-                    .progressBar(GuiTextures.PROGRESS_BAR_COMPRESS)
+                    .itemSlotOverlay(GuiTextures.COMPRESSOR_OVERLAY, GTGuiTextures.COMPRESSOR_OVERLAY, false)
+                    .progressBar(GuiTextures.PROGRESS_BAR_COMPRESS, GTGuiTextures.PROGRESS_BAR_COMPRESS)
                     .sound(GTSoundEvents.COMPRESSOR)
                     .build();
 
@@ -590,10 +596,10 @@ public final class RecipeMaps {
                     .itemInputs(1)
                     .itemOutputs(2)
                     .fluidInputs(1)
-                    .itemSlotOverlay(GuiTextures.SAWBLADE_OVERLAY, false)
-                    .itemSlotOverlay(GuiTextures.CUTTER_OVERLAY, true, false)
-                    .itemSlotOverlay(GuiTextures.DUST_OVERLAY, true, true)
-                    .progressBar(GuiTextures.PROGRESS_BAR_SLICE)
+                    .itemSlotOverlay(GuiTextures.SAWBLADE_OVERLAY, GTGuiTextures.SAWBLADE_OVERLAY, false)
+                    .itemSlotOverlay(GuiTextures.CUTTER_OVERLAY, GTGuiTextures.CUTTER_OVERLAY, true, false)
+                    .itemSlotOverlay(GuiTextures.DUST_OVERLAY, GTGuiTextures.DUST_OVERLAY, true, true)
+                    .progressBar(GuiTextures.PROGRESS_BAR_SLICE, GTGuiTextures.PROGRESS_BAR_SLICE)
                     .sound(GTSoundEvents.CUT)
                     .onBuild(gregtechId("cutter_fluid"), recipeBuilder -> {
                         if (recipeBuilder.getFluidInputs().isEmpty()) {
@@ -682,11 +688,11 @@ public final class RecipeMaps {
                     .itemOutputs(1)
                     .fluidInputs(1)
                     .fluidOutputs(1)
-                    .itemSlotOverlay(GuiTextures.INT_CIRCUIT_OVERLAY, false, true)
-                    .itemSlotOverlay(GuiTextures.DUST_OVERLAY, true)
-                    .fluidSlotOverlay(GuiTextures.BEAKER_OVERLAY_1, false)
-                    .fluidSlotOverlay(GuiTextures.BEAKER_OVERLAY_4, true)
-                    .progressBar(GuiTextures.PROGRESS_BAR_ARROW_MULTIPLE)
+                    .itemSlotOverlay(GuiTextures.INT_CIRCUIT_OVERLAY, GTGuiTextures.INT_CIRCUIT_OVERLAY, false, true)
+                    .itemSlotOverlay(GuiTextures.DUST_OVERLAY, GTGuiTextures.DUST_OVERLAY, true)
+                    .fluidSlotOverlay(GuiTextures.BEAKER_OVERLAY_1, GTGuiTextures.BEAKER_OVERLAY_1, false)
+                    .fluidSlotOverlay(GuiTextures.BEAKER_OVERLAY_4, GTGuiTextures.BEAKER_OVERLAY_4, true)
+                    .progressBar(GuiTextures.PROGRESS_BAR_ARROW_MULTIPLE, GTGuiTextures.PROGRESS_BAR_ARROW_MULTIPLE)
                     .sound(GTSoundEvents.BOILER)
                     .build();
 
@@ -711,10 +717,10 @@ public final class RecipeMaps {
                     .itemOutputs(6)
                     .fluidInputs(1)
                     .fluidOutputs(6)
-                    .itemSlotOverlay(GuiTextures.LIGHTNING_OVERLAY_1, false, false)
-                    .itemSlotOverlay(GuiTextures.CANISTER_OVERLAY, false, true)
-                    .fluidSlotOverlay(GuiTextures.LIGHTNING_OVERLAY_2, false)
-                    .progressBar(GuiTextures.PROGRESS_BAR_EXTRACT)
+                    .itemSlotOverlay(GuiTextures.LIGHTNING_OVERLAY_1, GTGuiTextures.LIGHTNING_OVERLAY_1, false, false)
+                    .itemSlotOverlay(GuiTextures.CANISTER_OVERLAY, GTGuiTextures.CANISTER_OVERLAY, false, true)
+                    .fluidSlotOverlay(GuiTextures.LIGHTNING_OVERLAY_2, GTGuiTextures.LIGHTNING_OVERLAY_2, false)
+                    .progressBar(GuiTextures.PROGRESS_BAR_EXTRACT, GTGuiTextures.PROGRESS_BAR_EXTRACT)
                     .sound(GTSoundEvents.ELECTROLYZER)
                     .build();
 
@@ -737,9 +743,9 @@ public final class RecipeMaps {
             "electromagnetic_separator", new SimpleRecipeBuilder())
                     .itemInputs(1)
                     .itemOutputs(4)
-                    .itemSlotOverlay(GuiTextures.CRUSHED_ORE_OVERLAY, false)
-                    .itemSlotOverlay(GuiTextures.DUST_OVERLAY, true)
-                    .progressBar(GuiTextures.PROGRESS_BAR_MAGNET)
+                    .itemSlotOverlay(GuiTextures.CRUSHED_ORE_OVERLAY, GTGuiTextures.CRUSHED_ORE_OVERLAY, false)
+                    .itemSlotOverlay(GuiTextures.DUST_OVERLAY, GTGuiTextures.DUST_OVERLAY, true)
+                    .progressBar(GuiTextures.PROGRESS_BAR_MAGNET, GTGuiTextures.PROGRESS_BAR_MAGNET)
                     .sound(GTSoundEvents.ARC)
                     .build();
 
@@ -763,8 +769,8 @@ public final class RecipeMaps {
                     .itemInputs(1)
                     .itemOutputs(1)
                     .fluidOutputs(1)
-                    .itemSlotOverlay(GuiTextures.EXTRACTOR_OVERLAY, false)
-                    .progressBar(GuiTextures.PROGRESS_BAR_EXTRACT)
+                    .itemSlotOverlay(GuiTextures.EXTRACTOR_OVERLAY, GTGuiTextures.EXTRACTOR_OVERLAY, false)
+                    .progressBar(GuiTextures.PROGRESS_BAR_EXTRACT, GTGuiTextures.PROGRESS_BAR_EXTRACT)
                     .sound(GTSoundEvents.COMPRESSOR)
                     .build();
 
@@ -786,8 +792,8 @@ public final class RecipeMaps {
             new SimpleRecipeBuilder())
                     .itemInputs(2)
                     .itemOutputs(1)
-                    .itemSlotOverlay(GuiTextures.MOLD_OVERLAY, false, true)
-                    .progressBar(GuiTextures.PROGRESS_BAR_EXTRUDER)
+                    .itemSlotOverlay(GuiTextures.MOLD_OVERLAY, GTGuiTextures.MOLD_OVERLAY, false, true)
+                    .progressBar(GuiTextures.PROGRESS_BAR_EXTRUDER, GTGuiTextures.PROGRESS_BAR_EXTRUDER)
                     .sound(GTSoundEvents.ARC)
                     .build();
 
@@ -811,8 +817,8 @@ public final class RecipeMaps {
                     .itemOutputs(1)
                     .fluidInputs(1)
                     .fluidOutputs(1)
-                    .itemSlotOverlay(GuiTextures.DUST_OVERLAY, false, true)
-                    .itemSlotOverlay(GuiTextures.DUST_OVERLAY, true, true)
+                    .itemSlotOverlay(GuiTextures.DUST_OVERLAY, GTGuiTextures.DUST_OVERLAY, false, true)
+                    .itemSlotOverlay(GuiTextures.DUST_OVERLAY, GTGuiTextures.DUST_OVERLAY, true, true)
                     .sound(GTSoundEvents.CHEMICAL_REACTOR)
                     .build();
 
@@ -835,9 +841,9 @@ public final class RecipeMaps {
                     .itemInputs(1)
                     .fluidInputs(1)
                     .fluidOutputs(1)
-                    .itemSlotOverlay(GuiTextures.INT_CIRCUIT_OVERLAY, false, true)
-                    .fluidSlotOverlay(GuiTextures.HEATING_OVERLAY_1, false)
-                    .fluidSlotOverlay(GuiTextures.HEATING_OVERLAY_2, true)
+                    .itemSlotOverlay(GuiTextures.INT_CIRCUIT_OVERLAY, GTGuiTextures.INT_CIRCUIT_OVERLAY, false, true)
+                    .fluidSlotOverlay(GuiTextures.HEATING_OVERLAY_1, GTGuiTextures.HEATING_OVERLAY_1, false)
+                    .fluidSlotOverlay(GuiTextures.HEATING_OVERLAY_2, GTGuiTextures.HEATING_OVERLAY_2, true)
                     .sound(GTSoundEvents.BOILER)
                     .build();
 
@@ -860,7 +866,7 @@ public final class RecipeMaps {
                     .itemInputs(1)
                     .itemOutputs(1)
                     .fluidInputs(1)
-                    .itemSlotOverlay(GuiTextures.SOLIDIFIER_OVERLAY, false)
+                    .itemSlotOverlay(GuiTextures.SOLIDIFIER_OVERLAY, GTGuiTextures.SOLIDIFIER_OVERLAY, false)
                     .sound(GTSoundEvents.COOLING)
                     .build();
 
@@ -881,9 +887,9 @@ public final class RecipeMaps {
             new SimpleRecipeBuilder())
                     .itemInputs(1)
                     .itemOutputs(1)
-                    .itemSlotOverlay(GuiTextures.HAMMER_OVERLAY, false)
+                    .itemSlotOverlay(GuiTextures.HAMMER_OVERLAY, GTGuiTextures.HAMMER_OVERLAY, false)
                     .specialTexture(GuiTextures.PROGRESS_BAR_HAMMER_BASE, 78, 42, 20, 6)
-                    .progressBar(GuiTextures.PROGRESS_BAR_HAMMER, MoveType.VERTICAL_DOWNWARDS)
+                    .progressBar(GuiTextures.PROGRESS_BAR_HAMMER, GTGuiTextures.PROGRESS_BAR_HAMMER, MoveType.VERTICAL_DOWNWARDS)
                     .sound(GTSoundEvents.FORGE_HAMMER)
                     .build();
 
@@ -928,7 +934,8 @@ public final class RecipeMaps {
             new SimpleRecipeBuilder(), recipeMap -> {
                 RecipeMapUI<?> ui = new RecipeMapUI<>(recipeMap, true, true, true, true, false);
                 ui.setItemSlotOverlay(GuiTextures.FURNACE_OVERLAY_1, false);
-                ui.setProgressBar(GuiTextures.PROGRESS_BAR_ARROW, ProgressWidget.MoveType.HORIZONTAL);
+                ui.setItemSlotOverlayMui2(GTGuiTextures.FURNACE_OVERLAY_1, false);
+                ui.setProgressBar(GuiTextures.PROGRESS_BAR_ARROW, GTGuiTextures.PROGRESS_BAR_ARROW, ProgressWidget.MoveType.HORIZONTAL);
                 return ui;
             });
 
@@ -959,7 +966,7 @@ public final class RecipeMaps {
             new FusionRecipeBuilder())
                     .fluidInputs(2)
                     .fluidOutputs(1)
-                    .progressBar(GuiTextures.PROGRESS_BAR_FUSION)
+                    .progressBar(GuiTextures.PROGRESS_BAR_FUSION, GTGuiTextures.PROGRESS_BAR_FUSION)
                     .sound(GTSoundEvents.ARC)
                     .build();
 
@@ -968,9 +975,9 @@ public final class RecipeMaps {
             "gas_collector", new SimpleRecipeBuilder())
                     .itemInputs(1)
                     .fluidOutputs(1)
-                    .itemSlotOverlay(GuiTextures.INT_CIRCUIT_OVERLAY, false, true)
-                    .fluidSlotOverlay(GuiTextures.CENTRIFUGE_OVERLAY, true)
-                    .progressBar(GuiTextures.PROGRESS_BAR_GAS_COLLECTOR)
+                    .itemSlotOverlay(GuiTextures.INT_CIRCUIT_OVERLAY, GTGuiTextures.INT_CIRCUIT_OVERLAY, false, true)
+                    .fluidSlotOverlay(GuiTextures.CENTRIFUGE_OVERLAY, GTGuiTextures.CENTRIFUGE_OVERLAY, true)
+                    .progressBar(GuiTextures.PROGRESS_BAR_GAS_COLLECTOR, GTGuiTextures.PROGRESS_BAR_GAS_COLLECTOR)
                     .sound(GTSoundEvents.COOLING)
                     .build();
 
@@ -1014,10 +1021,10 @@ public final class RecipeMaps {
             "implosion_compressor", new ImplosionRecipeBuilder().duration(20).EUt(VA[LV]))
                     .itemInputs(3)
                     .itemOutputs(2)
-                    .itemSlotOverlay(GuiTextures.IMPLOSION_OVERLAY_1, false, true)
-                    .itemSlotOverlay(GuiTextures.IMPLOSION_OVERLAY_2, false, false)
-                    .itemSlotOverlay(GuiTextures.DUST_OVERLAY, true, true)
-                    .progressBar(GuiTextures.PROGRESS_BAR_ARROW_MULTIPLE)
+                    .itemSlotOverlay(GuiTextures.IMPLOSION_OVERLAY_1, GTGuiTextures.IMPLOSION_OVERLAY_1, false, true)
+                    .itemSlotOverlay(GuiTextures.IMPLOSION_OVERLAY_2, GTGuiTextures.IMPLOSION_OVERLAY_2, false, false)
+                    .itemSlotOverlay(GuiTextures.DUST_OVERLAY, GTGuiTextures.DUST_OVERLAY, true, true)
+                    .progressBar(GuiTextures.PROGRESS_BAR_ARROW_MULTIPLE, GTGuiTextures.PROGRESS_BAR_ARROW_MULTIPLE)
                     .sound(SoundEvents.ENTITY_GENERIC_EXPLODE)
                     .build();
 
@@ -1047,13 +1054,13 @@ public final class RecipeMaps {
                     .itemOutputs(3)
                     .fluidInputs(5)
                     .fluidOutputs(4)
-                    .itemSlotOverlay(GuiTextures.MOLECULAR_OVERLAY_1, false, false)
-                    .itemSlotOverlay(GuiTextures.MOLECULAR_OVERLAY_2, false, true)
-                    .itemSlotOverlay(GuiTextures.VIAL_OVERLAY_1, true)
-                    .fluidSlotOverlay(GuiTextures.MOLECULAR_OVERLAY_3, false, false)
-                    .fluidSlotOverlay(GuiTextures.MOLECULAR_OVERLAY_4, false, true)
-                    .fluidSlotOverlay(GuiTextures.VIAL_OVERLAY_2, true)
-                    .progressBar(GuiTextures.PROGRESS_BAR_ARROW_MULTIPLE)
+                    .itemSlotOverlay(GuiTextures.MOLECULAR_OVERLAY_1, GTGuiTextures.MOLECULAR_OVERLAY_1, false, false)
+                    .itemSlotOverlay(GuiTextures.MOLECULAR_OVERLAY_2, GTGuiTextures.MOLECULAR_OVERLAY_2, false, true)
+                    .itemSlotOverlay(GuiTextures.VIAL_OVERLAY_1, GTGuiTextures.VIAL_OVERLAY_1, true)
+                    .fluidSlotOverlay(GuiTextures.MOLECULAR_OVERLAY_3, GTGuiTextures.MOLECULAR_OVERLAY_3, false, false)
+                    .fluidSlotOverlay(GuiTextures.MOLECULAR_OVERLAY_4, GTGuiTextures.MOLECULAR_OVERLAY_4, false, true)
+                    .fluidSlotOverlay(GuiTextures.VIAL_OVERLAY_2, GTGuiTextures.VIAL_OVERLAY_2, true)
+                    .progressBar(GuiTextures.PROGRESS_BAR_ARROW_MULTIPLE, GTGuiTextures.PROGRESS_BAR_ARROW_MULTIPLE)
                     .sound(GTSoundEvents.CHEMICAL_REACTOR)
                     .build()
                     .setSmallRecipeMap(CHEMICAL_RECIPES);
@@ -1076,7 +1083,7 @@ public final class RecipeMaps {
             new SimpleRecipeBuilder())
                     .itemInputs(2)
                     .itemOutputs(1)
-                    .itemSlotOverlay(GuiTextures.LENS_OVERLAY, false, true)
+                    .itemSlotOverlay(GuiTextures.LENS_OVERLAY, GTGuiTextures.LENS_OVERLAY, false, true)
                     .sound(GTSoundEvents.ELECTROLYZER)
                     .build();
 
@@ -1097,11 +1104,11 @@ public final class RecipeMaps {
             new SimpleRecipeBuilder())
                     .itemInputs(1)
                     .itemOutputs(2)
-                    .itemSlotOverlay(GuiTextures.PIPE_OVERLAY_1, false)
-                    .itemSlotOverlay(GuiTextures.PIPE_OVERLAY_2, true, false)
-                    .itemSlotOverlay(GuiTextures.DUST_OVERLAY, true, true)
+                    .itemSlotOverlay(GuiTextures.PIPE_OVERLAY_1, GTGuiTextures.PIPE_OVERLAY_1, false)
+                    .itemSlotOverlay(GuiTextures.PIPE_OVERLAY_2, GTGuiTextures.PIPE_OVERLAY_2, true, false)
+                    .itemSlotOverlay(GuiTextures.DUST_OVERLAY, GTGuiTextures.DUST_OVERLAY, true, true)
                     .specialTexture(GuiTextures.PROGRESS_BAR_LATHE_BASE, 98, 24, 5, 18)
-                    .progressBar(GuiTextures.PROGRESS_BAR_LATHE)
+                    .progressBar(GuiTextures.PROGRESS_BAR_LATHE, GTGuiTextures.PROGRESS_BAR_LATHE)
                     .sound(GTSoundEvents.CUT)
                     .build();
 
@@ -1124,9 +1131,9 @@ public final class RecipeMaps {
             new SimpleRecipeBuilder().duration(150).EUt(2))
                     .itemInputs(1)
                     .itemOutputs(4)
-                    .itemSlotOverlay(GuiTextures.CRUSHED_ORE_OVERLAY, false)
-                    .itemSlotOverlay(GuiTextures.DUST_OVERLAY, true)
-                    .progressBar(GuiTextures.PROGRESS_BAR_MACERATE)
+                    .itemSlotOverlay(GuiTextures.CRUSHED_ORE_OVERLAY, GTGuiTextures.CRUSHED_ORE_OVERLAY, false)
+                    .itemSlotOverlay(GuiTextures.DUST_OVERLAY, GTGuiTextures.DUST_OVERLAY, true)
+                    .progressBar(GuiTextures.PROGRESS_BAR_MACERATE, GTGuiTextures.PROGRESS_BAR_MACERATE)
                     .sound(GTSoundEvents.MACERATOR)
                     .build();
 
@@ -1140,11 +1147,11 @@ public final class RecipeMaps {
                     .itemInputs(1)
                     .fluidInputs(1)
                     .fluidOutputs(2)
-                    .itemSlotOverlay(GuiTextures.ATOMIC_OVERLAY_1, false)
-                    .fluidSlotOverlay(GuiTextures.ATOMIC_OVERLAY_2, false)
-                    .fluidSlotOverlay(GuiTextures.POSITIVE_MATTER_OVERLAY, true)
-                    .fluidSlotOverlay(GuiTextures.NEUTRAL_MATTER_OVERLAY, true, true)
-                    .progressBar(GuiTextures.PROGRESS_BAR_MASS_FAB)
+                    .itemSlotOverlay(GuiTextures.ATOMIC_OVERLAY_1, GTGuiTextures.ATOMIC_OVERLAY_1, false)
+                    .fluidSlotOverlay(GuiTextures.ATOMIC_OVERLAY_2, GTGuiTextures.ATOMIC_OVERLAY_2, false)
+                    .fluidSlotOverlay(GuiTextures.POSITIVE_MATTER_OVERLAY, GTGuiTextures.POSITIVE_MATTER_OVERLAY, true)
+                    .fluidSlotOverlay(GuiTextures.NEUTRAL_MATTER_OVERLAY, GTGuiTextures.NEUTRAL_MATTER_OVERLAY, true, true)
+                    .progressBar(GuiTextures.PROGRESS_BAR_MASS_FAB, GTGuiTextures.PROGRESS_BAR_MASS_FAB)
                     .sound(GTSoundEvents.REPLICATOR)
                     .build();
 
@@ -1168,9 +1175,9 @@ public final class RecipeMaps {
                     .itemOutputs(1)
                     .fluidInputs(2)
                     .fluidOutputs(1)
-                    .itemSlotOverlay(GuiTextures.DUST_OVERLAY, false)
-                    .itemSlotOverlay(GuiTextures.DUST_OVERLAY, true)
-                    .progressBar(GuiTextures.PROGRESS_BAR_MIXER, MoveType.CIRCULAR)
+                    .itemSlotOverlay(GuiTextures.DUST_OVERLAY, GTGuiTextures.DUST_OVERLAY, false)
+                    .itemSlotOverlay(GuiTextures.DUST_OVERLAY, GTGuiTextures.DUST_OVERLAY, true)
+                    .progressBar(GuiTextures.PROGRESS_BAR_MIXER, GTGuiTextures.PROGRESS_BAR_MIXER, MoveType.CIRCULAR)
                     .sound(GTSoundEvents.MIXER)
                     .build();
 
@@ -1195,9 +1202,9 @@ public final class RecipeMaps {
                     .itemInputs(2)
                     .itemOutputs(3)
                     .fluidInputs(1)
-                    .itemSlotOverlay(GuiTextures.CRUSHED_ORE_OVERLAY, false)
-                    .itemSlotOverlay(GuiTextures.DUST_OVERLAY, true)
-                    .progressBar(GuiTextures.PROGRESS_BAR_BATH, MoveType.CIRCULAR)
+                    .itemSlotOverlay(GuiTextures.CRUSHED_ORE_OVERLAY, GTGuiTextures.CRUSHED_ORE_OVERLAY, false)
+                    .itemSlotOverlay(GuiTextures.DUST_OVERLAY, GTGuiTextures.DUST_OVERLAY, true)
+                    .progressBar(GuiTextures.PROGRESS_BAR_BATH, GTGuiTextures.PROGRESS_BAR_BATH, MoveType.CIRCULAR)
                     .sound(GTSoundEvents.BATH)
                     .build();
 
@@ -1221,9 +1228,9 @@ public final class RecipeMaps {
             new SimpleRecipeBuilder().EUt(12).duration(10))
                     .itemInputs(2)
                     .itemOutputs(2)
-                    .itemSlotOverlay(GuiTextures.BOX_OVERLAY, false, true)
-                    .itemSlotOverlay(GuiTextures.BOXED_OVERLAY, true)
-                    .progressBar(GuiTextures.PROGRESS_BAR_UNPACKER)
+                    .itemSlotOverlay(GuiTextures.BOX_OVERLAY, GTGuiTextures.BOX_OVERLAY, false, true)
+                    .itemSlotOverlay(GuiTextures.BOXED_OVERLAY, GTGuiTextures.BOXED_OVERLAY, true)
+                    .progressBar(GuiTextures.PROGRESS_BAR_UNPACKER, GTGuiTextures.PROGRESS_BAR_UNPACKER)
                     .sound(GTSoundEvents.ASSEMBLER)
                     .build();
 
@@ -1244,7 +1251,7 @@ public final class RecipeMaps {
             new SimpleRecipeBuilder())
                     .itemInputs(1)
                     .itemOutputs(1)
-                    .progressBar(GuiTextures.PROGRESS_BAR_MAGNET)
+                    .progressBar(GuiTextures.PROGRESS_BAR_MAGNET, GTGuiTextures.PROGRESS_BAR_MAGNET)
                     .sound(GTSoundEvents.ARC)
                     .build();
 
@@ -1312,12 +1319,12 @@ public final class RecipeMaps {
                     .itemOutputs(1)
                     .fluidInputs(2)
                     .fluidOutputs(1)
-                    .itemSlotOverlay(GuiTextures.DATA_ORB_OVERLAY, false)
-                    .itemSlotOverlay(GuiTextures.ATOMIC_OVERLAY_1, true)
-                    .fluidSlotOverlay(GuiTextures.NEUTRAL_MATTER_OVERLAY, false)
-                    .fluidSlotOverlay(GuiTextures.POSITIVE_MATTER_OVERLAY, false, true)
-                    .fluidSlotOverlay(GuiTextures.ATOMIC_OVERLAY_2, true)
-                    .progressBar(GuiTextures.PROGRESS_BAR_REPLICATOR)
+                    .itemSlotOverlay(GuiTextures.DATA_ORB_OVERLAY, GTGuiTextures.DATA_ORB_OVERLAY, false)
+                    .itemSlotOverlay(GuiTextures.ATOMIC_OVERLAY_1, GTGuiTextures.ATOMIC_OVERLAY_1, true)
+                    .fluidSlotOverlay(GuiTextures.NEUTRAL_MATTER_OVERLAY, GTGuiTextures.NEUTRAL_MATTER_OVERLAY, false)
+                    .fluidSlotOverlay(GuiTextures.POSITIVE_MATTER_OVERLAY, GTGuiTextures.POSITIVE_MATTER_OVERLAY, false, true)
+                    .fluidSlotOverlay(GuiTextures.ATOMIC_OVERLAY_2, GTGuiTextures.ATOMIC_OVERLAY_2, true)
+                    .progressBar(GuiTextures.PROGRESS_BAR_REPLICATOR, GTGuiTextures.PROGRESS_BAR_REPLICATOR)
                     .sound(GTSoundEvents.REPLICATOR)
                     .build();
 
@@ -1330,9 +1337,9 @@ public final class RecipeMaps {
             new SimpleRecipeBuilder())
                     .itemInputs(1)
                     .itemOutputs(4)
-                    .itemSlotOverlay(GuiTextures.DUST_OVERLAY, false)
-                    .itemSlotOverlay(GuiTextures.CRUSHED_ORE_OVERLAY, true)
-                    .progressBar(GuiTextures.PROGRESS_BAR_MACERATE)
+                    .itemSlotOverlay(GuiTextures.DUST_OVERLAY, GTGuiTextures.DUST_OVERLAY, false)
+                    .itemSlotOverlay(GuiTextures.CRUSHED_ORE_OVERLAY, GTGuiTextures.CRUSHED_ORE_OVERLAY, true)
+                    .progressBar(GuiTextures.PROGRESS_BAR_MACERATE, GTGuiTextures.PROGRESS_BAR_MACERATE)
                     .sound(GTSoundEvents.FIRE)
                     .build();
 
@@ -1355,7 +1362,9 @@ public final class RecipeMaps {
                 RecipeMapUI<?> ui = new RecipeMapUI<>(recipeMap, true, true, true, true, false);
                 ui.setItemSlotOverlay(GuiTextures.DATA_ORB_OVERLAY, false, false);
                 ui.setItemSlotOverlay(GuiTextures.SCANNER_OVERLAY, false, true);
-                ui.setProgressBar(GuiTextures.PROGRESS_BAR_ARROW, ProgressWidget.MoveType.HORIZONTAL);
+                ui.setItemSlotOverlayMui2(GTGuiTextures.DATA_ORB_OVERLAY, false, false);
+                ui.setItemSlotOverlayMui2(GTGuiTextures.SCANNER_OVERLAY, false, true);
+                ui.setProgressBar(GuiTextures.PROGRESS_BAR_ARROW, GTGuiTextures.PROGRESS_BAR_ARROW, ProgressWidget.MoveType.HORIZONTAL);
                 return ui;
             });
 
@@ -1380,7 +1389,7 @@ public final class RecipeMaps {
             new SimpleRecipeBuilder())
                     .itemInputs(1)
                     .itemOutputs(6)
-                    .progressBar(GuiTextures.PROGRESS_BAR_SIFT, MoveType.VERTICAL_DOWNWARDS)
+                    .progressBar(GuiTextures.PROGRESS_BAR_SIFT, GTGuiTextures.PROGRESS_BAR_SIFT, MoveType.VERTICAL_DOWNWARDS)
                     .sound(SoundEvents.BLOCK_SAND_PLACE)
                     .build();
 
@@ -1406,9 +1415,9 @@ public final class RecipeMaps {
             "thermal_centrifuge", new SimpleRecipeBuilder().duration(400).EUt(30))
                     .itemInputs(1)
                     .itemOutputs(3)
-                    .itemSlotOverlay(GuiTextures.CRUSHED_ORE_OVERLAY, false)
-                    .itemSlotOverlay(GuiTextures.DUST_OVERLAY, true)
-                    .progressBar(GuiTextures.PROGRESS_BAR_MACERATE)
+                    .itemSlotOverlay(GuiTextures.CRUSHED_ORE_OVERLAY, GTGuiTextures.CRUSHED_ORE_OVERLAY, false)
+                    .itemSlotOverlay(GuiTextures.DUST_OVERLAY, GTGuiTextures.DUST_OVERLAY, true)
+                    .progressBar(GuiTextures.PROGRESS_BAR_MACERATE, GTGuiTextures.PROGRESS_BAR_MACERATE)
                     .sound(GTSoundEvents.CENTRIFUGE)
                     .build();
 
@@ -1452,9 +1461,9 @@ public final class RecipeMaps {
             new SimpleRecipeBuilder())
                     .itemInputs(2)
                     .itemOutputs(1)
-                    .itemSlotOverlay(GuiTextures.WIREMILL_OVERLAY, false)
-                    .itemSlotOverlay(GuiTextures.INT_CIRCUIT_OVERLAY, false, true)
-                    .progressBar(GuiTextures.PROGRESS_BAR_WIREMILL)
+                    .itemSlotOverlay(GuiTextures.WIREMILL_OVERLAY, GTGuiTextures.WIREMILL_OVERLAY, false)
+                    .itemSlotOverlay(GuiTextures.INT_CIRCUIT_OVERLAY, GTGuiTextures.INT_CIRCUIT_OVERLAY, false, true)
+                    .progressBar(GuiTextures.PROGRESS_BAR_WIREMILL, GTGuiTextures.PROGRESS_BAR_WIREMILL)
                     .sound(GTSoundEvents.MOTOR)
                     .build();
 
@@ -1466,8 +1475,8 @@ public final class RecipeMaps {
     public static final RecipeMap<FuelRecipeBuilder> COMBUSTION_GENERATOR_FUELS = new RecipeMapBuilder<>(
             "combustion_generator", new FuelRecipeBuilder())
                     .fluidInputs(1)
-                    .fluidSlotOverlay(GuiTextures.FURNACE_OVERLAY_2, false)
-                    .progressBar(GuiTextures.PROGRESS_BAR_ARROW_MULTIPLE)
+                    .fluidSlotOverlay(GuiTextures.FURNACE_OVERLAY_2, GTGuiTextures.FURNACE_OVERLAY_2, false)
+                    .progressBar(GuiTextures.PROGRESS_BAR_ARROW_MULTIPLE, GTGuiTextures.PROGRESS_BAR_ARROW_MULTIPLE)
                     .sound(GTSoundEvents.COMBUSTION)
                     .allowEmptyOutputs()
                     .generator()
@@ -1477,8 +1486,8 @@ public final class RecipeMaps {
     public static final RecipeMap<FuelRecipeBuilder> GAS_TURBINE_FUELS = new RecipeMapBuilder<>("gas_turbine",
             new FuelRecipeBuilder())
                     .fluidInputs(1)
-                    .fluidSlotOverlay(GuiTextures.DARK_CANISTER_OVERLAY, false)
-                    .progressBar(GuiTextures.PROGRESS_BAR_GAS_COLLECTOR)
+                    .fluidSlotOverlay(GuiTextures.DARK_CANISTER_OVERLAY, GTGuiTextures.DARK_CANISTER_OVERLAY, false)
+                    .progressBar(GuiTextures.PROGRESS_BAR_GAS_COLLECTOR, GTGuiTextures.PROGRESS_BAR_GAS_COLLECTOR)
                     .sound(GTSoundEvents.TURBINE)
                     .allowEmptyOutputs()
                     .generator()
@@ -1489,8 +1498,8 @@ public final class RecipeMaps {
             new FuelRecipeBuilder())
                     .fluidInputs(1)
                     .fluidOutputs(1)
-                    .fluidSlotOverlay(GuiTextures.CENTRIFUGE_OVERLAY, false)
-                    .progressBar(GuiTextures.PROGRESS_BAR_GAS_COLLECTOR)
+                    .fluidSlotOverlay(GuiTextures.CENTRIFUGE_OVERLAY, GTGuiTextures.CENTRIFUGE_OVERLAY, false)
+                    .progressBar(GuiTextures.PROGRESS_BAR_GAS_COLLECTOR, GTGuiTextures.PROGRESS_BAR_GAS_COLLECTOR)
                     .sound(GTSoundEvents.TURBINE)
                     .allowEmptyOutputs()
                     .generator()
@@ -1500,8 +1509,8 @@ public final class RecipeMaps {
     public static final RecipeMap<FuelRecipeBuilder> SEMI_FLUID_GENERATOR_FUELS = new RecipeMapBuilder<>(
             "semi_fluid_generator", new FuelRecipeBuilder())
                     .fluidInputs(1)
-                    .fluidSlotOverlay(GuiTextures.FURNACE_OVERLAY_2, false)
-                    .progressBar(GuiTextures.PROGRESS_BAR_ARROW_MULTIPLE)
+                    .fluidSlotOverlay(GuiTextures.FURNACE_OVERLAY_2, GTGuiTextures.FURNACE_OVERLAY_2, false)
+                    .progressBar(GuiTextures.PROGRESS_BAR_ARROW_MULTIPLE, GTGuiTextures.PROGRESS_BAR_ARROW_MULTIPLE)
                     .sound(GTSoundEvents.COMBUSTION)
                     .allowEmptyOutputs()
                     .generator()
@@ -1512,8 +1521,8 @@ public final class RecipeMaps {
             new FuelRecipeBuilder())
                     .fluidInputs(1)
                     .fluidOutputs(1)
-                    .fluidSlotOverlay(GuiTextures.CENTRIFUGE_OVERLAY, false)
-                    .progressBar(GuiTextures.PROGRESS_BAR_GAS_COLLECTOR)
+                    .fluidSlotOverlay(GuiTextures.CENTRIFUGE_OVERLAY, GTGuiTextures.CENTRIFUGE_OVERLAY, false)
+                    .progressBar(GuiTextures.PROGRESS_BAR_GAS_COLLECTOR, GTGuiTextures.PROGRESS_BAR_GAS_COLLECTOR)
                     .sound(GTSoundEvents.TURBINE)
                     .allowEmptyOutputs()
                     .generator()

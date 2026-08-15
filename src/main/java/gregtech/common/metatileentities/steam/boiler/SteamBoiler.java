@@ -14,6 +14,9 @@ import gregtech.api.gui.widgets.TankWidget;
 import gregtech.api.items.itemhandlers.GTItemStackHandler;
 import gregtech.api.metatileentity.IDataInfoProvider;
 import gregtech.api.metatileentity.MetaTileEntity;
+import gregtech.api.mui.GTGuiTextures;
+import gregtech.api.mui.GTGuiTheme;
+import gregtech.api.mui.GTGuis;
 import gregtech.api.unification.material.Materials;
 import gregtech.api.util.GTTransferUtils;
 import gregtech.api.util.GTUtility;
@@ -23,6 +26,7 @@ import gregtech.client.renderer.ICubeRenderer;
 import gregtech.client.renderer.texture.Textures;
 import gregtech.client.renderer.texture.cube.SimpleSidedCubeRenderer;
 import gregtech.common.ConfigHolder;
+import gregtech.common.mui.widget.GTFluidSlot;
 import gregtech.core.sound.GTSoundEvents;
 
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -39,6 +43,7 @@ import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.fluids.FluidTank;
+import net.minecraftforge.fluids.FluidUtil;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.items.ItemStackHandler;
@@ -47,6 +52,16 @@ import codechicken.lib.render.CCRenderState;
 import codechicken.lib.render.pipeline.ColourMultiplier;
 import codechicken.lib.render.pipeline.IVertexOperation;
 import codechicken.lib.vec.Matrix4;
+import com.cleanroommc.modularui.api.drawable.IKey;
+import com.cleanroommc.modularui.drawable.UITexture;
+import com.cleanroommc.modularui.factory.PosGuiData;
+import com.cleanroommc.modularui.screen.ModularPanel;
+import com.cleanroommc.modularui.screen.UISettings;
+import com.cleanroommc.modularui.value.sync.DoubleSyncValue;
+import com.cleanroommc.modularui.value.sync.PanelSyncManager;
+import com.cleanroommc.modularui.widgets.SlotGroupWidget;
+import com.cleanroommc.modularui.widgets.slot.ItemSlot;
+import com.cleanroommc.modularui.widgets.slot.ModularSlot;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
@@ -353,6 +368,68 @@ public abstract class SteamBoiler extends MetaTileEntity implements IDataInfoPro
                 .image(43, 44, 18, 18, GuiTextures.CANISTER_OVERLAY_STEAM.get(isHighPressure))
 
                 .bindPlayerInventory(player.inventory, GuiTextures.SLOT_STEAM.get(isHighPressure), 0);
+    }
+
+    @Override
+    public boolean usesMui2() {
+        return true;
+    }
+
+    @Override
+    public GTGuiTheme getUITheme() {
+        return isHighPressure ? GTGuiTheme.STEEL : GTGuiTheme.BRONZE;
+    }
+
+    @Override
+    public ModularPanel buildUI(PosGuiData guiData, PanelSyncManager panelSyncManager, UISettings settings) {
+        return buildUITemplate(guiData, panelSyncManager);
+    }
+
+    /**
+     * MUI2 equivalent of {@link #createUITemplate}, without machine control widgets. Subclasses can add
+     * additional widgets to the returned panel.
+     */
+    protected ModularPanel buildUITemplate(PosGuiData guiData, PanelSyncManager panelSyncManager) {
+        UITexture emptyBar = isHighPressure ? GTGuiTextures.PROGRESS_BAR_BOILER_EMPTY_STEEL :
+                GTGuiTextures.PROGRESS_BAR_BOILER_EMPTY_BRONZE;
+        UITexture inSlotOverlay = isHighPressure ? GTGuiTextures.IN_SLOT_OVERLAY_STEEL :
+                GTGuiTextures.IN_SLOT_OVERLAY_BRONZE;
+        UITexture outSlotOverlay = isHighPressure ? GTGuiTextures.OUT_SLOT_OVERLAY_STEEL :
+                GTGuiTextures.OUT_SLOT_OVERLAY_BRONZE;
+        UITexture canisterOverlay = isHighPressure ? GTGuiTextures.CANISTER_OVERLAY_STEEL :
+                GTGuiTextures.CANISTER_OVERLAY_BRONZE;
+        UITexture slotBase = isHighPressure ? GTGuiTextures.SLOT_STEEL : GTGuiTextures.SLOT_BRONZE;
+
+        return GTGuis.createPanel(this, 176, 166)
+                .child(IKey.lang(getMetaFullName()).asWidget().pos(6, 6))
+                .child(new com.cleanroommc.modularui.widgets.ProgressWidget()
+                        .pos(96, 26)
+                        .size(10, 54)
+                        .value(new DoubleSyncValue(this::getTemperaturePercent))
+                        .texture(emptyBar, GTGuiTextures.PROGRESS_BAR_BOILER_HEAT, 54)
+                        .direction(com.cleanroommc.modularui.widgets.ProgressWidget.Direction.UP))
+                .child(new GTFluidSlot()
+                        .pos(83, 26)
+                        .size(10, 54)
+                        .background(emptyBar)
+                        .syncHandler(GTFluidSlot.sync(waterFluidTank).drawAlwaysFull(true)))
+                .child(new GTFluidSlot()
+                        .pos(70, 26)
+                        .size(10, 54)
+                        .background(emptyBar)
+                        .syncHandler(GTFluidSlot.sync(steamFluidTank).drawAlwaysFull(true)))
+                .child(new ItemSlot()
+                        .pos(43, 26)
+                        .background(slotBase, inSlotOverlay)
+                        .slot(new ModularSlot(containerInventory, 0)
+                                .filter(stack -> FluidUtil.getFluidHandler(stack) != null)
+                                .accessibility(true, true)))
+                .child(new ItemSlot()
+                        .pos(43, 62)
+                        .background(slotBase, outSlotOverlay)
+                        .slot(new ModularSlot(containerInventory, 1).accessibility(false, true)))
+                .child(canisterOverlay.asWidget().pos(43, 44).size(18, 18))
+                .child(SlotGroupWidget.playerInventory(false).left(7).bottom(7));
     }
 
     @Override
