@@ -4,13 +4,7 @@ import gregtech.api.GTValues;
 import gregtech.api.capability.impl.CommonFluidFilters;
 import gregtech.api.capability.impl.FilteredFluidHandler;
 import gregtech.api.capability.impl.FluidTankList;
-import gregtech.api.gui.GuiTextures;
-import gregtech.api.gui.ModularUI;
 import gregtech.api.gui.resources.TextureArea;
-import gregtech.api.gui.widgets.FluidContainerSlotWidget;
-import gregtech.api.gui.widgets.ProgressWidget;
-import gregtech.api.gui.widgets.ProgressWidget.MoveType;
-import gregtech.api.gui.widgets.TankWidget;
 import gregtech.api.items.itemhandlers.GTItemStackHandler;
 import gregtech.api.metatileentity.IDataInfoProvider;
 import gregtech.api.metatileentity.MetaTileEntity;
@@ -31,7 +25,6 @@ import gregtech.core.sound.GTSoundEvents;
 
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.I18n;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -59,6 +52,7 @@ import com.cleanroommc.modularui.screen.ModularPanel;
 import com.cleanroommc.modularui.screen.UISettings;
 import com.cleanroommc.modularui.value.sync.DoubleSyncValue;
 import com.cleanroommc.modularui.value.sync.PanelSyncManager;
+import com.cleanroommc.modularui.widgets.ProgressWidget;
 import com.cleanroommc.modularui.widgets.SlotGroupWidget;
 import com.cleanroommc.modularui.widgets.slot.ItemSlot;
 import com.cleanroommc.modularui.widgets.slot.ModularSlot;
@@ -208,19 +202,25 @@ public abstract class SteamBoiler extends MetaTileEntity implements IDataInfoPro
                 pushFluidsIntoNearbyHandlers(STEAM_PUSH_DIRECTIONS);
             }
 
-            if (fuelMaxBurnTime <= 0) {
-                tryConsumeNewFuel();
-                if (fuelBurnTimeLeft > 0) {
-                    if (wasBurningAndNeedsUpdate) {
-                        this.wasBurningAndNeedsUpdate = false;
-                    } else setBurning(true);
+            updateBurningState();
+        }
+    }
+
+    private void updateBurningState() {
+        if (fuelMaxBurnTime <= 0) {
+            tryConsumeNewFuel();
+            if (fuelBurnTimeLeft > 0) {
+                if (wasBurningAndNeedsUpdate) {
+                    this.wasBurningAndNeedsUpdate = false;
+                } else {
+                    setBurning(true);
                 }
             }
+        }
 
-            if (wasBurningAndNeedsUpdate) {
-                this.wasBurningAndNeedsUpdate = false;
-                setBurning(false);
-            }
+        if (wasBurningAndNeedsUpdate) {
+            this.wasBurningAndNeedsUpdate = false;
+            setBurning(false);
         }
     }
 
@@ -228,8 +228,9 @@ public abstract class SteamBoiler extends MetaTileEntity implements IDataInfoPro
         if (fuelMaxBurnTime > 0) {
             if (getOffsetTimer() % 12 == 0) {
                 if (fuelBurnTimeLeft % 2 == 0 && currentTemperature < getMaxTemperate())
-                    currentTemperature++;
-                fuelBurnTimeLeft -= isHighPressure ? 2 : 1;
+                    this.currentTemperature++;
+                this.fuelBurnTimeLeft -= isHighPressure ? 2 : 1;
+
                 if (fuelBurnTimeLeft <= 0) {
                     this.fuelMaxBurnTime = 0;
                     this.timeBeforeCoolingDown = getCooldownInterval();
@@ -239,10 +240,12 @@ public abstract class SteamBoiler extends MetaTileEntity implements IDataInfoPro
             }
         } else if (timeBeforeCoolingDown == 0) {
             if (currentTemperature > 0) {
-                currentTemperature -= getCoolDownRate();
-                timeBeforeCoolingDown = getCooldownInterval();
+                this.currentTemperature -= getCoolDownRate();
+                this.timeBeforeCoolingDown = getCooldownInterval();
             }
-        } else--timeBeforeCoolingDown;
+        } else {
+            --this.timeBeforeCoolingDown;
+        }
     }
 
     protected abstract int getBaseSteamOutput();
@@ -258,40 +261,49 @@ public abstract class SteamBoiler extends MetaTileEntity implements IDataInfoPro
     }
 
     private void generateSteam() {
-        if (currentTemperature >= 100) {
-            int fillAmount = getTotalSteamOutput();
-            boolean hasDrainedWater = waterFluidTank.drain(1, true) != null;
-            int filledSteam = 0;
-            if (hasDrainedWater) {
-                filledSteam = steamFluidTank.fill(Materials.Steam.getFluid(fillAmount), true);
-            }
-            if (this.hasNoWater && hasDrainedWater) {
-                doExplosion(2.0f);
-            } else this.hasNoWater = !hasDrainedWater;
-            if (filledSteam == 0 && hasDrainedWater) {
-                final float x = getPos().getX() + 0.5F;
-                final float y = getPos().getY() + 0.5F;
-                final float z = getPos().getZ() + 0.5F;
-
-                ((WorldServer) getWorld()).spawnParticle(EnumParticleTypes.CLOUD,
-                        x + getFrontFacing().getXOffset() * 0.6,
-                        y + getFrontFacing().getYOffset() * 0.6,
-                        z + getFrontFacing().getZOffset() * 0.6,
-                        7 + GTValues.RNG.nextInt(3),
-                        getFrontFacing().getXOffset() / 2.0,
-                        getFrontFacing().getYOffset() / 2.0,
-                        getFrontFacing().getZOffset() / 2.0, 0.1);
-
-                if (ConfigHolder.machines.machineSounds && !this.isMuffled()) {
-                    getWorld().playSound(null, x, y, z, SoundEvents.BLOCK_LAVA_EXTINGUISH, SoundCategory.BLOCKS, 1.0f,
-                            1.0f);
-                }
-
-                steamFluidTank.drain(4000, true);
-            }
-        } else {
+        if (currentTemperature < 100) {
             this.hasNoWater = waterFluidTank.getFluidAmount() == 0;
+            return;
         }
+
+        int fillAmount = getTotalSteamOutput();
+        boolean hasDrainedWater = waterFluidTank.drain(1, true) != null;
+        int filledSteam = 0;
+        if (hasDrainedWater) {
+            filledSteam = steamFluidTank.fill(Materials.Steam.getFluid(fillAmount), true);
+        }
+
+        if (this.hasNoWater && hasDrainedWater) {
+            doExplosion(2.0f);
+        } else {
+            this.hasNoWater = !hasDrainedWater;
+        }
+
+        if (filledSteam == 0 && hasDrainedWater) {
+            ventExcessSteam();
+        }
+    }
+
+    /** Vents the boiler's steam tank when it is full, releasing particles and playing a hiss sound. */
+    private void ventExcessSteam() {
+        final float x = getPos().getX() + 0.5F;
+        final float y = getPos().getY() + 0.5F;
+        final float z = getPos().getZ() + 0.5F;
+
+        ((WorldServer) getWorld()).spawnParticle(EnumParticleTypes.CLOUD,
+                x + getFrontFacing().getXOffset() * 0.6,
+                y + getFrontFacing().getYOffset() * 0.6,
+                z + getFrontFacing().getZOffset() * 0.6,
+                7 + GTValues.RNG.nextInt(3),
+                getFrontFacing().getXOffset() / 2.0,
+                getFrontFacing().getYOffset() / 2.0,
+                getFrontFacing().getZOffset() / 2.0, 0.1);
+
+        if (ConfigHolder.machines.machineSounds && !this.isMuffled()) {
+            getWorld().playSound(null, x, y, z, SoundEvents.BLOCK_LAVA_EXTINGUISH, SoundCategory.BLOCKS, 1.0f, 1.0f);
+        }
+
+        steamFluidTank.drain(4000, true);
     }
 
     public boolean isBurning() {
@@ -346,30 +358,6 @@ public abstract class SteamBoiler extends MetaTileEntity implements IDataInfoPro
                 type, STRING_SUBSTITUTION_PATTERN.matcher(pathTemplate).replaceAll(Matcher.quoteReplacement(type))));
     }
 
-    public ModularUI.Builder createUITemplate(EntityPlayer player) {
-        return ModularUI.builder(GuiTextures.BACKGROUND_STEAM.get(isHighPressure), 176, 166)
-                .label(6, 6, getMetaFullName()).shouldColor(false)
-                .widget(new ProgressWidget(this::getTemperaturePercent, 96, 26, 10, 54)
-                        .setProgressBar(GuiTextures.PROGRESS_BAR_BOILER_EMPTY.get(isHighPressure),
-                                GuiTextures.PROGRESS_BAR_BOILER_HEAT,
-                                MoveType.VERTICAL))
-
-                .widget(new TankWidget(waterFluidTank, 83, 26, 10, 54)
-                        .setBackgroundTexture(GuiTextures.PROGRESS_BAR_BOILER_EMPTY.get(isHighPressure)))
-                .widget(new TankWidget(steamFluidTank, 70, 26, 10, 54)
-                        .setBackgroundTexture(GuiTextures.PROGRESS_BAR_BOILER_EMPTY.get(isHighPressure)))
-
-                .widget(new FluidContainerSlotWidget(containerInventory, 0, 43, 26, true)
-                        .setBackgroundTexture(GuiTextures.SLOT_STEAM.get(isHighPressure),
-                                GuiTextures.IN_SLOT_OVERLAY_STEAM.get(isHighPressure)))
-                .slot(containerInventory, 1, 43, 62, true, false,
-                        GuiTextures.SLOT_STEAM.get(isHighPressure),
-                        GuiTextures.OUT_SLOT_OVERLAY_STEAM.get(isHighPressure))
-                .image(43, 44, 18, 18, GuiTextures.CANISTER_OVERLAY_STEAM.get(isHighPressure))
-
-                .bindPlayerInventory(player.inventory, GuiTextures.SLOT_STEAM.get(isHighPressure), 0);
-    }
-
     @Override
     public boolean usesMui2() {
         return true;
@@ -385,10 +373,6 @@ public abstract class SteamBoiler extends MetaTileEntity implements IDataInfoPro
         return buildUITemplate(guiData, panelSyncManager);
     }
 
-    /**
-     * MUI2 equivalent of {@link #createUITemplate}, without machine control widgets. Subclasses can add
-     * additional widgets to the returned panel.
-     */
     protected ModularPanel buildUITemplate(PosGuiData guiData, PanelSyncManager panelSyncManager) {
         UITexture emptyBar = isHighPressure ? GTGuiTextures.PROGRESS_BAR_BOILER_EMPTY_STEEL :
                 GTGuiTextures.PROGRESS_BAR_BOILER_EMPTY_BRONZE;
@@ -402,12 +386,12 @@ public abstract class SteamBoiler extends MetaTileEntity implements IDataInfoPro
 
         return GTGuis.createPanel(this, 176, 166)
                 .child(IKey.lang(getMetaFullName()).asWidget().pos(6, 6))
-                .child(new com.cleanroommc.modularui.widgets.ProgressWidget()
+                .child(new ProgressWidget()
                         .pos(96, 26)
                         .size(10, 54)
                         .value(new DoubleSyncValue(this::getTemperaturePercent))
                         .texture(emptyBar, GTGuiTextures.PROGRESS_BAR_BOILER_HEAT, 54)
-                        .direction(com.cleanroommc.modularui.widgets.ProgressWidget.Direction.UP))
+                        .direction(ProgressWidget.Direction.UP))
                 .child(new GTFluidSlot()
                         .pos(83, 26)
                         .size(10, 54)
