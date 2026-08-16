@@ -68,10 +68,8 @@ public class GTGuiTextures {
             "textures/gui/icon/gregtech_logo_blinking_red.png", 17, 34, 36);
 
     public static final UITexture INDICATOR_NO_ENERGY = fullImage("textures/gui/base/indicator_no_energy.png");
-    public static final UITexture INDICATOR_NO_STEAM_BRONZE = fullImage(
-            "textures/gui/base/indicator_no_steam_bronze.png");
-    public static final UITexture INDICATOR_NO_STEAM_STEEL = fullImage(
-            "textures/gui/base/indicator_no_steam_steel.png");
+    public static final SteamTexture INDICATOR_NO_STEAM = SteamTexture
+            .fullImage("textures/gui/base/indicator_no_steam_%s.png");
     public static final UITexture TANK_ICON = fullImage("textures/gui/base/tank_icon.png");
 
     // BACKGROUNDS
@@ -93,19 +91,19 @@ public class GTGuiTextures {
 
     // todo BORDERED/BOXED backgrounds will not be ported, if possible
 
-    public static final UITexture BACKGROUND_BRONZE = UITexture.builder()
-            .location(GTValues.MODID, "textures/gui/base/background_bronze.png")
-            .imageSize(176, 166)
-            .adaptable(3)
-            .name(IDs.BRONZE_BACKGROUND)
-            .build();
-
-    public static final UITexture BACKGROUND_STEEL = UITexture.builder()
-            .location(GTValues.MODID, "textures/gui/base/background_steel.png")
-            .imageSize(176, 166)
-            .adaptable(3)
-            .name(IDs.STEEL_BACKGROUND)
-            .build();
+    public static final SteamTexture BACKGROUND_STEAM = SteamTexture.of(
+            UITexture.builder()
+                    .location(GTValues.MODID, "textures/gui/base/background_bronze.png")
+                    .imageSize(176, 166)
+                    .adaptable(3)
+                    .name(IDs.BRONZE_BACKGROUND)
+                    .build(),
+            UITexture.builder()
+                    .location(GTValues.MODID, "textures/gui/base/background_steel.png")
+                    .imageSize(176, 166)
+                    .adaptable(3)
+                    .name(IDs.STEEL_BACKGROUND)
+                    .build());
 
     // todo move to textures/gui/base
     public static final UITexture BACKGROUND_PRIMITIVE = UITexture.builder()
@@ -126,19 +124,19 @@ public class GTGuiTextures {
             .canApplyTheme()
             .build();
 
-    public static final UITexture DISPLAY_BRONZE = new UITexture.Builder()
-            .location(GTValues.MODID, "textures/gui/base/display_bronze.png")
-            .name(IDs.DISPLAY_BRONZE)
-            .imageSize(143, 75)
-            .adaptable(2)
-            .build();
-
-    public static final UITexture DISPLAY_STEEL = new UITexture.Builder()
-            .location(GTValues.MODID, "textures/gui/base/display_steel.png")
-            .name(IDs.DISPLAY_STEEL)
-            .imageSize(143, 75)
-            .adaptable(2)
-            .build();
+    public static final SteamTexture DISPLAY_STEAM = SteamTexture.of(
+            new UITexture.Builder()
+                    .location(GTValues.MODID, "textures/gui/base/display_bronze.png")
+                    .name(IDs.DISPLAY_BRONZE)
+                    .imageSize(143, 75)
+                    .adaptable(2)
+                    .build(),
+            new UITexture.Builder()
+                    .location(GTValues.MODID, "textures/gui/base/display_steel.png")
+                    .name(IDs.DISPLAY_STEEL)
+                    .imageSize(143, 75)
+                    .adaptable(2)
+                    .build());
 
     // todo primitive display?
 
@@ -170,19 +168,19 @@ public class GTGuiTextures {
             .canApplyTheme()
             .build();
 
-    public static final UITexture SLOT_BRONZE = new UITexture.Builder()
-            .location(GTValues.MODID, "textures/gui/base/slot_bronze.png")
-            .imageSize(18, 18)
-            .adaptable(1)
-            .name(IDs.BRONZE_SLOT)
-            .build();
-
-    public static final UITexture SLOT_STEEL = new UITexture.Builder()
-            .location(GTValues.MODID, "textures/gui/base/slot_steel.png")
-            .imageSize(18, 18)
-            .adaptable(1)
-            .name(IDs.STEEL_SLOT)
-            .build();
+    public static final SteamTexture SLOT_STEAM = SteamTexture.of(
+            new UITexture.Builder()
+                    .location(GTValues.MODID, "textures/gui/base/slot_bronze.png")
+                    .imageSize(18, 18)
+                    .adaptable(1)
+                    .name(IDs.BRONZE_SLOT)
+                    .build(),
+            new UITexture.Builder()
+                    .location(GTValues.MODID, "textures/gui/base/slot_steel.png")
+                    .imageSize(18, 18)
+                    .adaptable(1)
+                    .name(IDs.STEEL_SLOT)
+                    .build());
 
     // todo move to textures/gui/base
     public static final UITexture SLOT_PRIMITIVE = new UITexture.Builder()
@@ -335,31 +333,26 @@ public class GTGuiTextures {
             ColorType.DEFAULT);
     public static final UITexture CANISTER_OVERLAY = fullImage("textures/gui/overlay/canister_overlay.png",
             ColorType.DEFAULT);
-    public static final UITexture CANISTER_OVERLAY_BRONZE = fullImage(
-            "textures/gui/overlay/canister_overlay_bronze.png");
-    public static final UITexture CANISTER_OVERLAY_STEEL = fullImage("textures/gui/overlay/canister_overlay_steel.png");
+    public static final SteamTexture CANISTER_OVERLAY_STEAM = SteamTexture
+            .fullImage("textures/gui/overlay/canister_overlay_%s.png");
     public static final UITexture CENTRIFUGE_OVERLAY = fullImage("textures/gui/overlay/centrifuge_overlay.png",
             ColorType.DEFAULT);
     public static final UITexture CIRCUIT_OVERLAY = fullImage("textures/gui/overlay/circuit_overlay.png",
             ColorType.DEFAULT);
-    public static final UITexture COAL_OVERLAY_BRONZE = fullImage("textures/gui/overlay/coal_overlay_bronze.png");
-    public static final UITexture COAL_OVERLAY_STEEL = fullImage("textures/gui/overlay/coal_overlay_steel.png");
+    public static final SteamTexture COAL_OVERLAY_STEAM = SteamTexture
+            .fullImage("textures/gui/overlay/coal_overlay_%s.png");
     public static final UITexture COMPRESSOR_OVERLAY = fullImage("textures/gui/overlay/compressor_overlay.png",
             ColorType.DEFAULT);
-    public static final UITexture COMPRESSOR_OVERLAY_BRONZE = fullImage(
-            "textures/gui/overlay/compressor_overlay_bronze.png");
-    public static final UITexture COMPRESSOR_OVERLAY_STEEL = fullImage(
-            "textures/gui/overlay/compressor_overlay_steel.png");
+    public static final SteamTexture COMPRESSOR_OVERLAY_STEAM = SteamTexture
+            .fullImage("textures/gui/overlay/compressor_overlay_%s.png");
     public static final UITexture CRACKING_OVERLAY_1 = fullImage("textures/gui/overlay/cracking_overlay_1.png",
             ColorType.DEFAULT);
     public static final UITexture CRACKING_OVERLAY_2 = fullImage("textures/gui/overlay/cracking_overlay_2.png",
             ColorType.DEFAULT);
     public static final UITexture CRUSHED_ORE_OVERLAY = fullImage("textures/gui/overlay/crushed_ore_overlay.png",
             ColorType.DEFAULT);
-    public static final UITexture CRUSHED_ORE_OVERLAY_BRONZE = fullImage(
-            "textures/gui/overlay/crushed_ore_overlay_bronze.png");
-    public static final UITexture CRUSHED_ORE_OVERLAY_STEEL = fullImage(
-            "textures/gui/overlay/crushed_ore_overlay_steel.png");
+    public static final SteamTexture CRUSHED_ORE_OVERLAY_STEAM = SteamTexture
+            .fullImage("textures/gui/overlay/crushed_ore_overlay_%s.png");
     public static final UITexture CRYSTAL_OVERLAY = fullImage("textures/gui/overlay/crystal_overlay.png",
             ColorType.DEFAULT);
     public static final UITexture CUTTER_OVERLAY = fullImage("textures/gui/overlay/cutter_overlay.png",
@@ -367,14 +360,12 @@ public class GTGuiTextures {
     public static final UITexture DARK_CANISTER_OVERLAY = fullImage("textures/gui/overlay/dark_canister_overlay.png",
             ColorType.DEFAULT);
     public static final UITexture DUST_OVERLAY = fullImage("textures/gui/overlay/dust_overlay.png", ColorType.DEFAULT);
-    public static final UITexture DUST_OVERLAY_BRONZE = fullImage("textures/gui/overlay/dust_overlay_bronze.png");
-    public static final UITexture DUST_OVERLAY_STEEL = fullImage("textures/gui/overlay/dust_overlay_steel.png");
+    public static final SteamTexture DUST_OVERLAY_STEAM = SteamTexture
+            .fullImage("textures/gui/overlay/dust_overlay_%s.png");
     public static final UITexture EXTRACTOR_OVERLAY = fullImage("textures/gui/overlay/extractor_overlay.png",
             ColorType.DEFAULT);
-    public static final UITexture EXTRACTOR_OVERLAY_BRONZE = fullImage(
-            "textures/gui/overlay/extractor_overlay_bronze.png");
-    public static final UITexture EXTRACTOR_OVERLAY_STEEL = fullImage(
-            "textures/gui/overlay/extractor_overlay_steel.png");
+    public static final SteamTexture EXTRACTOR_OVERLAY_STEAM = SteamTexture
+            .fullImage("textures/gui/overlay/extractor_overlay_%s.png");
     public static final UITexture FILTER_SLOT_OVERLAY = fullImage("textures/gui/overlay/filter_slot_overlay.png",
             ColorType.DEFAULT);
     public static final UITexture FILTER_SETTINGS_OVERLAY = fullImage(
@@ -383,12 +374,12 @@ public class GTGuiTextures {
             ColorType.DEFAULT);
     public static final UITexture FURNACE_OVERLAY_2 = fullImage("textures/gui/overlay/furnace_overlay_2.png",
             ColorType.DEFAULT);
-    public static final UITexture FURNACE_OVERLAY_BRONZE = fullImage("textures/gui/overlay/furnace_overlay_bronze.png");
-    public static final UITexture FURNACE_OVERLAY_STEEL = fullImage("textures/gui/overlay/furnace_overlay_steel.png");
+    public static final SteamTexture FURNACE_OVERLAY_STEAM = SteamTexture
+            .fullImage("textures/gui/overlay/furnace_overlay_%s.png");
     public static final UITexture HAMMER_OVERLAY = fullImage("textures/gui/overlay/hammer_overlay.png",
             ColorType.DEFAULT);
-    public static final UITexture HAMMER_OVERLAY_BRONZE = fullImage("textures/gui/overlay/hammer_overlay_bronze.png");
-    public static final UITexture HAMMER_OVERLAY_STEEL = fullImage("textures/gui/overlay/hammer_overlay_steel.png");
+    public static final SteamTexture HAMMER_OVERLAY_STEAM = SteamTexture
+            .fullImage("textures/gui/overlay/hammer_overlay_%s.png");
     public static final UITexture HEATING_OVERLAY_1 = fullImage("textures/gui/overlay/heating_overlay_1.png",
             ColorType.DEFAULT);
     public static final UITexture HEATING_OVERLAY_2 = fullImage("textures/gui/overlay/heating_overlay_2.png",
@@ -399,8 +390,8 @@ public class GTGuiTextures {
             ColorType.DEFAULT);
     public static final UITexture IN_SLOT_OVERLAY = fullImage("textures/gui/overlay/in_slot_overlay.png",
             ColorType.DEFAULT);
-    public static final UITexture IN_SLOT_OVERLAY_BRONZE = fullImage("textures/gui/overlay/in_slot_overlay_bronze.png");
-    public static final UITexture IN_SLOT_OVERLAY_STEEL = fullImage("textures/gui/overlay/in_slot_overlay_steel.png");
+    public static final SteamTexture IN_SLOT_OVERLAY_STEAM = SteamTexture
+            .fullImage("textures/gui/overlay/in_slot_overlay_%s.png");
     public static final UITexture INGOT_OVERLAY = fullImage("textures/gui/overlay/ingot_overlay.png",
             ColorType.DEFAULT);
     public static final UITexture INT_CIRCUIT_OVERLAY = fullImage("textures/gui/overlay/int_circuit_overlay.png",
@@ -421,9 +412,8 @@ public class GTGuiTextures {
             ColorType.DEFAULT);
     public static final UITexture OUT_SLOT_OVERLAY = fullImage("textures/gui/overlay/out_slot_overlay.png",
             ColorType.DEFAULT);
-    public static final UITexture OUT_SLOT_OVERLAY_BRONZE = fullImage(
-            "textures/gui/overlay/out_slot_overlay_bronze.png");
-    public static final UITexture OUT_SLOT_OVERLAY_STEEL = fullImage("textures/gui/overlay/out_slot_overlay_steel.png");
+    public static final SteamTexture OUT_SLOT_OVERLAY_STEAM = SteamTexture
+            .fullImage("textures/gui/overlay/out_slot_overlay_%s.png");
     public static final UITexture PAPER_OVERLAY = fullImage("textures/gui/overlay/paper_overlay.png",
             ColorType.DEFAULT);
     public static final UITexture PRINTED_PAPER_OVERLAY = fullImage("textures/gui/overlay/printed_paper_overlay.png",
@@ -594,10 +584,8 @@ public class GTGuiTextures {
             "textures/gui/progress_bar/progress_bar_arc_furnace.png", ColorType.DEFAULT);
     public static final UITexture PROGRESS_BAR_ARROW = progressBar("textures/gui/progress_bar/progress_bar_arrow.png",
             ColorType.DEFAULT);
-    public static final UITexture PROGRESS_BAR_ARROW_BRONZE = progressBar(
-            "textures/gui/progress_bar/progress_bar_arrow_bronze.png");
-    public static final UITexture PROGRESS_BAR_ARROW_STEEL = progressBar(
-            "textures/gui/progress_bar/progress_bar_arrow_steel.png");
+    public static final SteamTexture PROGRESS_BAR_ARROW_STEAM = SteamTexture
+            .fullImage("textures/gui/progress_bar/progress_bar_arrow_%s.png");
     public static final UITexture PROGRESS_BAR_ARROW_MULTIPLE = progressBar(
             "textures/gui/progress_bar/progress_bar_arrow_multiple.png", ColorType.DEFAULT);
     public static final UITexture PROGRESS_BAR_BATH = progressBar("textures/gui/progress_bar/progress_bar_bath.png",
@@ -612,10 +600,8 @@ public class GTGuiTextures {
             "textures/gui/progress_bar/progress_bar_circuit_assembler.png", ColorType.DEFAULT);
     public static final UITexture PROGRESS_BAR_COMPRESS = progressBar(
             "textures/gui/progress_bar/progress_bar_compress.png", ColorType.DEFAULT);
-    public static final UITexture PROGRESS_BAR_COMPRESS_BRONZE = progressBar(
-            "textures/gui/progress_bar/progress_bar_compress_bronze.png");
-    public static final UITexture PROGRESS_BAR_COMPRESS_STEEL = progressBar(
-            "textures/gui/progress_bar/progress_bar_compress_steel.png");
+    public static final SteamTexture PROGRESS_BAR_COMPRESS_STEAM = SteamTexture
+            .fullImage("textures/gui/progress_bar/progress_bar_compress_%s.png");
     public static final UITexture PROGRESS_BAR_CRACKING = progressBar(
             "textures/gui/progress_bar/progress_bar_cracking.png", ColorType.DEFAULT);
     public static final UITexture PROGRESS_BAR_CRACKING_INPUT = progressBar(
@@ -624,10 +610,8 @@ public class GTGuiTextures {
             "textures/gui/progress_bar/progress_bar_crystallization.png", ColorType.DEFAULT);
     public static final UITexture PROGRESS_BAR_EXTRACT = progressBar(
             "textures/gui/progress_bar/progress_bar_extract.png", ColorType.DEFAULT);
-    public static final UITexture PROGRESS_BAR_EXTRACT_BRONZE = progressBar(
-            "textures/gui/progress_bar/progress_bar_extract_bronze.png");
-    public static final UITexture PROGRESS_BAR_EXTRACT_STEEL = progressBar(
-            "textures/gui/progress_bar/progress_bar_extract_steel.png");
+    public static final SteamTexture PROGRESS_BAR_EXTRACT_STEAM = SteamTexture
+            .fullImage("textures/gui/progress_bar/progress_bar_extract_%s.png");
     public static final UITexture PROGRESS_BAR_EXTRUDER = progressBar(
             "textures/gui/progress_bar/progress_bar_extruder.png", ColorType.DEFAULT);
     public static final UITexture PROGRESS_BAR_FUSION = progressBar("textures/gui/progress_bar/progress_bar_fusion.png",
@@ -636,26 +620,20 @@ public class GTGuiTextures {
             "textures/gui/progress_bar/progress_bar_gas_collector.png", ColorType.DEFAULT);
     public static final UITexture PROGRESS_BAR_HAMMER = progressBar("textures/gui/progress_bar/progress_bar_hammer.png",
             ColorType.DEFAULT);
-    public static final UITexture PROGRESS_BAR_HAMMER_BRONZE = progressBar(
-            "textures/gui/progress_bar/progress_bar_hammer_bronze.png");
-    public static final UITexture PROGRESS_BAR_HAMMER_STEEL = progressBar(
-            "textures/gui/progress_bar/progress_bar_hammer_steel.png");
+    public static final SteamTexture PROGRESS_BAR_HAMMER_STEAM = SteamTexture
+            .fullImage("textures/gui/progress_bar/progress_bar_hammer_%s.png");
     public static final UITexture PROGRESS_BAR_HAMMER_BASE = fullImage(
             "textures/gui/progress_bar/progress_bar_hammer_base.png", ColorType.DEFAULT);
-    public static final UITexture PROGRESS_BAR_HAMMER_BASE_BRONZE = fullImage(
-            "textures/gui/progress_bar/progress_bar_hammer_base_bronze.png");
-    public static final UITexture PROGRESS_BAR_HAMMER_BASE_STEEL = fullImage(
-            "textures/gui/progress_bar/progress_bar_hammer_base_steel.png");
+    public static final SteamTexture PROGRESS_BAR_HAMMER_BASE_STEAM = SteamTexture
+            .fullImage("textures/gui/progress_bar/progress_bar_hammer_base_%s.png");
     public static final UITexture PROGRESS_BAR_LATHE = progressBar("textures/gui/progress_bar/progress_bar_lathe.png",
             ColorType.DEFAULT);
     public static final UITexture PROGRESS_BAR_LATHE_BASE = fullImage(
             "textures/gui/progress_bar/progress_bar_lathe_base.png", ColorType.DEFAULT);
     public static final UITexture PROGRESS_BAR_MACERATE = progressBar(
             "textures/gui/progress_bar/progress_bar_macerate.png", ColorType.DEFAULT);
-    public static final UITexture PROGRESS_BAR_MACERATE_BRONZE = progressBar(
-            "textures/gui/progress_bar/progress_bar_macerate_bronze.png");
-    public static final UITexture PROGRESS_BAR_MACERATE_STEEL = progressBar(
-            "textures/gui/progress_bar/progress_bar_macerate_steel.png");
+    public static final SteamTexture PROGRESS_BAR_MACERATE_STEAM = SteamTexture
+            .fullImage("textures/gui/progress_bar/progress_bar_macerate_%s.png");
     public static final UITexture PROGRESS_BAR_MAGNET = progressBar("textures/gui/progress_bar/progress_bar_magnet.png",
             ColorType.DEFAULT);
     public static final UITexture PROGRESS_BAR_MASS_FAB = progressBar(
@@ -696,10 +674,8 @@ public class GTGuiTextures {
             "textures/gui/progress_bar/progress_bar_boiler_fuel_steel.png", 18, 36);
     public static final UITexture PROGRESS_BAR_BOILER_HEAT = progressBar(
             "textures/gui/progress_bar/progress_bar_boiler_heat.png");
-    public static final UITexture PROGRESS_BAR_SOLAR_STEAM_BRONZE = progressBar(
-            "textures/gui/progress_bar/progress_bar_solar_bronze.png");
-    public static final UITexture PROGRESS_BAR_SOLAR_STEAM_STEEL = progressBar(
-            "textures/gui/progress_bar/progress_bar_solar_steel.png");
+    public static final SteamTexture PROGRESS_BAR_SOLAR_STEAM = SteamTexture
+            .fullImage("textures/gui/progress_bar/progress_bar_solar_%s.png");
     public static final UITexture PROGRESS_BAR_ASSEMBLY_LINE = progressBar(
             "textures/gui/progress_bar/progress_bar_assembly_line.png", 54, 144);
     public static final UITexture PROGRESS_BAR_ASSEMBLY_LINE_ARROW = progressBar(

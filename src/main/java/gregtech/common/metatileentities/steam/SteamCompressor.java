@@ -1,20 +1,26 @@
 package gregtech.common.metatileentities.steam;
 
 import gregtech.api.capability.impl.NotifiableItemStackHandler;
-import gregtech.api.gui.GuiTextures;
-import gregtech.api.gui.ModularUI;
-import gregtech.api.gui.widgets.ProgressWidget.MoveType;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.SteamMetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
+import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.recipes.RecipeMaps;
 import gregtech.client.renderer.texture.Textures;
 
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.items.IItemHandlerModifiable;
+
+import com.cleanroommc.modularui.drawable.UITexture;
+import com.cleanroommc.modularui.factory.PosGuiData;
+import com.cleanroommc.modularui.screen.ModularPanel;
+import com.cleanroommc.modularui.screen.UISettings;
+import com.cleanroommc.modularui.value.sync.PanelSyncManager;
+import com.cleanroommc.modularui.widgets.ProgressWidget;
+import com.cleanroommc.modularui.widgets.slot.ItemSlot;
+import com.cleanroommc.modularui.widgets.slot.ModularSlot;
 
 public class SteamCompressor extends SteamMetaTileEntity {
 
@@ -38,15 +44,23 @@ public class SteamCompressor extends SteamMetaTileEntity {
     }
 
     @Override
-    public ModularUI createUI(EntityPlayer player) {
-        return createUITemplate(player)
-                .slot(this.importItems, 0, 53, 25, GuiTextures.SLOT_STEAM.get(isHighPressure),
-                        GuiTextures.COMPRESSOR_OVERLAY_STEAM.get(isHighPressure))
-                .progressBar(workableHandler::getProgressPercent, 78, 25, 20, 18,
-                        GuiTextures.PROGRESS_BAR_COMPRESS_STEAM.get(isHighPressure), MoveType.HORIZONTAL,
-                        workableHandler.getRecipeMap())
-                .slot(this.exportItems, 0, 107, 25, true, false, GuiTextures.SLOT_STEAM.get(isHighPressure))
-                .build(getHolder(), player);
+    public ModularPanel buildUI(PosGuiData guiData, PanelSyncManager panelSyncManager, UISettings settings) {
+        UITexture slotBase = GTGuiTextures.SLOT_STEAM.get(isHighPressure);
+        return buildUITemplate(guiData, panelSyncManager)
+                .child(new ItemSlot()
+                        .pos(53, 25)
+                        .background(slotBase, GTGuiTextures.COMPRESSOR_OVERLAY_STEAM.get(isHighPressure))
+                        .slot(new ModularSlot(this.importItems, 0).accessibility(true, true)))
+                .child(workableHandler.getRecipeMap().getRecipeMapUI()
+                        .createJeiProgressWidget(workableHandler::getProgressPercent)
+                        .pos(78, 25)
+                        .size(20, 18)
+                        .texture(GTGuiTextures.PROGRESS_BAR_COMPRESS_STEAM.get(isHighPressure), 20)
+                        .direction(ProgressWidget.Direction.RIGHT))
+                .child(new ItemSlot()
+                        .pos(107, 25)
+                        .background(slotBase)
+                        .slot(new ModularSlot(this.exportItems, 0).accessibility(false, true)));
     }
 
     @SideOnly(Side.CLIENT)

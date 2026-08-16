@@ -50,25 +50,27 @@ public class RecipeProgressWidget extends ProgressWidget {
             return false;
         }
         if (isMouseOverElement(mouseX, mouseY)) {
-            Collection<RecipeMapCategory> categories = RecipeMapCategory.getCategoriesFor(recipeMap);
-            if (categories != null && !categories.isEmpty()) {
-                // Since categories were even registered at all, we know JEI is active.
-                List<String> categoryID = new ArrayList<>();
-                if (recipeMap == RecipeMaps.FURNACE_RECIPES) {
-                    categoryID.add("minecraft.smelting");
-                } else {
-                    for (RecipeMapCategory category : categories) {
-                        categoryID.add(category.getUid());
-                    }
-                }
-
-                if (JustEnoughItemsModule.jeiRuntime == null) {
-                    IntegrationModule.logger.error("GTCEu JEI integration has crashed, this is not a good thing");
+            List<String> categoryID = new ArrayList<>();
+            if (recipeMap == RecipeMaps.FURNACE_RECIPES) {
+                // furnace recipes are never registered as GT recipe categories (they're converted from vanilla
+                // smelting recipes on the fly), so there's no RecipeMapCategory to fall back on here.
+                categoryID.add("minecraft.smelting");
+            } else {
+                Collection<RecipeMapCategory> categories = RecipeMapCategory.getCategoriesFor(recipeMap);
+                if (categories == null || categories.isEmpty()) {
                     return false;
                 }
-                JustEnoughItemsModule.jeiRuntime.getRecipesGui().showCategories(categoryID);
-                return true;
+                for (RecipeMapCategory category : categories) {
+                    categoryID.add(category.getUid());
+                }
             }
+
+            if (JustEnoughItemsModule.jeiRuntime == null) {
+                IntegrationModule.logger.error("GTCEu JEI integration has crashed, this is not a good thing");
+                return false;
+            }
+            JustEnoughItemsModule.jeiRuntime.getRecipesGui().showCategories(categoryID);
+            return true;
         }
         return false;
     }

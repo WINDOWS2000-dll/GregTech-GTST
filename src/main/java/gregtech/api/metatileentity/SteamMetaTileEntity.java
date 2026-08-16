@@ -5,9 +5,9 @@ import gregtech.api.capability.impl.CommonFluidFilters;
 import gregtech.api.capability.impl.FilteredFluidHandler;
 import gregtech.api.capability.impl.FluidTankList;
 import gregtech.api.capability.impl.RecipeLogicSteam;
-import gregtech.api.gui.GuiTextures;
-import gregtech.api.gui.ModularUI;
-import gregtech.api.gui.widgets.ImageWidget;
+import gregtech.api.mui.GTGuiTextures;
+import gregtech.api.mui.GTGuiTheme;
+import gregtech.api.mui.GTGuis;
 import gregtech.api.recipes.RecipeMap;
 import gregtech.api.util.GTUtility;
 import gregtech.client.particle.VanillaParticleEffects;
@@ -34,6 +34,16 @@ import codechicken.lib.render.CCRenderState;
 import codechicken.lib.render.pipeline.ColourMultiplier;
 import codechicken.lib.render.pipeline.IVertexOperation;
 import codechicken.lib.vec.Matrix4;
+import com.cleanroommc.modularui.api.drawable.IDrawable;
+import com.cleanroommc.modularui.api.drawable.IKey;
+import com.cleanroommc.modularui.drawable.DynamicDrawable;
+import com.cleanroommc.modularui.factory.PosGuiData;
+import com.cleanroommc.modularui.screen.ModularPanel;
+import com.cleanroommc.modularui.screen.UISettings;
+import com.cleanroommc.modularui.value.sync.BooleanSyncValue;
+import com.cleanroommc.modularui.value.sync.PanelSyncManager;
+import com.cleanroommc.modularui.widget.Widget;
+import com.cleanroommc.modularui.widgets.SlotGroupWidget;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
@@ -127,12 +137,36 @@ public abstract class SteamMetaTileEntity extends MetaTileEntity {
         return new FluidTankList(false, steamFluidTank);
     }
 
-    public ModularUI.Builder createUITemplate(EntityPlayer player) {
-        return ModularUI.builder(GuiTextures.BACKGROUND_STEAM.get(isHighPressure), 176, 166)
-                .label(6, 6, getMetaFullName()).shouldColor(false)
-                .widget(new ImageWidget(79, 42, 18, 18, GuiTextures.INDICATOR_NO_STEAM.get(isHighPressure))
-                        .setPredicate(() -> workableHandler.isHasNotEnoughEnergy()))
-                .bindPlayerInventory(player.inventory, GuiTextures.SLOT_STEAM.get(isHighPressure), 0);
+    @Override
+    public boolean usesMui2() {
+        return true;
+    }
+
+    @Override
+    public GTGuiTheme getUITheme() {
+        return isHighPressure ? GTGuiTheme.STEEL : GTGuiTheme.BRONZE;
+    }
+
+    @Override
+    public ModularPanel buildUI(PosGuiData guiData, PanelSyncManager panelSyncManager, UISettings settings) {
+        return buildUITemplate(guiData, panelSyncManager);
+    }
+
+    /**
+     * Builds the base panel shared by all steam machines (background, label, energy indicator, player inventory).
+     * Subclasses add their own item/fluid slots and progress bar widgets on top of the returned panel.
+     */
+    protected ModularPanel buildUITemplate(PosGuiData guiData, PanelSyncManager panelSyncManager) {
+        BooleanSyncValue hasNotEnoughEnergyValue = new BooleanSyncValue(workableHandler::isHasNotEnoughEnergy);
+
+        return GTGuis.createPanel(this, 176, 166)
+                .child(IKey.lang(getMetaFullName()).asWidget().pos(6, 6))
+                .child(new Widget<>()
+                        .pos(79, 42)
+                        .size(18, 18)
+                        .overlay(new DynamicDrawable(() -> hasNotEnoughEnergyValue.getBoolValue() ?
+                                GTGuiTextures.INDICATOR_NO_STEAM.get(isHighPressure) : IDrawable.NONE)))
+                .child(SlotGroupWidget.playerInventory(false).left(7).bottom(7));
     }
 
     @Override

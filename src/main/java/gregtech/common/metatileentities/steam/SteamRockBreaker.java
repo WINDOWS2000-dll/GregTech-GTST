@@ -2,19 +2,16 @@ package gregtech.common.metatileentities.steam;
 
 import gregtech.api.capability.impl.NotifiableItemStackHandler;
 import gregtech.api.capability.impl.RecipeLogicSteam;
-import gregtech.api.gui.GuiTextures;
-import gregtech.api.gui.ModularUI;
-import gregtech.api.gui.widgets.ProgressWidget.MoveType;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.SteamMetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
+import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.recipes.RecipeMap;
 import gregtech.api.recipes.RecipeMaps;
 import gregtech.client.particle.VanillaParticleEffects;
 import gregtech.client.renderer.texture.Textures;
 
 import net.minecraft.block.Block;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
@@ -24,6 +21,15 @@ import net.minecraftforge.fluids.IFluidTank;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.items.IItemHandlerModifiable;
+
+import com.cleanroommc.modularui.drawable.UITexture;
+import com.cleanroommc.modularui.factory.PosGuiData;
+import com.cleanroommc.modularui.screen.ModularPanel;
+import com.cleanroommc.modularui.screen.UISettings;
+import com.cleanroommc.modularui.value.sync.PanelSyncManager;
+import com.cleanroommc.modularui.widgets.ProgressWidget;
+import com.cleanroommc.modularui.widgets.slot.ItemSlot;
+import com.cleanroommc.modularui.widgets.slot.ModularSlot;
 
 public class SteamRockBreaker extends SteamMetaTileEntity {
 
@@ -82,22 +88,36 @@ public class SteamRockBreaker extends SteamMetaTileEntity {
     }
 
     @Override
-    public ModularUI createUI(EntityPlayer player) {
-        return createUITemplate(player)
-                .slot(importItems, 0, 53, 34, GuiTextures.SLOT_STEAM.get(isHighPressure),
-                        GuiTextures.DUST_OVERLAY_STEAM.get(isHighPressure))
-                .progressBar(workableHandler::getProgressPercent, 79, 35, 21, 18,
-                        GuiTextures.PROGRESS_BAR_MACERATE_STEAM.get(isHighPressure), MoveType.HORIZONTAL,
-                        workableHandler.getRecipeMap())
-                .slot(exportItems, 0, 107, 25, true, false, GuiTextures.SLOT_STEAM.get(isHighPressure),
-                        GuiTextures.CRUSHED_ORE_OVERLAY_STEAM.get(isHighPressure))
-                .slot(exportItems, 1, 125, 25, true, false, GuiTextures.SLOT_STEAM.get(isHighPressure),
-                        GuiTextures.CRUSHED_ORE_OVERLAY_STEAM.get(isHighPressure))
-                .slot(exportItems, 2, 107, 43, true, false, GuiTextures.SLOT_STEAM.get(isHighPressure),
-                        GuiTextures.CRUSHED_ORE_OVERLAY_STEAM.get(isHighPressure))
-                .slot(exportItems, 3, 125, 43, true, false, GuiTextures.SLOT_STEAM.get(isHighPressure),
-                        GuiTextures.CRUSHED_ORE_OVERLAY_STEAM.get(isHighPressure))
-                .build(getHolder(), player);
+    public ModularPanel buildUI(PosGuiData guiData, PanelSyncManager panelSyncManager, UISettings settings) {
+        UITexture slotBase = GTGuiTextures.SLOT_STEAM.get(isHighPressure);
+        UITexture crushedOreOverlay = GTGuiTextures.CRUSHED_ORE_OVERLAY_STEAM.get(isHighPressure);
+        return buildUITemplate(guiData, panelSyncManager)
+                .child(new ItemSlot()
+                        .pos(53, 34)
+                        .background(slotBase, GTGuiTextures.DUST_OVERLAY_STEAM.get(isHighPressure))
+                        .slot(new ModularSlot(importItems, 0).accessibility(true, true)))
+                .child(workableHandler.getRecipeMap().getRecipeMapUI()
+                        .createJeiProgressWidget(workableHandler::getProgressPercent)
+                        .pos(79, 35)
+                        .size(21, 18)
+                        .texture(GTGuiTextures.PROGRESS_BAR_MACERATE_STEAM.get(isHighPressure), 21)
+                        .direction(ProgressWidget.Direction.RIGHT))
+                .child(new ItemSlot()
+                        .pos(107, 25)
+                        .background(slotBase, crushedOreOverlay)
+                        .slot(new ModularSlot(exportItems, 0).accessibility(false, true)))
+                .child(new ItemSlot()
+                        .pos(125, 25)
+                        .background(slotBase, crushedOreOverlay)
+                        .slot(new ModularSlot(exportItems, 1).accessibility(false, true)))
+                .child(new ItemSlot()
+                        .pos(107, 43)
+                        .background(slotBase, crushedOreOverlay)
+                        .slot(new ModularSlot(exportItems, 2).accessibility(false, true)))
+                .child(new ItemSlot()
+                        .pos(125, 43)
+                        .background(slotBase, crushedOreOverlay)
+                        .slot(new ModularSlot(exportItems, 3).accessibility(false, true)));
     }
 
     @Override

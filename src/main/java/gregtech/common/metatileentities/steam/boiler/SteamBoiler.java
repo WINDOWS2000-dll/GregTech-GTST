@@ -376,13 +376,10 @@ public abstract class SteamBoiler extends MetaTileEntity implements IDataInfoPro
     protected ModularPanel buildUITemplate(PosGuiData guiData, PanelSyncManager panelSyncManager) {
         UITexture emptyBar = isHighPressure ? GTGuiTextures.PROGRESS_BAR_BOILER_EMPTY_STEEL :
                 GTGuiTextures.PROGRESS_BAR_BOILER_EMPTY_BRONZE;
-        UITexture inSlotOverlay = isHighPressure ? GTGuiTextures.IN_SLOT_OVERLAY_STEEL :
-                GTGuiTextures.IN_SLOT_OVERLAY_BRONZE;
-        UITexture outSlotOverlay = isHighPressure ? GTGuiTextures.OUT_SLOT_OVERLAY_STEEL :
-                GTGuiTextures.OUT_SLOT_OVERLAY_BRONZE;
-        UITexture canisterOverlay = isHighPressure ? GTGuiTextures.CANISTER_OVERLAY_STEEL :
-                GTGuiTextures.CANISTER_OVERLAY_BRONZE;
-        UITexture slotBase = isHighPressure ? GTGuiTextures.SLOT_STEEL : GTGuiTextures.SLOT_BRONZE;
+        UITexture inSlotOverlay = GTGuiTextures.IN_SLOT_OVERLAY_STEAM.get(isHighPressure);
+        UITexture outSlotOverlay = GTGuiTextures.OUT_SLOT_OVERLAY_STEAM.get(isHighPressure);
+        UITexture canisterOverlay = GTGuiTextures.CANISTER_OVERLAY_STEAM.get(isHighPressure);
+        UITexture slotBase = GTGuiTextures.SLOT_STEAM.get(isHighPressure);
 
         return GTGuis.createPanel(this, 176, 166)
                 .child(IKey.lang(getMetaFullName()).asWidget().pos(6, 6))

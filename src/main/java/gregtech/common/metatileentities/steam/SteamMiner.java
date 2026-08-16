@@ -159,7 +159,8 @@ public class SteamMiner extends MetaTileEntity implements IMiner, IControllable,
                 .child(IKey.lang(getMetaFullName())
                         .asWidget()
                         .pos(5, 5))
-                .child(createMinerWidgets(panelSyncManager, exportItems, inventorySize, GTGuiTextures.DISPLAY_BRONZE,
+                .child(createMinerWidgets(panelSyncManager, exportItems, inventorySize,
+                        GTGuiTextures.DISPLAY_STEAM.get(false),
                         text -> {
                             boolean isDone = isDoneSync.getBoolValue();
                             boolean isWorking = isWorkingSync.getBoolValue();

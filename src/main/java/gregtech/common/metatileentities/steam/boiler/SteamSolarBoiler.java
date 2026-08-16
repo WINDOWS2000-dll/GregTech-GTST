@@ -57,8 +57,7 @@ public class SteamSolarBoiler extends SteamBoiler {
                 .pos(114, 44)
                 .size(20, 20)
                 .value(new DoubleSyncValue(() -> GTUtility.canSeeSunClearly(getWorld(), getPos()) ? 1.0 : 0.0))
-                .texture(isHighPressure ? GTGuiTextures.PROGRESS_BAR_SOLAR_STEAM_STEEL :
-                        GTGuiTextures.PROGRESS_BAR_SOLAR_STEAM_BRONZE, 20)
+                .texture(GTGuiTextures.PROGRESS_BAR_SOLAR_STEAM.get(isHighPressure), 20)
                 .direction(ProgressWidget.Direction.RIGHT));
         return panel;
     }

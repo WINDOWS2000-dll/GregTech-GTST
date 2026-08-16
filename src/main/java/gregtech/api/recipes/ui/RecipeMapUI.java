@@ -26,7 +26,6 @@ import com.cleanroommc.modularui.api.widget.Interactable;
 import com.cleanroommc.modularui.drawable.UITexture;
 import com.cleanroommc.modularui.value.sync.DoubleSyncValue;
 import com.cleanroommc.modularui.widget.ParentWidget;
-import com.cleanroommc.modularui.widgets.layout.Grid;
 import com.cleanroommc.modularui.widgets.slot.ItemSlot;
 import com.cleanroommc.modularui.widgets.slot.ModularSlot;
 import it.unimi.dsi.fastutil.bytes.Byte2ObjectMap;
@@ -331,11 +330,27 @@ public class RecipeMapUI<R extends RecipeMap<?>> {
         // ProgressWidget's fluent setters return the non-generic base type, so the chain can't be
         // typed as RecipeMapProgressWidgetMui2; apply it to the instance directly instead.
         RecipeMapProgressWidgetMui2 widget = new RecipeMapProgressWidgetMui2();
-        widget.pos(78, 23)
+        widget.value(new DoubleSyncValue(progressSupplier))
+                .pos(78, 23)
                 .size(20, 20)
-                .value(new DoubleSyncValue(progressSupplier))
                 .texture(progressBarTextureMui2, 20)
                 .direction(toMui2Direction(moveType));
+        return widget;
+    }
+
+    /**
+     * Creates a MUI2 progress bar widget that opens JEI to this recipe map's categories when clicked, same as
+     * {@link #buildProgressWidgetMui2}, but without any default position, size, or texture. Intended for machines
+     * that build their own custom layout instead of using {@link #buildUITemplate}, so they can still expose the
+     * click-to-open-JEI behavior on their progress bar.
+     *
+     * @param progressSupplier a supplier for the progress bar's value
+     * @return the JEI-aware progress widget, pre-configured only with its value
+     */
+    public @NotNull com.cleanroommc.modularui.widgets.ProgressWidget createJeiProgressWidget(
+                                                                                              @NotNull DoubleSupplier progressSupplier) {
+        RecipeMapProgressWidgetMui2 widget = new RecipeMapProgressWidgetMui2();
+        widget.value(new DoubleSyncValue(progressSupplier));
         return widget;
     }
 
@@ -352,18 +367,20 @@ public class RecipeMapUI<R extends RecipeMap<?>> {
         }
 
         @Override
-        public Result onMousePressed(int mouseButton) {
+        public @NotNull Result onMousePressed(int mouseButton) {
             if (!GregTechAPI.moduleManager.isModuleEnabled(GregTechModules.MODULE_JEI)) {
-                return Result.IGNORE;
-            }
-            Collection<RecipeMapCategory> categories = RecipeMapCategory.getCategoriesFor(recipeMap);
-            if (categories == null || categories.isEmpty()) {
                 return Result.IGNORE;
             }
             List<String> categoryID = new ArrayList<>();
             if (recipeMap == RecipeMaps.FURNACE_RECIPES) {
+                // furnace recipes are never registered as GT recipe categories (they're converted from vanilla
+                // smelting recipes on the fly), so there's no RecipeMapCategory to fall back on here.
                 categoryID.add("minecraft.smelting");
             } else {
+                Collection<RecipeMapCategory> categories = RecipeMapCategory.getCategoriesFor(recipeMap);
+                if (categories == null || categories.isEmpty()) {
+                    return Result.IGNORE;
+                }
                 for (RecipeMapCategory category : categories) {
                     categoryID.add(category.getUid());
                 }

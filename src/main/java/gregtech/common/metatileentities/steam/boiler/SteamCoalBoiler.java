@@ -90,17 +90,15 @@ public class SteamCoalBoiler extends SteamBoiler implements ICategoryOverride {
 
     @Override
     public ModularPanel buildUI(PosGuiData guiData, PanelSyncManager panelSyncManager, UISettings settings) {
-        UITexture slotBase = isHighPressure ? GTGuiTextures.SLOT_STEEL : GTGuiTextures.SLOT_BRONZE;
+        UITexture slotBase = GTGuiTextures.SLOT_STEAM.get(isHighPressure);
         ModularPanel panel = buildUITemplate(guiData, panelSyncManager);
         panel.child(new ItemSlot()
                 .pos(115, 62)
-                .background(slotBase,
-                        isHighPressure ? GTGuiTextures.COAL_OVERLAY_STEEL : GTGuiTextures.COAL_OVERLAY_BRONZE)
+                .background(slotBase, GTGuiTextures.COAL_OVERLAY_STEAM.get(isHighPressure))
                 .slot(new ModularSlot(this.importItems, 0).accessibility(true, true)))
                 .child(new ItemSlot()
                         .pos(115, 26)
-                        .background(slotBase,
-                                isHighPressure ? GTGuiTextures.DUST_OVERLAY_STEEL : GTGuiTextures.DUST_OVERLAY_BRONZE)
+                        .background(slotBase, GTGuiTextures.DUST_OVERLAY_STEAM.get(isHighPressure))
                         .slot(new ModularSlot(this.exportItems, 0).accessibility(false, true)))
                 .child(new ProgressWidget()
                         .pos(115, 44)
