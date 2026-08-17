@@ -1,32 +1,27 @@
 package gregtech.common.metatileentities;
 
 import gregtech.api.GregTechAPI;
-import gregtech.api.gui.ModularUI;
-import gregtech.api.gui.Widget;
-import gregtech.api.gui.impl.FakeModularGui;
-import gregtech.api.items.gui.PlayerInventoryHolder;
 import gregtech.api.items.itemhandlers.InaccessibleItemStackHandler;
-import gregtech.api.items.metaitem.MetaItem;
-import gregtech.api.items.metaitem.stats.IItemBehaviour;
 import gregtech.api.items.toolitem.ToolClasses;
 import gregtech.api.metatileentity.IFastRenderMetaTileEntity;
 import gregtech.api.metatileentity.MetaTileEntity;
-import gregtech.api.metatileentity.MetaTileEntityUIFactory;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
+import gregtech.api.mui.GTGuiTheme;
+import gregtech.api.mui.GTGuis;
+import gregtech.api.mui.GregTechGuiScreen;
+import gregtech.api.mui.factory.MetaTileEntityGuiFactory;
 import gregtech.api.util.GTLog;
-import gregtech.api.util.GregFakePlayer;
 import gregtech.client.renderer.texture.custom.ClipboardRenderer;
-import gregtech.common.gui.impl.FakeModularUIContainerClipboard;
 import gregtech.common.items.behaviors.ClipboardBehavior;
 import gregtech.core.network.packets.PacketClipboardNBTUpdate;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
@@ -52,14 +47,22 @@ import codechicken.lib.render.CCRenderState;
 import codechicken.lib.render.pipeline.IVertexOperation;
 import codechicken.lib.vec.Matrix4;
 import codechicken.lib.vec.Vector3;
+import com.cleanroommc.modularui.factory.PosGuiData;
+import com.cleanroommc.modularui.screen.ClientScreenHandler;
+import com.cleanroommc.modularui.screen.GuiScreenWrapper;
+import com.cleanroommc.modularui.screen.ModularPanel;
+import com.cleanroommc.modularui.screen.ModularScreen;
+import com.cleanroommc.modularui.screen.UISettings;
+import com.cleanroommc.modularui.value.sync.PanelSyncManager;
 import io.netty.buffer.Unpooled;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.opengl.GL11;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.Objects;
 
 import static codechicken.lib.raytracer.RayTracer.*;
 import static gregtech.api.capability.GregtechDataCodes.*;
@@ -87,10 +90,16 @@ public class MetaTileEntityClipboard extends MetaTileEntity implements IFastRend
             15.7 / 16.0, 14.25 / 16.0, 13 / 16.0);
 
     public static final float scale = 1;
-    public FakeModularGui guiCache;
-    public FakeModularUIContainerClipboard guiContainerCache;
     private static final NBTBase NO_CLIPBOARD_SIG = new NBTTagInt(0);
     private boolean didSetFacing = false;
+
+    /** Headless client-side widget tree projected in world space onto the placed clipboard. */
+    @SideOnly(Side.CLIENT)
+    private ModularScreen fakeGuiScreen;
+    @SideOnly(Side.CLIENT)
+    private GuiScreenWrapper fakeGuiWrapper;
+    /** Server-side cache used to detect clipboard NBT changes so they can be broadcast to all clients. */
+    private NBTTagCompound lastSyncedClipboardNBT;
 
     public MetaTileEntityClipboard(ResourceLocation metaTileEntityId) {
         super(metaTileEntityId);
@@ -99,16 +108,18 @@ public class MetaTileEntityClipboard extends MetaTileEntity implements IFastRend
     @Override
     public void update() {
         super.update();
-        if (guiContainerCache == null) {
-            createFakeGui();
-            scheduleRenderUpdate();
+        if (getWorld().isRemote) {
+            if (fakeGuiScreen == null) {
+                createFakeGui();
+            }
+        } else {
+            NBTTagCompound current = getClipboard().getTagCompound();
+            if (!Objects.equals(current, lastSyncedClipboardNBT)) {
+                lastSyncedClipboardNBT = current == null ? null : current.copy();
+                writeCustomData(SYNC_CLIPBOARD_NBT,
+                        buf -> buf.writeCompoundTag(current == null ? new NBTTagCompound() : current));
+            }
         }
-        if (this.getWorld().isRemote) {
-            if (guiCache != null)
-                guiCache.updateScreen();
-        }
-        if (guiContainerCache != null)
-            guiContainerCache.detectAndSendChanges();
     }
 
     @Override
@@ -122,8 +133,23 @@ public class MetaTileEntityClipboard extends MetaTileEntity implements IFastRend
                 this, partialTicks);
     }
 
+    // Intentionally left empty: the projected page GUI is NOT drawn here. This is called from inside
+    // MetaTileEntityTESR's fast render pass, which draws into a BufferBuilder that is already mid-`begin()` for
+    // block geometry; MUI2's screen drawing needs the Tessellator to itself, so drawing it here would corrupt
+    // that shared buffer (and with it, unrelated world rendering like water/glass). See #renderProjectedGui.
     @Override
-    public void renderMetaTileEntity(double x, double y, double z, float partialTicks) {
+    public void renderMetaTileEntity(double x, double y, double z, float partialTicks) {}
+
+    /**
+     * Draws the always-visible page projection onto this placed clipboard. Called from
+     * {@link ClipboardRenderer#renderWorldLastEvent} during {@link net.minecraftforge.client.event.RenderWorldLastEvent},
+     * i.e. after all normal world geometry has been drawn and the Tessellator is free for MUI2 to use safely.
+     *
+     * {@code x}/{@code y}/{@code z} are the camera-relative position of this clipboard, matching the convention of
+     * {@link IFastRenderMetaTileEntity#renderMetaTileEntity}.
+     */
+    @SideOnly(Side.CLIENT)
+    public void renderProjectedGui(double x, double y, double z, float partialTicks) {
         if (this.getClipboard() != null)
             ClipboardRenderer.renderGUI(x, y, z, this.getFrontFacing(), this, partialTicks);
     }
@@ -148,53 +174,84 @@ public class MetaTileEntityClipboard extends MetaTileEntity implements IFastRend
     }
 
     @Override
-    public ModularUI createUI(EntityPlayer entityPlayer) {
-        if (getClipboard().isItemEqual(CLIPBOARD.getStackForm())) {
-            List<IItemBehaviour> behaviours = ((MetaItem<?>) getClipboard().getItem()).getBehaviours(getClipboard());
-            Optional<IItemBehaviour> clipboardBehaviour = behaviours.stream()
-                    .filter((x) -> x instanceof ClipboardBehavior).findFirst();
-            if (!clipboardBehaviour.isPresent())
-                return null;
-            if (clipboardBehaviour.get() instanceof ClipboardBehavior) {
-                PlayerInventoryHolder holder = new PlayerInventoryHolder(new GregFakePlayer(entityPlayer.world),
-                        EnumHand.MAIN_HAND); // We can't have this actually set the player's hand
-                holder.setCustomValidityCheck(this::isValid).setCurrentItem(this.getClipboard());
-                if (entityPlayer instanceof GregFakePlayer) { // This is how to tell if this is being called in-world or
-                                                              // not
-                    return ClipboardBehavior.createMTEUI(holder, entityPlayer);
-                } else {
-                    return ((ClipboardBehavior) clipboardBehaviour.get()).createUI(holder, entityPlayer);
-                }
-            }
-        }
-        return null;
+    public boolean usesMui2() {
+        return true;
     }
 
+    @Override
+    public ModularPanel buildUI(PosGuiData guiData, PanelSyncManager panelSyncManager, UISettings settings) {
+        if (!getClipboard().isItemEqual(CLIPBOARD.getStackForm())) return null;
+        return ClipboardBehavior.buildEditablePanel(GTGuis.createPanel(this, 186, 263), getClipboard(),
+                panelSyncManager);
+    }
+
+    /**
+     * (Re)builds the headless, client-only widget tree that is projected in world space onto the placed clipboard.
+     * MUI2's normal Forge-event-driven screen handling only ever operates on {@code Minecraft.currentScreen}, so it
+     * cannot be used here; instead {@link #drawFakeGui(double, double, float)} drives the {@link ModularScreen} and
+     * {@link GuiScreenWrapper} directly, bypassing that machinery entirely.
+     */
+    @SideOnly(Side.CLIENT)
     public void createFakeGui() {
-        // Basically just the original function from the PluginBehavior, but with a lot of now useless stuff stripped
-        // out.
         try {
-            GregFakePlayer fakePlayer = new GregFakePlayer(this.getWorld());
-            fakePlayer.setHeldItem(EnumHand.MAIN_HAND, this.getClipboard());
-            ModularUI ui = this.createUI(fakePlayer);
-
-            ModularUI.Builder builder = new ModularUI.Builder(ui.backgroundPath, ui.getWidth(), ui.getHeight());
-            builder.shouldColor(false);
-
-            List<Widget> widgets = new ArrayList<>(ui.guiWidgets.values());
-
-            for (Widget widget : widgets) {
-                builder.widget(widget);
-            }
-            ui = builder.build(ui.holder, ui.entityPlayer);
-            FakeModularUIContainerClipboard fakeModularUIContainer = new FakeModularUIContainerClipboard(ui, this);
-            this.guiContainerCache = fakeModularUIContainer;
-            if (getWorld().isRemote)
-                this.guiCache = new FakeModularGui(ui, fakeModularUIContainer);
-            this.writeCustomData(CREATE_FAKE_UI);
+            if (!getClipboard().isItemEqual(CLIPBOARD.getStackForm())) return;
+            ModularPanel panel = ClipboardBehavior.buildDisplayPanel(getClipboard());
+            GregTechGuiScreen screen = new GregTechGuiScreen(panel, GTGuiTheme.STANDARD);
+            this.fakeGuiWrapper = new GuiScreenWrapper(screen);
+            this.fakeGuiScreen = screen;
+            // Normally set by GuiManager#openScreen right before the screen is actually displayed; widget
+            // initialization (e.g. recipe-viewer-aware widgets) reads this, so it must be set before onResize.
+            screen.getContext().setSettings(new UISettings());
+            screen.onResize(ClipboardBehavior.PROJECTION_WIDTH, ClipboardBehavior.PROJECTION_HEIGHT);
         } catch (Exception e) {
-            GTLog.logger.error(e);
+            GTLog.logger.error("Could not create fake clipboard GUI", e);
         }
+    }
+
+    @SideOnly(Side.CLIENT)
+    public boolean hasFakeGui() {
+        return this.fakeGuiScreen != null;
+    }
+
+    /**
+     * Draws the projected clipboard page. {@code x}/{@code y} are the normalized (0-1) coordinates the player is
+     * looking at on the page, as returned by {@link #checkLookingAt(EntityPlayer)}, and are converted into pixel
+     * mouse coordinates within the projected panel the same way {@link #onLeftClick} converts a click.
+     */
+    @SideOnly(Side.CLIENT)
+    public void drawFakeGui(double x, double y, float partialTicks) {
+        if (this.fakeGuiScreen == null || this.fakeGuiWrapper == null) return;
+        float halfW = ClipboardBehavior.PROJECTION_WIDTH / 2f;
+        float halfH = ClipboardBehavior.PROJECTION_HEIGHT / 2f;
+        float glScale = 0.5f / Math.max(halfW, halfH);
+        int[] mouse = toPixelCoords(x, y);
+        GlStateManager.translate(-glScale * halfW, -glScale * halfH, 0);
+        GlStateManager.scale(glScale, glScale, 1);
+        this.fakeGuiScreen.getContext().updateState(mouse[0], mouse[1], partialTicks);
+        // Normally driven by the client tick loop; needed here too so hovered widgets are recalculated for the
+        // current mouse position (see #onMousePressed handling in receiveCustomData, which relies on this).
+        this.fakeGuiScreen.onFrameUpdate();
+        // MUI2's screen drawing (stencil clipping, color/depth masking, ...) is designed for drawing a normal
+        // fullscreen GUI, not for being called mid-way through the world's tile entity fast render pass. Saving and
+        // restoring the entire GL state around it prevents it from corrupting unrelated world rendering (water,
+        // glass, etc.) if it leaves something enabled/disabled that the caller doesn't expect.
+        GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
+        try {
+            ClientScreenHandler.drawScreenInternal(this.fakeGuiScreen, this.fakeGuiWrapper, mouse[0], mouse[1],
+                    partialTicks);
+        } finally {
+            GL11.glPopAttrib();
+        }
+    }
+
+    /** Converts normalized (0-1) page coordinates into pixel mouse coordinates within the projected panel. */
+    private static int[] toPixelCoords(double x, double y) {
+        float halfW = ClipboardBehavior.PROJECTION_WIDTH / 2f;
+        float halfH = ClipboardBehavior.PROJECTION_HEIGHT / 2f;
+        float scale = 0.5f / Math.max(halfW, halfH);
+        int mouseX = (int) ((x / scale) + (halfW > halfH ? 0 : (halfW - halfH)));
+        int mouseY = (int) ((y / scale) + (halfH > halfW ? 0 : (halfH - halfW)));
+        return new int[] { mouseX, mouseY };
     }
 
     @Override
@@ -242,7 +299,7 @@ public class MetaTileEntityClipboard extends MetaTileEntity implements IFastRend
                                 CuboidRayTraceResult hitResult) {
         if (!playerIn.isSneaking()) {
             if (getWorld() != null && !getWorld().isRemote) {
-                MetaTileEntityUIFactory.INSTANCE.openUI(getHolder(), (EntityPlayerMP) playerIn);
+                MetaTileEntityGuiFactory.open(playerIn, this);
             }
         } else {
             breakClipboard(playerIn);
@@ -425,7 +482,7 @@ public class MetaTileEntityClipboard extends MetaTileEntity implements IFastRend
     }
 
     @Override
-    public void writeInitialSyncData(PacketBuffer buf) {
+    public void writeInitialSyncData(@NotNull PacketBuffer buf) {
         super.writeInitialSyncData(buf);
         if (this.getClipboard() != null && this.getClipboard().getTagCompound() != null)
             buf.writeCompoundTag(this.getClipboard().getTagCompound());
@@ -435,7 +492,7 @@ public class MetaTileEntityClipboard extends MetaTileEntity implements IFastRend
     }
 
     @Override
-    public void receiveInitialSyncData(PacketBuffer buf) {
+    public void receiveInitialSyncData(@NotNull PacketBuffer buf) {
         super.receiveInitialSyncData(buf);
         try {
             NBTTagCompound clipboardNBT = buf.readCompoundTag();
@@ -450,26 +507,24 @@ public class MetaTileEntityClipboard extends MetaTileEntity implements IFastRend
     }
 
     @Override
-    public void receiveCustomData(int dataId, PacketBuffer buf) {
+    public void receiveCustomData(int dataId, @NotNull PacketBuffer buf) {
         super.receiveCustomData(dataId, buf);
-        if (dataId >= UPDATE_UI) {
-            int windowID = buf.readVarInt();
-            int widgetID = buf.readVarInt();
-            if (guiCache != null)
-                guiCache.handleWidgetUpdate(windowID, widgetID, buf);
-            this.scheduleRenderUpdate();
-            this.sendNBTToServer();
-        } else if (dataId == CREATE_FAKE_UI) {
-            createFakeGui();
+        if (dataId == CREATE_FAKE_UI) {
+            if (getWorld().isRemote) {
+                createFakeGui();
+            }
             this.scheduleRenderUpdate();
         } else if (dataId == MOUSE_POSITION) {
             int mouseX = buf.readVarInt();
             int mouseY = buf.readVarInt();
-            if (guiCache != null && guiContainerCache != null) {
-                guiCache.mouseClicked(mouseX, mouseY, 0); // Left mouse button
+            if (getWorld().isRemote && hasFakeGui()) {
+                this.fakeGuiScreen.getContext().updateState(mouseX, mouseY, 0);
+                this.fakeGuiScreen.onFrameUpdate(); // recalculate hovered widgets for this mouse position
+                this.fakeGuiScreen.onMousePressed(0); // Left mouse button
+                this.fakeGuiScreen.onMouseRelease(0);
+                this.scheduleRenderUpdate();
+                this.sendNBTToServer();
             }
-            this.scheduleRenderUpdate();
-            this.sendNBTToServer();
         } else if (dataId == INIT_CLIPBOARD_NBT) {
             try {
                 NBTTagCompound clipboardNBT = buf.readCompoundTag();
@@ -480,6 +535,16 @@ public class MetaTileEntityClipboard extends MetaTileEntity implements IFastRend
                 }
             } catch (Exception e) {
                 GTLog.logger.error("Could not read Clipboard Init NBT from CustomData buffer", e);
+            }
+        } else if (dataId == SYNC_CLIPBOARD_NBT) {
+            try {
+                NBTTagCompound clipboardNBT = buf.readCompoundTag();
+                setClipboardNBT(clipboardNBT);
+                if (getWorld().isRemote) {
+                    createFakeGui();
+                }
+            } catch (Exception e) {
+                GTLog.logger.error("Could not sync Clipboard NBT from CustomData buffer", e);
             }
         }
     }
@@ -500,27 +565,17 @@ public class MetaTileEntityClipboard extends MetaTileEntity implements IFastRend
     @Override
     public void renderMetaTileEntity(CCRenderState renderState, Matrix4 translation, IVertexOperation[] pipeline) {}
 
-    public void readUIAction(EntityPlayerMP player, int id, PacketBuffer buf) {
-        if (id == 1) {
-            if (this.guiContainerCache != null) {
-                guiContainerCache.handleClientAction(buf);
-            }
-        }
-    }
-
     @Override
     public void onLeftClick(EntityPlayer player, EnumFacing facing, CuboidRayTraceResult hitResult) {
         if (this.getWorld().isRemote) return;
         Pair<Double, Double> clickCoords = this.checkLookingAt(player);
-        int width = 178; // These should always be correct.
-        int height = 230;
-        double scale = 1.0 / Math.max(width, height);
-        int mouseX = (int) ((clickCoords.getLeft() / scale));
-        int mouseY = (int) ((clickCoords.getRight() / scale));
-        if (0 <= mouseX && mouseX <= width && 0 <= mouseY && mouseY <= height) {
+        if (clickCoords == null) return;
+        int[] mouse = toPixelCoords(clickCoords.getLeft(), clickCoords.getRight());
+        if (0 <= mouse[0] && mouse[0] <= ClipboardBehavior.PROJECTION_WIDTH &&
+                0 <= mouse[1] && mouse[1] <= ClipboardBehavior.PROJECTION_HEIGHT) {
             this.writeCustomData(MOUSE_POSITION, buf -> {
-                buf.writeVarInt(mouseX);
-                buf.writeVarInt(mouseY);
+                buf.writeVarInt(mouse[0]);
+                buf.writeVarInt(mouse[1]);
             });
         }
     }

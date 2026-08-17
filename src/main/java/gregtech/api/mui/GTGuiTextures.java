@@ -113,7 +113,27 @@ public class GTGuiTextures {
             .name(IDs.PRIMITIVE_BACKGROUND)
             .build();
 
-    // todo clipboard backgrounds, may deserve some redoing
+    // CLIPBOARD
+    public static final UITexture CLIPBOARD_BACKGROUND = UITexture.builder()
+            .location(GTValues.MODID, "textures/gui/base/clipboard_background.png")
+            .imageSize(186, 263)
+            .build();
+
+    public static final UITexture CLIPBOARD_PAPER_BACKGROUND = UITexture.builder()
+            .location(GTValues.MODID, "textures/gui/base/clipboard_paper_background.png")
+            .imageSize(170, 238)
+            .build();
+
+    public static final UITexture CLIPBOARD_BUTTON = UITexture.builder()
+            .location(GTValues.MODID, "textures/gui/widget/clipboard_button.png")
+            .imageSize(15, 60)
+            .build();
+
+    public static final UITexture CLIPBOARD_TEXT_BOX = UITexture.builder()
+            .location(GTValues.MODID, "textures/gui/widget/clipboard_text_box.png")
+            .imageSize(9, 18)
+            .adaptable(1)
+            .build();
 
     // DISPLAYS
     public static final UITexture DISPLAY = new UITexture.Builder()
@@ -716,6 +736,9 @@ public class GTGuiTextures {
             "textures/gui/progress_bar/progress_bar_fluid_rig_depletion.png", 190, 14);
 
     // MISC
+
+    public static final UITexture BUTTON_LEFT = fullImage("textures/gui/widget/left.png");
+    public static final UITexture BUTTON_RIGHT = fullImage("textures/gui/widget/right.png");
 
     // ME hatch/bus
     public static final UITexture NUMBER_BACKGROUND = fullImage("textures/gui/widget/number_background.png");

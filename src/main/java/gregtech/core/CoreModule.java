@@ -59,7 +59,6 @@ import gregtech.core.network.internal.NetworkHandler;
 import gregtech.core.network.packets.PacketBlockParticle;
 import gregtech.core.network.packets.PacketClipboard;
 import gregtech.core.network.packets.PacketClipboardNBTUpdate;
-import gregtech.core.network.packets.PacketClipboardUIWidgetUpdate;
 import gregtech.core.network.packets.PacketFluidVeinList;
 import gregtech.core.network.packets.PacketKeysPressed;
 import gregtech.core.network.packets.PacketNotifyCapeChange;
@@ -240,7 +239,6 @@ public class CoreModule implements IGregTechModule {
         GregTechAPI.networkHandler.registerPacket(PacketUIClientAction.class);
         GregTechAPI.networkHandler.registerPacket(PacketBlockParticle.class);
         GregTechAPI.networkHandler.registerPacket(PacketClipboard.class);
-        GregTechAPI.networkHandler.registerPacket(PacketClipboardUIWidgetUpdate.class);
         GregTechAPI.networkHandler.registerPacket(PacketPluginSynced.class);
         GregTechAPI.networkHandler.registerPacket(PacketRecoverMTE.class);
         GregTechAPI.networkHandler.registerPacket(PacketKeysPressed.class);

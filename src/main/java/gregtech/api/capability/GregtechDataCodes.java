@@ -53,8 +53,8 @@ public class GregtechDataCodes {
     public static final int CREATE_FAKE_UI = assignId();
     public static final int MOUSE_POSITION = assignId();
     public static final int INIT_CLIPBOARD_NBT = assignId();
+    public static final int SYNC_CLIPBOARD_NBT = assignId();
 
-    public static final int UPDATE_UI = assignId(); // 10-36
     // Pump
     public static final int PUMP_HEAD_LEVEL = assignId();
 

@@ -9,6 +9,7 @@ import gregtech.api.metatileentity.MetaTileEntityHolder;
 import gregtech.api.util.CapesRegistry;
 import gregtech.client.particle.GTParticleManager;
 import gregtech.client.renderer.handler.BlockPosHighlightRenderer;
+import gregtech.client.renderer.texture.custom.ClipboardRenderer;
 import gregtech.client.renderer.handler.MultiblockPreviewRenderer;
 import gregtech.client.utils.BloomEffectUtil;
 import gregtech.client.utils.DepthTextureUtil;
@@ -80,6 +81,7 @@ public class ClientEventHandler {
         MultiblockPreviewRenderer.renderWorldLastEvent(event);
         BlockPosHighlightRenderer.renderWorldLastEvent(event);
         GTParticleManager.renderWorld(event);
+        ClipboardRenderer.renderWorldLastEvent(event);
     }
 
     @SubscribeEvent

@@ -1,5 +1,6 @@
 package gregtech.client.renderer.texture.custom;
 
+import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.client.renderer.texture.Textures;
 import gregtech.client.texture.IconRegistrar;
 import gregtech.common.metatileentities.MetaTileEntityClipboard;
@@ -10,9 +11,13 @@ import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
+import net.minecraft.entity.Entity;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -113,14 +118,14 @@ public class ClipboardRenderer implements IconRegistrar {
         GlStateManager.rotate(180, 1, 0, 0);
         GlStateManager.scale(0.875, 0.875, 0.875);
 
-        if (clipboard.guiCache != null) {
+        if (clipboard.hasFakeGui()) {
             Pair<Double, Double> result = clipboard.checkLookingAt(Minecraft.getMinecraft().player);
             GlStateManager.translate(0, 0, 0.01);
             GlStateManager.scale(1, 1, -1);
             if (result == null) {
-                clipboard.guiCache.drawScreen(0, 0, partialTicks);
+                clipboard.drawFakeGui(0, 0, partialTicks);
             } else {
-                clipboard.guiCache.drawScreen(result.getKey(), result.getValue(), partialTicks);
+                clipboard.drawFakeGui(result.getKey(), result.getValue(), partialTicks);
             }
         }
 
@@ -132,5 +137,35 @@ public class ClipboardRenderer implements IconRegistrar {
     @SideOnly(Side.CLIENT)
     public TextureAtlasSprite getParticleTexture() {
         return textures[0];
+    }
+
+    /**
+     * Draws the projected page GUI of every nearby placed clipboard. Run once per frame after all normal world
+     * geometry has been drawn (see {@link gregtech.client.event.ClientEventHandler#onRenderWorldLast}), so the
+     * Tessellator is free for MUI2 to use without corrupting the shared buffers used by the fast render pass.
+     */
+    @SideOnly(Side.CLIENT)
+    public static void renderWorldLastEvent(RenderWorldLastEvent event) {
+        Minecraft mc = Minecraft.getMinecraft();
+        World world = mc.world;
+        Entity view = mc.getRenderViewEntity();
+        if (world == null || view == null) return;
+
+        float partialTicks = event.getPartialTicks();
+        double camX = view.lastTickPosX + (view.posX - view.lastTickPosX) * partialTicks;
+        double camY = view.lastTickPosY + (view.posY - view.lastTickPosY) * partialTicks;
+        double camZ = view.lastTickPosZ + (view.posZ - view.lastTickPosZ) * partialTicks;
+
+        double maxDistanceSq = 64.0 * 64.0;
+        for (TileEntity tileEntity : world.loadedTileEntityList) {
+            if (!(tileEntity instanceof IGregTechTileEntity gtTileEntity)) continue;
+            if (!(gtTileEntity.getMetaTileEntity() instanceof MetaTileEntityClipboard clipboard)) continue;
+            BlockPos pos = clipboard.getPos();
+            double dx = pos.getX() + 0.5 - camX;
+            double dy = pos.getY() + 0.5 - camY;
+            double dz = pos.getZ() + 0.5 - camZ;
+            if (dx * dx + dy * dy + dz * dz > maxDistanceSq) continue;
+            clipboard.renderProjectedGui(pos.getX() - camX, pos.getY() - camY, pos.getZ() - camZ, partialTicks);
+        }
     }
 }
