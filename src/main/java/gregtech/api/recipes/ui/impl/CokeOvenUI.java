@@ -1,16 +1,18 @@
 package gregtech.api.recipes.ui.impl;
 
 import gregtech.api.capability.impl.FluidTankList;
-import gregtech.api.gui.GuiTextures;
-import gregtech.api.gui.ModularUI;
 import gregtech.api.gui.widgets.ProgressWidget;
+import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.recipes.RecipeMap;
 import gregtech.api.recipes.ui.RecipeMapUI;
 
 import net.minecraftforge.items.IItemHandlerModifiable;
 
+import com.cleanroommc.modularui.widget.ParentWidget;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.function.DoubleSupplier;
 
 @ApiStatus.Internal
 public class CokeOvenUI<R extends RecipeMap<?>> extends RecipeMapUI<R> {
@@ -23,14 +25,19 @@ public class CokeOvenUI<R extends RecipeMap<?>> extends RecipeMapUI<R> {
     }
 
     @Override
-    public ModularUI.Builder createJeiUITemplate(IItemHandlerModifiable importItems, IItemHandlerModifiable exportItems,
-                                                 FluidTankList importFluids, FluidTankList exportFluids, int yOffset) {
-        ModularUI.Builder builder = ModularUI.builder(GuiTextures.BACKGROUND, 176, 100)
-                .widget(new ProgressWidget(200, 70, 19, 36, 18, GuiTextures.PROGRESS_BAR_COKE_OVEN,
-                        ProgressWidget.MoveType.HORIZONTAL));
-        addSlot(builder, 52, 10, 0, importItems, null, false, false);
-        addSlot(builder, 106, 10, 0, exportItems, null, false, true);
-        addSlot(builder, 106, 28, 0, null, exportFluids, true, true);
-        return builder;
+    public @NotNull ParentWidget<?> buildUITemplate(@NotNull DoubleSupplier progressSupplier,
+                                                    @NotNull IItemHandlerModifiable importItems,
+                                                    @NotNull IItemHandlerModifiable exportItems,
+                                                    @NotNull FluidTankList importFluids,
+                                                    @NotNull FluidTankList exportFluids) {
+        ParentWidget<?> parent = new ParentWidget<>();
+        parent.child(createJeiProgressWidget(progressSupplier)
+                .pos(70, 19).size(36, 18)
+                .texture(GTGuiTextures.PROGRESS_BAR_COKE_OVEN, 36)
+                .direction(RecipeMapUI.toMui2Direction(ProgressWidget.MoveType.HORIZONTAL)));
+        addSlotMui2(parent, 52, 10, 0, importItems, importFluids, false, false);
+        addSlotMui2(parent, 106, 10, 0, exportItems, exportFluids, false, true);
+        addSlotMui2(parent, 106, 28, 0, exportItems, exportFluids, true, true);
+        return parent;
     }
 }

@@ -104,6 +104,14 @@ public class GTFluidSyncHandler extends SyncHandler {
         return this.tank.getFluid();
     }
 
+    /**
+     * @return the backing tank of this sync handler. Mainly useful for identifying which tank a
+     *         {@link gregtech.common.mui.widget.GTFluidSlot} belongs to (e.g. for JEI slot mapping).
+     */
+    public IFluidTank getTank() {
+        return this.tank;
+    }
+
     public void setFluid(FluidStack fluid) {
         if (tank instanceof FluidTank fluidTank) {
             fluidTank.setFluid(fluid);

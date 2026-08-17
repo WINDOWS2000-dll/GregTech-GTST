@@ -48,6 +48,10 @@ public final class GTFluidSlot extends Widget<GTFluidSlot> implements Interactab
         return new GTFluidSyncHandler(tank);
     }
 
+    public @Nullable GTFluidSyncHandler getSyncHandler() {
+        return this.syncHandler;
+    }
+
     @Override
     public void onInit() {
         this.textRenderer.setShadow(true);

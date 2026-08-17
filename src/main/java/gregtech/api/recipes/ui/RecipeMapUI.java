@@ -3,12 +3,8 @@ package gregtech.api.recipes.ui;
 import gregtech.api.GregTechAPI;
 import gregtech.api.capability.impl.FluidTankList;
 import gregtech.api.gui.GuiTextures;
-import gregtech.api.gui.ModularUI;
 import gregtech.api.gui.resources.TextureArea;
 import gregtech.api.gui.widgets.ProgressWidget;
-import gregtech.api.gui.widgets.RecipeProgressWidget;
-import gregtech.api.gui.widgets.SlotWidget;
-import gregtech.api.gui.widgets.TankWidget;
 import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeMap;
@@ -130,162 +126,7 @@ public class RecipeMapUI<R extends RecipeMap<?>> {
     }
 
     /**
-     * Create a JEI UI Template
-     *
-     * @param importItems  the input item inventory
-     * @param exportItems  the output item inventory
-     * @param importFluids the input fluid inventory
-     * @param exportFluids the output fluid inventory
-     * @param yOffset      the y offset for the gui
-     * @return the populated builder
-     */
-    public ModularUI.Builder createJeiUITemplate(IItemHandlerModifiable importItems, IItemHandlerModifiable exportItems,
-                                                 FluidTankList importFluids, FluidTankList exportFluids, int yOffset) {
-        ModularUI.Builder builder = ModularUI.defaultBuilder(yOffset);
-        builder.widget(new RecipeProgressWidget(200, 78, 23 + yOffset, 20, 20, progressBarTexture,
-                moveType, recipeMap));
-        addInventorySlotGroup(builder, importItems, importFluids, false, yOffset);
-        addInventorySlotGroup(builder, exportItems, exportFluids, true, yOffset);
-        if (specialTexture != null && specialTexturePosition != null) {
-            addSpecialTexture(builder);
-        }
-        return builder;
-    }
-
-    /**
-     * This DOES NOT include machine control widgets or binds player inventory
-     *
-     * @param progressSupplier a supplier for the progress bar
-     * @param importItems      the input item inventory
-     * @param exportItems      the output item inventory
-     * @param importFluids     the input fluid inventory
-     * @param exportFluids     the output fluid inventory
-     * @param yOffset          the y offset for the gui
-     * @return the populated builder
-     */
-    public ModularUI.Builder createUITemplate(DoubleSupplier progressSupplier, IItemHandlerModifiable importItems,
-                                              IItemHandlerModifiable exportItems, FluidTankList importFluids,
-                                              FluidTankList exportFluids, int yOffset) {
-        ModularUI.Builder builder = ModularUI.defaultBuilder(yOffset);
-        builder.widget(
-                new RecipeProgressWidget(progressSupplier, 78, 23 + yOffset, 20, 20, progressBarTexture,
-                        moveType, recipeMap));
-        addInventorySlotGroup(builder, importItems, importFluids, false, yOffset);
-        addInventorySlotGroup(builder, exportItems, exportFluids, true, yOffset);
-        if (specialTexture != null && specialTexturePosition != null) {
-            addSpecialTexture(builder);
-        }
-        return builder;
-    }
-
-    /**
-     * This DOES NOT include machine control widgets or binds player inventory
-     *
-     * @param progressSupplier a supplier for the progress bar
-     * @param importItems      the input item inventory
-     * @param exportItems      the output item inventory
-     * @param importFluids     the input fluid inventory
-     * @param exportFluids     the output fluid inventory
-     * @param yOffset          the y offset for the gui
-     * @return the populated builder
-     */
-    public ModularUI.Builder createUITemplateNoOutputs(DoubleSupplier progressSupplier,
-                                                       IItemHandlerModifiable importItems,
-                                                       IItemHandlerModifiable exportItems, FluidTankList importFluids,
-                                                       FluidTankList exportFluids, int yOffset) {
-        ModularUI.Builder builder = ModularUI.defaultBuilder(yOffset);
-        builder.widget(
-                new RecipeProgressWidget(progressSupplier, 78, 23 + yOffset, 20, 20, progressBarTexture,
-                        moveType, recipeMap));
-        addInventorySlotGroup(builder, importItems, importFluids, false, yOffset);
-        if (specialTexture != null && specialTexturePosition != null) {
-            addSpecialTexture(builder);
-        }
-        return builder;
-    }
-
-    /**
-     * @param builder      the builder to add to
-     * @param itemHandler  the item handler to use
-     * @param fluidHandler the fluid handler to use
-     * @param isOutputs    if slots should be output slots
-     * @param yOffset      the y offset for the gui
-     */
-    protected void addInventorySlotGroup(@NotNull ModularUI.Builder builder,
-                                         @NotNull IItemHandlerModifiable itemHandler,
-                                         @NotNull FluidTankList fluidHandler, boolean isOutputs, int yOffset) {
-        int itemInputsCount = itemHandler.getSlots();
-        int fluidInputsCount = fluidHandler.getTanks();
-        boolean invertFluids = false;
-        if (itemInputsCount == 0) {
-            int tmp = itemInputsCount;
-            itemInputsCount = fluidInputsCount;
-            fluidInputsCount = tmp;
-            invertFluids = true;
-        }
-        int[] inputSlotGrid = determineSlotsGrid(itemInputsCount);
-        int itemSlotsToLeft = inputSlotGrid[0];
-        int itemSlotsToDown = inputSlotGrid[1];
-        int startInputsX = isOutputs ? 106 : 70 - itemSlotsToLeft * 18;
-        int startInputsY = 33 - (int) (itemSlotsToDown / 2.0 * 18) + yOffset;
-        boolean wasGroup = itemHandler.getSlots() + fluidHandler.getTanks() == 12;
-        if (wasGroup) startInputsY -= 9;
-        else if (itemHandler.getSlots() >= 6 && fluidHandler.getTanks() >= 2 && !isOutputs) startInputsY -= 9;
-        for (int i = 0; i < itemSlotsToDown; i++) {
-            for (int j = 0; j < itemSlotsToLeft; j++) {
-                int slotIndex = i * itemSlotsToLeft + j;
-                if (slotIndex >= itemInputsCount) break;
-                int x = startInputsX + 18 * j;
-                int y = startInputsY + 18 * i;
-                addSlot(builder, x, y, slotIndex, itemHandler, fluidHandler, invertFluids, isOutputs);
-            }
-        }
-        if (wasGroup) startInputsY += 2;
-        if (fluidInputsCount > 0 || invertFluids) {
-            if (itemSlotsToDown >= fluidInputsCount && itemSlotsToLeft < 3) {
-                int startSpecX = isOutputs ? startInputsX + itemSlotsToLeft * 18 : startInputsX - 18;
-                for (int i = 0; i < fluidInputsCount; i++) {
-                    int y = startInputsY + 18 * i;
-                    addSlot(builder, startSpecX, y, i, itemHandler, fluidHandler, !invertFluids, isOutputs);
-                }
-            } else {
-                int startSpecY = startInputsY + itemSlotsToDown * 18;
-                for (int i = 0; i < fluidInputsCount; i++) {
-                    int x = isOutputs ? startInputsX + 18 * (i % 3) :
-                            startInputsX + itemSlotsToLeft * 18 - 18 - 18 * (i % 3);
-                    int y = startSpecY + (i / 3) * 18;
-                    addSlot(builder, x, y, i, itemHandler, fluidHandler, !invertFluids, isOutputs);
-                }
-            }
-        }
-    }
-
-    /**
-     * Add a slot to this ui
-     *
-     * @param builder      the builder to add to
-     * @param x            the x coordinate of the slot
-     * @param y            the y coordinate of the slot
-     * @param slotIndex    the slot index of the slot
-     * @param itemHandler  the item handler to use
-     * @param fluidHandler the fluid handler to use
-     * @param isFluid      if the slot is a fluid slot
-     * @param isOutputs    if slots should be output slots
-     */
-    protected void addSlot(ModularUI.Builder builder, int x, int y, int slotIndex, IItemHandlerModifiable itemHandler,
-                           FluidTankList fluidHandler, boolean isFluid, boolean isOutputs) {
-        if (!isFluid) {
-            builder.widget(new SlotWidget(itemHandler, slotIndex, x, y, true, !isOutputs).setBackgroundTexture(
-                    getOverlaysForSlot(isOutputs, false, slotIndex == itemHandler.getSlots() - 1)));
-        } else {
-            builder.widget(new TankWidget(fluidHandler.getTankAt(slotIndex), x, y, 18, 18).setAlwaysShowFull(true)
-                    .setBackgroundTexture(getOverlaysForSlot(isOutputs, true, slotIndex == fluidHandler.getTanks() - 1))
-                    .setContainerClicking(true, !isOutputs));
-        }
-    }
-
-    /**
-     * MUI2 equivalent of {@link #createUITemplate}. This DOES NOT include machine control widgets or bind the
+     * MUI2 equivalent of the old MUI1 createUITemplate. This DOES NOT include machine control widgets or bind the
      * player inventory. <br>
      * Note: slot overlays set via {@link #setItemSlotOverlay} / {@link #setFluidSlotOverlay} are MUI1-only
      * ({@link TextureArea}) and are not applied here; only the base slot/fluid-slot background is used.
@@ -355,8 +196,8 @@ public class RecipeMapUI<R extends RecipeMap<?>> {
     }
 
     /**
-     * MUI2 equivalent of {@link RecipeProgressWidget}. Clicking it opens JEI to this recipe map's categories,
-     * same as the MUI1 progress bar.
+     * MUI2 equivalent of {@link gregtech.api.gui.widgets.RecipeProgressWidget}. Clicking it opens JEI to this
+     * recipe map's categories, same as the MUI1 progress bar.
      */
     private class RecipeMapProgressWidgetMui2 extends com.cleanroommc.modularui.widgets.ProgressWidget
                                               implements Interactable {
@@ -499,22 +340,7 @@ public class RecipeMapUI<R extends RecipeMap<?>> {
     }
 
     /**
-     * @param isOutput if the slot is an output slot
-     * @param isFluid  if the slot is a fluid slot
-     * @param isLast   if the slot is the last slot of its type
-     * @return the overlays for a slot
-     */
-    protected TextureArea[] getOverlaysForSlot(boolean isOutput, boolean isFluid, boolean isLast) {
-        TextureArea base = isFluid ? GuiTextures.FLUID_SLOT : GuiTextures.SLOT;
-        byte overlayKey = computeOverlayKey(isOutput, isFluid, isLast);
-        if (slotOverlays.containsKey(overlayKey)) {
-            return new TextureArea[] { base, slotOverlays.get(overlayKey) };
-        }
-        return new TextureArea[] { base };
-    }
-
-    /**
-     * MUI2 equivalent of {@link #getOverlaysForSlot}.
+     * MUI2 equivalent of the old MUI1 getOverlaysForSlot.
      *
      * @param isOutput if the slot is an output slot
      * @param isFluid  if the slot is a fluid slot
@@ -649,21 +475,6 @@ public class RecipeMapUI<R extends RecipeMap<?>> {
      */
     public int @Nullable @UnmodifiableView [] specialTexturePosition() {
         return this.specialTexturePosition;
-    }
-
-    /**
-     * Add a special texture to a builder
-     *
-     * @param builder the builder to add to
-     * @return the updated builder
-     */
-    public @NotNull ModularUI.Builder addSpecialTexture(@NotNull ModularUI.Builder builder) {
-        if (specialTexturePosition != null) {
-            builder.image(specialTexturePosition[0], specialTexturePosition[1],
-                    specialTexturePosition[2],
-                    specialTexturePosition[3], specialTexture);
-        }
-        return builder;
     }
 
     /**

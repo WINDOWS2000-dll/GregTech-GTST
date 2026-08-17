@@ -820,98 +820,9 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
         return null;
     }
 
-    /**
-     * @deprecated {@link RecipeMapUI#createJeiUITemplate(IItemHandlerModifiable, IItemHandlerModifiable, FluidTankList, FluidTankList, int)}
-     */
-    @ApiStatus.ScheduledForRemoval(inVersion = "2.9")
-    @Deprecated
-    public ModularUI.Builder createJeiUITemplate(IItemHandlerModifiable importItems, IItemHandlerModifiable exportItems,
-                                                 FluidTankList importFluids, FluidTankList exportFluids, int yOffset) {
-        return recipeMapUI.createJeiUITemplate(importItems, exportItems, importFluids, exportFluids, yOffset);
-    }
-
-    /**
-     * @deprecated {@link RecipeMapUI#createUITemplate(DoubleSupplier, IItemHandlerModifiable, IItemHandlerModifiable, FluidTankList, FluidTankList, int)}
-     */
-    @ApiStatus.ScheduledForRemoval(inVersion = "2.9")
-    @Deprecated
-    public ModularUI.Builder createUITemplate(DoubleSupplier progressSupplier, IItemHandlerModifiable importItems,
-                                              IItemHandlerModifiable exportItems, FluidTankList importFluids,
-                                              FluidTankList exportFluids, int yOffset) {
-        return recipeMapUI.createUITemplate(progressSupplier, importItems, exportItems, importFluids, exportFluids,
-                yOffset);
-    }
-
-    /**
-     * @deprecated {@link RecipeMapUI#createUITemplateNoOutputs(DoubleSupplier, IItemHandlerModifiable, IItemHandlerModifiable, FluidTankList, FluidTankList, int)}
-     */
-    @ApiStatus.ScheduledForRemoval(inVersion = "2.9")
-    @Deprecated
-    public ModularUI.Builder createUITemplateNoOutputs(DoubleSupplier progressSupplier,
-                                                       IItemHandlerModifiable importItems,
-                                                       IItemHandlerModifiable exportItems, FluidTankList importFluids,
-                                                       FluidTankList exportFluids, int yOffset) {
-        return recipeMapUI.createUITemplateNoOutputs(progressSupplier, importItems, exportItems, importFluids,
-                exportFluids, yOffset);
-    }
-
-    /**
-     * @deprecated {@link RecipeMapUI#addInventorySlotGroup(ModularUI.Builder, IItemHandlerModifiable, FluidTankList, boolean, int)}
-     */
-    @ApiStatus.ScheduledForRemoval(inVersion = "2.9")
-    @Deprecated
-    protected void addInventorySlotGroup(ModularUI.Builder builder, IItemHandlerModifiable itemHandler,
-                                         FluidTankList fluidHandler, boolean isOutputs, int yOffset) {}
-
-    /**
-     * @deprecated {@link RecipeMapUI#addSlot(ModularUI.Builder, int, int, int, IItemHandlerModifiable, FluidTankList, boolean, boolean)}
-     */
-    @ApiStatus.ScheduledForRemoval(inVersion = "2.9")
-    @Deprecated
-    protected void addSlot(ModularUI.Builder builder, int x, int y, int slotIndex, IItemHandlerModifiable itemHandler,
-                           FluidTankList fluidHandler, boolean isFluid, boolean isOutputs) {}
-
-    /**
-     * @deprecated {@link RecipeMapUI#getOverlaysForSlot(boolean, boolean, boolean)}
-     */
-    @ApiStatus.ScheduledForRemoval(inVersion = "2.9")
-    @Deprecated
-    protected TextureArea[] getOverlaysForSlot(boolean isOutput, boolean isFluid, boolean isLast) {
-        return null;
-    }
-
-    /**
-     * @deprecated {@link RecipeMapUI#getPropertyHeightShift()}
-     */
-    @ApiStatus.ScheduledForRemoval(inVersion = "2.9")
-    @Deprecated
-    public int getPropertyHeightShift() {
-        return recipeMapUI.getPropertyHeightShift();
-    }
-
-    /**
-     * @deprecated {@link RecipeMapUI#shouldShiftWidgets()}
-     */
-    @ApiStatus.ScheduledForRemoval(inVersion = "2.9")
-    @Deprecated
-    private boolean shouldShiftWidgets() {
-        return false;
-    }
-
     @Method(modid = Mods.Names.GROOVY_SCRIPT)
     private VirtualizedRecipeMap getGroovyScriptRecipeMap() {
         return ((VirtualizedRecipeMap) grsVirtualizedRecipeMap);
-    }
-
-    /**
-     * This height is used to determine Y position to start drawing info on JEI.
-     * 
-     * @deprecated remove overrides, this method is no longer used in any way.
-     */
-    @Deprecated
-    @ApiStatus.ScheduledForRemoval(inVersion = "2.9")
-    public int getPropertyListHeight(Recipe recipe) {
-        return 0;
     }
 
     /**
@@ -1225,15 +1136,6 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
     protected RecipeMap<R> setSpecialTexture(int x, int y, int width, int height, TextureArea area) {
         recipeMapUI.setSpecialTexture(area, x, y, width, height);
         return this;
-    }
-
-    /**
-     * @deprecated {@link RecipeMapUI#addSpecialTexture(ModularUI.Builder)}
-     */
-    @ApiStatus.ScheduledForRemoval(inVersion = "2.9")
-    @Deprecated
-    protected ModularUI.Builder addSpecialTexture(ModularUI.Builder builder) {
-        return recipeMapUI.addSpecialTexture(builder);
     }
 
     public Collection<Recipe> getRecipeList() {
