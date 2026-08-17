@@ -196,8 +196,8 @@ public class RecipeMapUI<R extends RecipeMap<?>> {
     }
 
     /**
-     * MUI2 equivalent of {@link gregtech.api.gui.widgets.RecipeProgressWidget}. Clicking it opens JEI to this
-     * recipe map's categories, same as the MUI1 progress bar.
+     * MUI2 equivalent of the old MUI1 RecipeProgressWidget. Clicking it opens JEI to this recipe map's categories,
+     * same as the MUI1 progress bar used to.
      */
     private class RecipeMapProgressWidgetMui2 extends com.cleanroommc.modularui.widgets.ProgressWidget
                                               implements Interactable {

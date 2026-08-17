@@ -5,7 +5,6 @@ import gregtech.api.gui.resources.IGuiTexture;
 import gregtech.api.gui.resources.TextureArea;
 import gregtech.api.gui.widgets.*;
 import gregtech.api.gui.widgets.ProgressWidget.MoveType;
-import gregtech.api.recipes.RecipeMap;
 import gregtech.api.util.Position;
 import gregtech.common.ConfigHolder;
 
@@ -231,18 +230,6 @@ public final class ModularUI implements ISizeProvider {
                             boolean canPutItems, IGuiTexture... overlays) {
             return widget(new SlotWidget(itemHandler, slotIndex, x, y, canTakeItems, canPutItems)
                     .setBackgroundTexture(overlays));
-        }
-
-        // todo this shouldn't exist, only RecipeProgressWidget should directly take a DoubleSupplier
-        public Builder progressBar(DoubleSupplier progressSupplier, int x, int y, int width, int height,
-                                   TextureArea texture, MoveType moveType) {
-            return widget(new ProgressWidget(progressSupplier, x, y, width, height, texture, moveType));
-        }
-
-        public Builder progressBar(DoubleSupplier progressSupplier, int x, int y, int width, int height,
-                                   TextureArea texture, MoveType moveType, RecipeMap<?> recipeMap) {
-            return widget(
-                    new RecipeProgressWidget(progressSupplier, x, y, width, height, texture, moveType, recipeMap));
         }
 
         public Builder bindPlayerInventory(InventoryPlayer inventoryPlayer) {
