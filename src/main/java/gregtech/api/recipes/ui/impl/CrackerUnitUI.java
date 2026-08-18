@@ -1,9 +1,9 @@
 package gregtech.api.recipes.ui.impl;
 
 import gregtech.api.capability.impl.FluidTankList;
-import gregtech.api.gui.widgets.ProgressWidget;
 import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.recipes.RecipeMap;
+import gregtech.api.recipes.ui.ProgressBarMoveType;
 import gregtech.api.recipes.ui.RecipeMapUI;
 
 import net.minecraftforge.items.IItemHandlerModifiable;
@@ -19,7 +19,7 @@ public class CrackerUnitUI<R extends RecipeMap<?>> extends RecipeMapUI<R> {
 
     public CrackerUnitUI(@NotNull R recipeMap) {
         super(recipeMap, true, true, false, true, false);
-        setProgressBarMoveType(ProgressWidget.MoveType.HORIZONTAL);
+        setProgressBarMoveType(ProgressBarMoveType.HORIZONTAL);
 
         setFluidSlotOverlayMui2(GTGuiTextures.CRACKING_OVERLAY_1, false);
         setFluidSlotOverlayMui2(GTGuiTextures.CRACKING_OVERLAY_2, true);
@@ -54,7 +54,7 @@ public class CrackerUnitUI<R extends RecipeMap<?>> extends RecipeMapUI<R> {
         parent.child(createJeiProgressWidget(progressSupplier)
                 .pos(42, 24 + 18).size(21, 19)
                 .texture(GTGuiTextures.PROGRESS_BAR_CRACKING_INPUT, 19)
-                .direction(RecipeMapUI.toMui2Direction(ProgressWidget.MoveType.VERTICAL)));
+                .direction(RecipeMapUI.toMui2Direction(ProgressBarMoveType.VERTICAL)));
         parent.child(createJeiProgressWidget(progressSupplier)
                 .pos(78, 23).size(20, 20)
                 .texture(progressBarTextureMui2(), 20)

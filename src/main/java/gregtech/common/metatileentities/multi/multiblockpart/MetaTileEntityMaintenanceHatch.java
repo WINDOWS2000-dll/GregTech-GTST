@@ -404,11 +404,6 @@ public class MetaTileEntityMaintenanceHatch extends MetaTileEntityMultiblockPart
     }
 
     @Override
-    public boolean usesMui2() {
-        return true;
-    }
-
-    @Override
     public ModularPanel buildUI(PosGuiData guiData, PanelSyncManager panelSyncManager, UISettings settings) {
         ModularPanel panel = GTGuis.createPanel(this, 176, 18 * 3 + 98)
                 .child(IKey.lang(getMetaFullName()).asWidget().pos(5, 5))

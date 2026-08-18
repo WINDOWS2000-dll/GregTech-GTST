@@ -1,8 +1,6 @@
 package gregtech.api.recipes;
 
 import gregtech.api.GTValues;
-import gregtech.api.gui.widgets.ProgressWidget;
-import gregtech.api.gui.widgets.ProgressWidget.MoveType;
 import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.recipes.builders.AssemblyLineRecipeBuilder;
 import gregtech.api.recipes.builders.BlastRecipeBuilder;
@@ -21,6 +19,7 @@ import gregtech.api.recipes.machines.RecipeMapFormingPress;
 import gregtech.api.recipes.machines.RecipeMapFurnace;
 import gregtech.api.recipes.machines.RecipeMapResearchStation;
 import gregtech.api.recipes.machines.RecipeMapScanner;
+import gregtech.api.recipes.ui.ProgressBarMoveType;
 import gregtech.api.recipes.ui.RecipeMapUI;
 import gregtech.api.recipes.ui.impl.AssemblyLineUI;
 import gregtech.api.recipes.ui.impl.CokeOvenUI;
@@ -324,7 +323,7 @@ public final class RecipeMaps {
                 ui.setItemSlotOverlayMui2(GTGuiTextures.CANISTER_OVERLAY, true);
                 ui.setFluidSlotOverlayMui2(GTGuiTextures.DARK_CANISTER_OVERLAY, false);
                 ui.setFluidSlotOverlayMui2(GTGuiTextures.DARK_CANISTER_OVERLAY, true);
-                ui.setProgressBar(GTGuiTextures.PROGRESS_BAR_CANNER, ProgressWidget.MoveType.HORIZONTAL);
+                ui.setProgressBar(GTGuiTextures.PROGRESS_BAR_CANNER, ProgressBarMoveType.HORIZONTAL);
                 return ui;
             });
 
@@ -382,7 +381,7 @@ public final class RecipeMaps {
                     .fluidOutputs(1)
                     .itemSlotOverlay(GTGuiTextures.BREWER_OVERLAY, false, true)
                     .itemSlotOverlay(GTGuiTextures.DUST_OVERLAY, true)
-                    .progressBar(GTGuiTextures.PROGRESS_BAR_MIXER, MoveType.CIRCULAR)
+                    .progressBar(GTGuiTextures.PROGRESS_BAR_MIXER, ProgressBarMoveType.CIRCULAR)
                     .sound(GTSoundEvents.BATH)
                     .build();
 
@@ -882,7 +881,7 @@ public final class RecipeMaps {
                     .itemInputs(1)
                     .itemOutputs(1)
                     .itemSlotOverlay(GTGuiTextures.HAMMER_OVERLAY, false)
-                    .progressBar(GTGuiTextures.PROGRESS_BAR_HAMMER, MoveType.VERTICAL_DOWNWARDS)
+                    .progressBar(GTGuiTextures.PROGRESS_BAR_HAMMER, ProgressBarMoveType.VERTICAL_DOWNWARDS)
                     .sound(GTSoundEvents.FORGE_HAMMER)
                     .build();
 
@@ -927,7 +926,7 @@ public final class RecipeMaps {
             new SimpleRecipeBuilder(), recipeMap -> {
                 RecipeMapUI<?> ui = new RecipeMapUI<>(recipeMap, true, true, true, true, false);
                 ui.setItemSlotOverlayMui2(GTGuiTextures.FURNACE_OVERLAY_1, false);
-                ui.setProgressBar(GTGuiTextures.PROGRESS_BAR_ARROW, ProgressWidget.MoveType.HORIZONTAL);
+                ui.setProgressBar(GTGuiTextures.PROGRESS_BAR_ARROW, ProgressBarMoveType.HORIZONTAL);
                 return ui;
             });
 
@@ -1168,7 +1167,7 @@ public final class RecipeMaps {
                     .fluidOutputs(1)
                     .itemSlotOverlay(GTGuiTextures.DUST_OVERLAY, false)
                     .itemSlotOverlay(GTGuiTextures.DUST_OVERLAY, true)
-                    .progressBar(GTGuiTextures.PROGRESS_BAR_MIXER, MoveType.CIRCULAR)
+                    .progressBar(GTGuiTextures.PROGRESS_BAR_MIXER, ProgressBarMoveType.CIRCULAR)
                     .sound(GTSoundEvents.MIXER)
                     .build();
 
@@ -1195,7 +1194,7 @@ public final class RecipeMaps {
                     .fluidInputs(1)
                     .itemSlotOverlay(GTGuiTextures.CRUSHED_ORE_OVERLAY, false)
                     .itemSlotOverlay(GTGuiTextures.DUST_OVERLAY, true)
-                    .progressBar(GTGuiTextures.PROGRESS_BAR_BATH, MoveType.CIRCULAR)
+                    .progressBar(GTGuiTextures.PROGRESS_BAR_BATH, ProgressBarMoveType.CIRCULAR)
                     .sound(GTSoundEvents.BATH)
                     .build();
 
@@ -1353,7 +1352,7 @@ public final class RecipeMaps {
                 RecipeMapUI<?> ui = new RecipeMapUI<>(recipeMap, true, true, true, true, false);
                 ui.setItemSlotOverlayMui2(GTGuiTextures.DATA_ORB_OVERLAY, false, false);
                 ui.setItemSlotOverlayMui2(GTGuiTextures.SCANNER_OVERLAY, false, true);
-                ui.setProgressBar(GTGuiTextures.PROGRESS_BAR_ARROW, ProgressWidget.MoveType.HORIZONTAL);
+                ui.setProgressBar(GTGuiTextures.PROGRESS_BAR_ARROW, ProgressBarMoveType.HORIZONTAL);
                 return ui;
             });
 
@@ -1378,7 +1377,7 @@ public final class RecipeMaps {
             new SimpleRecipeBuilder())
                     .itemInputs(1)
                     .itemOutputs(6)
-                    .progressBar(GTGuiTextures.PROGRESS_BAR_SIFT, MoveType.VERTICAL_DOWNWARDS)
+                    .progressBar(GTGuiTextures.PROGRESS_BAR_SIFT, ProgressBarMoveType.VERTICAL_DOWNWARDS)
                     .sound(SoundEvents.BLOCK_SAND_PLACE)
                     .build();
 

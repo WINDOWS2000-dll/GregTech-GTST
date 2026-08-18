@@ -121,11 +121,6 @@ public class SteamMiner extends MetaTileEntity implements IMiner, IControllable,
     }
 
     @Override
-    public boolean usesMui2() {
-        return true;
-    }
-
-    @Override
     public GTGuiTheme getUITheme() {
         return GTGuiTheme.BRONZE;
     }

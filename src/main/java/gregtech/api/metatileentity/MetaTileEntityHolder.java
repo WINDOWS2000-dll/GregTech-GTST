@@ -4,7 +4,6 @@ import gregtech.api.GregTechAPI;
 import gregtech.api.block.machines.BlockMachine;
 import gregtech.api.capability.GregtechDataCodes;
 import gregtech.api.cover.Cover;
-import gregtech.api.gui.IUIHolder;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.metatileentity.registry.MTERegistry;
 import gregtech.api.util.GTLog;
@@ -12,7 +11,6 @@ import gregtech.api.util.Mods;
 import gregtech.api.util.TextFormattingUtil;
 import gregtech.client.particle.GTNameTagParticle;
 import gregtech.client.particle.GTParticleManager;
-import gregtech.common.ConfigHolder;
 import gregtech.core.network.packets.PacketRecoverMTE;
 
 import net.minecraft.block.state.IBlockState;
@@ -63,7 +61,7 @@ import static gregtech.api.capability.GregtechDataCodes.INITIALIZE_MTE;
         @Interface(iface = "appeng.me.helpers.IGridProxyable",
                    modid = Mods.Names.APPLIED_ENERGISTICS2,
                    striprefs = true) })
-public class MetaTileEntityHolder extends TickableTileEntityBase implements IGregTechTileEntity, IUIHolder,
+public class MetaTileEntityHolder extends TickableTileEntityBase implements IGregTechTileEntity,
                                   IWorldNameable, IActionHost, IGridProxyable {
 
     MetaTileEntity metaTileEntity;
@@ -353,11 +351,6 @@ public class MetaTileEntityHolder extends TickableTileEntityBase implements IGre
     }
 
     @Override
-    public boolean isRemote() {
-        return getWorld().isRemote;
-    }
-
-    @Override
     public World world() {
         return getWorld();
     }
@@ -461,15 +454,6 @@ public class MetaTileEntityHolder extends TickableTileEntityBase implements IGre
             }
         }
         return false;
-    }
-
-    @Override
-    public int getUIColorOverride() {
-        if (metaTileEntity == null) return -1;
-        if (ConfigHolder.client.useSprayCanColorInUI) {
-            return metaTileEntity.getPaintingColor();
-        }
-        return -1;
     }
 
     public void setCustomName(String customName) {

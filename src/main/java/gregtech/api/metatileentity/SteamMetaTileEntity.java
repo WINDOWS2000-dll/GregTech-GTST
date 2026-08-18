@@ -138,11 +138,6 @@ public abstract class SteamMetaTileEntity extends MetaTileEntity {
     }
 
     @Override
-    public boolean usesMui2() {
-        return true;
-    }
-
-    @Override
     public GTGuiTheme getUITheme() {
         return isHighPressure ? GTGuiTheme.STEEL : GTGuiTheme.BRONZE;
     }

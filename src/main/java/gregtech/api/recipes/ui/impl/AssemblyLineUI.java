@@ -1,9 +1,9 @@
 package gregtech.api.recipes.ui.impl;
 
 import gregtech.api.capability.impl.FluidTankList;
-import gregtech.api.gui.widgets.ProgressWidget;
 import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.recipes.RecipeMap;
+import gregtech.api.recipes.ui.ProgressBarMoveType;
 import gregtech.api.recipes.ui.RecipeMapUI;
 
 import net.minecraftforge.items.IItemHandlerModifiable;
@@ -25,7 +25,7 @@ public final class AssemblyLineUI<R extends RecipeMap<?>> extends RecipeMapUI<R>
      */
     public AssemblyLineUI(@NotNull R recipeMap) {
         super(recipeMap, false, false, false, false, false);
-        setProgressBarMoveType(ProgressWidget.MoveType.HORIZONTAL);
+        setProgressBarMoveType(ProgressBarMoveType.HORIZONTAL);
     }
 
     @Override
@@ -72,11 +72,11 @@ public final class AssemblyLineUI<R extends RecipeMap<?>> extends RecipeMapUI<R>
         parent.child(createJeiProgressWidget(progressSupplier)
                 .pos(80, 1).size(54, 72)
                 .texture(GTGuiTextures.PROGRESS_BAR_ASSEMBLY_LINE, 54)
-                .direction(RecipeMapUI.toMui2Direction(ProgressWidget.MoveType.HORIZONTAL)));
+                .direction(RecipeMapUI.toMui2Direction(ProgressBarMoveType.HORIZONTAL)));
         parent.child(createJeiProgressWidget(progressSupplier)
                 .pos(138, 19).size(10, 18)
                 .texture(GTGuiTextures.PROGRESS_BAR_ASSEMBLY_LINE_ARROW, 18)
-                .direction(RecipeMapUI.toMui2Direction(ProgressWidget.MoveType.VERTICAL)));
+                .direction(RecipeMapUI.toMui2Direction(ProgressBarMoveType.VERTICAL)));
         addInventorySlotGroupMui2(parent, importItems, importFluids, false);
         addInventorySlotGroupMui2(parent, exportItems, exportFluids, true);
         return parent;

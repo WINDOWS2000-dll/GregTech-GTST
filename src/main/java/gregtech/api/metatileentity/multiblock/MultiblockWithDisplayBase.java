@@ -367,11 +367,6 @@ public abstract class MultiblockWithDisplayBase extends MultiblockControllerBase
         return VoidingMode.VALUES[mode].getName();
     }
 
-    @Override
-    public boolean usesMui2() {
-        return true;
-    }
-
     protected void configureDisplayText(MultiblockUIBuilder builder) {}
 
     protected void configureErrorText(MultiblockUIBuilder builder) {

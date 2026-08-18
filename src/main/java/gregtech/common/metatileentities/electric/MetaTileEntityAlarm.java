@@ -76,11 +76,6 @@ public class MetaTileEntityAlarm extends TieredMetaTileEntity {
     }
 
     @Override
-    public boolean usesMui2() {
-        return true;
-    }
-
-    @Override
     public ModularPanel buildUI(PosGuiData guiData, PanelSyncManager panelSyncManager, UISettings settings) {
         StringSyncValue soundValue = new StringSyncValue(() -> getNameOfSound(this.selectedSound), v -> {
             if (this.getWorld().isRemote) GregTechAPI.soundManager.stopTileSound(getPos());

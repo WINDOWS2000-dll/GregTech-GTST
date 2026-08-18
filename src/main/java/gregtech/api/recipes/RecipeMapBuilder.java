@@ -1,6 +1,6 @@
 package gregtech.api.recipes;
 
-import gregtech.api.gui.widgets.ProgressWidget;
+import gregtech.api.recipes.ui.ProgressBarMoveType;
 import gregtech.api.recipes.ui.RecipeMapUI;
 import gregtech.api.recipes.ui.RecipeMapUIFunction;
 
@@ -37,7 +37,7 @@ public class RecipeMapBuilder<B extends RecipeBuilder<B>> {
     private boolean isGenerator;
 
     private @Nullable UITexture progressBarMui2;
-    private @Nullable ProgressWidget.MoveType moveType;
+    private @Nullable ProgressBarMoveType moveType;
 
     private RecipeMapUIFunction recipeMapUIFunction = this::buildUI;
 
@@ -154,7 +154,7 @@ public class RecipeMapBuilder<B extends RecipeBuilder<B>> {
      * @return this
      */
     public @NotNull RecipeMapBuilder<B> progressBar(@NotNull UITexture progressBarMui2,
-                                                    @Nullable ProgressWidget.MoveType moveType) {
+                                                    @Nullable ProgressBarMoveType moveType) {
         this.progressBarMui2 = progressBarMui2;
         this.moveType = moveType;
         return this;

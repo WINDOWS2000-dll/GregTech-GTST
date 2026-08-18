@@ -110,11 +110,6 @@ public class MetaTileEntityCreativeEnergy extends MetaTileEntity implements ILas
     }
 
     @Override
-    public boolean usesMui2() {
-        return true;
-    }
-
-    @Override
     public ModularPanel buildUI(PosGuiData guiData, PanelSyncManager panelSyncManager, UISettings settings) {
         IntSyncValue tierValue = new IntSyncValue(() -> setTier, tier -> {
             setTier = tier;

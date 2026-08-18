@@ -562,11 +562,6 @@ public class MetaTileEntityMonitorScreen extends MetaTileEntityMultiblockPart {
     }
 
     @Override
-    public boolean usesMui2() {
-        return true;
-    }
-
-    @Override
     public ModularPanel buildUI(PosGuiData guiData, PanelSyncManager syncManager, UISettings settings) {
         MultiblockControllerBase controller = this.getController();
         if (!(controller instanceof MetaTileEntityCentralMonitor centralMonitor) || !controller.isActive()) {

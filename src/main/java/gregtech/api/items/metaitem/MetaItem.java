@@ -8,10 +8,8 @@ import gregtech.api.capability.IFilteredFluidContainer;
 import gregtech.api.capability.IPropertyFluidFilter;
 import gregtech.api.capability.impl.CombinedCapabilityProvider;
 import gregtech.api.capability.impl.ElectricItem;
-import gregtech.api.gui.ModularUI;
 import gregtech.api.items.OreDictNames;
 import gregtech.api.items.gui.ItemUIFactory;
-import gregtech.api.items.gui.PlayerInventoryHolder;
 import gregtech.api.items.metaitem.stats.*;
 import gregtech.api.unification.OreDictUnifier;
 import gregtech.api.unification.material.Material;
@@ -736,14 +734,6 @@ public abstract class MetaItem<T extends MetaItem<?>.MetaValueItem> extends Item
             if (!item.isInCreativeTab(tab)) continue;
             item.getSubItemHandler().getSubItems(item.getStackForm(), tab, subItems);
         }
-    }
-
-    @Override
-    public ModularUI createUI(PlayerInventoryHolder holder, EntityPlayer entityPlayer) {
-        ItemStack itemStack = holder.getCurrentItem();
-        T metaValueItem = getItem(itemStack);
-        ItemUIFactory uiFactory = metaValueItem == null ? null : metaValueItem.getUIManager();
-        return uiFactory == null ? null : uiFactory.createUI(holder, entityPlayer);
     }
 
     // IOverlayRenderAware

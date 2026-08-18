@@ -103,11 +103,6 @@ public class MetaTileEntityMiner extends TieredMetaTileEntity implements IMiner,
         minerLogic.renderPipe(renderState, translation, pipeline);
     }
 
-    @Override
-    public boolean usesMui2() {
-        return true;
-    }
-
     @SuppressWarnings("DuplicatedCode")
     @Override
     public ModularPanel buildUI(PosGuiData guiData, PanelSyncManager panelSyncManager, UISettings settings) {

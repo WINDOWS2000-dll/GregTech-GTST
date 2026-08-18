@@ -2,7 +2,6 @@ package gregtech.api.recipes.ui;
 
 import gregtech.api.GregTechAPI;
 import gregtech.api.capability.impl.FluidTankList;
-import gregtech.api.gui.widgets.ProgressWidget;
 import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeMap;
@@ -46,7 +45,7 @@ public class RecipeMapUI<R extends RecipeMap<?>> {
 
     private final boolean isGenerator;
 
-    private ProgressWidget.MoveType moveType = ProgressWidget.MoveType.HORIZONTAL;
+    private ProgressBarMoveType moveType = ProgressBarMoveType.HORIZONTAL;
     private @NotNull UITexture progressBarTextureMui2 = GTGuiTextures.PROGRESS_BAR_ARROW;
 
     private boolean isJEIVisible = true;
@@ -309,14 +308,14 @@ public class RecipeMapUI<R extends RecipeMap<?>> {
     }
 
     /**
-     * Converts a MUI1 {@link ProgressWidget.MoveType} to its MUI2
+     * Converts a {@link ProgressBarMoveType} to its MUI2
      * {@link com.cleanroommc.modularui.widgets.ProgressWidget.Direction} equivalent.
      *
-     * @param moveType the MUI1 move type
+     * @param moveType the move type
      * @return the corresponding MUI2 direction
      */
     public static com.cleanroommc.modularui.widgets.ProgressWidget.@NotNull Direction toMui2Direction(
-                                                                                                      @NotNull ProgressWidget.MoveType moveType) {
+                                                                                                      @NotNull ProgressBarMoveType moveType) {
         return switch (moveType) {
             case HORIZONTAL -> com.cleanroommc.modularui.widgets.ProgressWidget.Direction.RIGHT;
             case HORIZONTAL_BACKWARDS -> com.cleanroommc.modularui.widgets.ProgressWidget.Direction.LEFT;
@@ -370,14 +369,14 @@ public class RecipeMapUI<R extends RecipeMap<?>> {
     /**
      * @return the progress bar's move type
      */
-    public @NotNull ProgressWidget.MoveType progressBarMoveType() {
+    public @NotNull ProgressBarMoveType progressBarMoveType() {
         return moveType;
     }
 
     /**
      * @param moveType the new progress bar move type
      */
-    public void setProgressBarMoveType(@NotNull ProgressWidget.MoveType moveType) {
+    public void setProgressBarMoveType(@NotNull ProgressBarMoveType moveType) {
         this.moveType = moveType;
     }
 
@@ -385,7 +384,7 @@ public class RecipeMapUI<R extends RecipeMap<?>> {
      * @param progressBarTextureMui2 the new MUI2 progress bar texture
      * @param moveType               the new progress bar move type
      */
-    public void setProgressBar(@NotNull UITexture progressBarTextureMui2, @NotNull ProgressWidget.MoveType moveType) {
+    public void setProgressBar(@NotNull UITexture progressBarTextureMui2, @NotNull ProgressBarMoveType moveType) {
         this.progressBarTextureMui2 = progressBarTextureMui2;
         this.moveType = moveType;
     }

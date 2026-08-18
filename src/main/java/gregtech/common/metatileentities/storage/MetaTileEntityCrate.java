@@ -137,11 +137,6 @@ public class MetaTileEntityCrate extends MetaTileEntity {
     }
 
     @Override
-    public boolean usesMui2() {
-        return true;
-    }
-
-    @Override
     public ModularPanel buildUI(PosGuiData guiData, PanelSyncManager panelSyncManager, UISettings settings) {
         panelSyncManager.registerSlotGroup("item_inv", rowSize);
 

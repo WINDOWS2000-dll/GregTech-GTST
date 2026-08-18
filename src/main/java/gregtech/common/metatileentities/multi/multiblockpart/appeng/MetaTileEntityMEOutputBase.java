@@ -96,11 +96,6 @@ public abstract class MetaTileEntityMEOutputBase<AEStackType extends IAEStack<AE
                                          @NotNull AEStackType stack);
 
     @Override
-    public boolean usesMui2() {
-        return true;
-    }
-
-    @Override
     public ModularPanel buildUI(PosGuiData guiData, PanelSyncManager panelSyncManager, UISettings settings) {
         BooleanSyncValue onlineSync = new BooleanSyncValue(this::isOnline);
         panelSyncManager.syncValue("online", 0, onlineSync);

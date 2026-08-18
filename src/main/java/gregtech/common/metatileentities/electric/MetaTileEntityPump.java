@@ -148,11 +148,6 @@ public class MetaTileEntityPump extends TieredMetaTileEntity {
     }
 
     @Override
-    public boolean usesMui2() {
-        return true;
-    }
-
-    @Override
     public ModularPanel buildUI(PosGuiData guiData, PanelSyncManager panelSyncManager, UISettings settings) {
         var fluidSyncHandler = GTFluidSlot.sync(exportFluids.getTankAt(0))
                 .accessibility(true, true);

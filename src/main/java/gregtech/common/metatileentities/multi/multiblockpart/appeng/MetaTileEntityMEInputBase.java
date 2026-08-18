@@ -146,11 +146,6 @@ public abstract class MetaTileEntityMEInputBase<AEStackType extends IAEStack<AES
         }
     }
 
-    @Override
-    public boolean usesMui2() {
-        return true;
-    }
-
     protected abstract @NotNull AESyncHandler<AEStackType> createAESyncHandler();
 
     @Override

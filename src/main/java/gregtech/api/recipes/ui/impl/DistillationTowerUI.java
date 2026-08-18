@@ -1,9 +1,9 @@
 package gregtech.api.recipes.ui.impl;
 
 import gregtech.api.capability.impl.FluidTankList;
-import gregtech.api.gui.widgets.ProgressWidget;
 import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.recipes.RecipeMap;
+import gregtech.api.recipes.ui.ProgressBarMoveType;
 import gregtech.api.recipes.ui.RecipeMapUI;
 import gregtech.common.mui.widget.GTFluidSlot;
 
@@ -67,7 +67,7 @@ public class DistillationTowerUI<R extends RecipeMap<?>> extends RecipeMapUI<R> 
         parent.child(createJeiProgressWidget(progressSupplier)
                 .pos(47, 8).size(66, 58)
                 .texture(GTGuiTextures.PROGRESS_BAR_DISTILLATION_TOWER, 66)
-                .direction(RecipeMapUI.toMui2Direction(ProgressWidget.MoveType.HORIZONTAL)));
+                .direction(RecipeMapUI.toMui2Direction(ProgressBarMoveType.HORIZONTAL)));
         addInventorySlotGroupMui2(parent, importItems, importFluids, false);
         addInventorySlotGroupMui2(parent, exportItems, exportFluids, true);
         // note: MUI1-only setSpecialTexture()/specialTexture() is not currently mirrored on the MUI2 side;

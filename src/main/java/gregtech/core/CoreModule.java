@@ -8,9 +8,6 @@ import gregtech.api.block.coil.CoilManager;
 import gregtech.api.capability.SimpleCapabilityManager;
 import gregtech.api.cover.CoverDefinition;
 import gregtech.api.fluids.GTFluidRegistration;
-import gregtech.api.gui.UIFactory;
-import gregtech.api.items.gui.PlayerInventoryUIFactory;
-import gregtech.api.metatileentity.MetaTileEntityUIFactory;
 import gregtech.api.metatileentity.registry.MTEManager;
 import gregtech.api.metatileentity.registry.MTERegistry;
 import gregtech.api.modules.GregTechModule;
@@ -67,9 +64,6 @@ import gregtech.core.network.packets.PacketPluginSynced;
 import gregtech.core.network.packets.PacketRecoverMTE;
 import gregtech.core.network.packets.PacketReloadShaders;
 import gregtech.core.network.packets.PacketToolbeltSelectionChange;
-import gregtech.core.network.packets.PacketUIClientAction;
-import gregtech.core.network.packets.PacketUIOpen;
-import gregtech.core.network.packets.PacketUIWidgetUpdate;
 import gregtech.core.sound.GTSoundEvents;
 import gregtech.core.sound.internal.SoundManager;
 import gregtech.core.unification.material.internal.MaterialRegistryManager;
@@ -145,16 +139,6 @@ public class CoreModule implements IGregTechModule {
         GTGuis.registerFactories();
         GTGuiTextures.init();
         GTGuiTheme.registerThemes();
-
-        /* Start UI Factory Registration */
-        UI_FACTORY_REGISTRY.unfreeze();
-        logger.info("Registering GTCEu UI Factories");
-        MetaTileEntityUIFactory.INSTANCE.init();
-        PlayerInventoryUIFactory.INSTANCE.init();
-        logger.info("Registering addon UI Factories");
-        MinecraftForge.EVENT_BUS.post(new GregTechAPI.RegisterEvent<>(UI_FACTORY_REGISTRY, UIFactory.class));
-        UI_FACTORY_REGISTRY.freeze();
-        /* End UI Factory Registration */
 
         SimpleCapabilityManager.init();
 
@@ -235,9 +219,6 @@ public class CoreModule implements IGregTechModule {
 
     @Override
     public void registerPackets() {
-        GregTechAPI.networkHandler.registerPacket(PacketUIOpen.class);
-        GregTechAPI.networkHandler.registerPacket(PacketUIWidgetUpdate.class);
-        GregTechAPI.networkHandler.registerPacket(PacketUIClientAction.class);
         GregTechAPI.networkHandler.registerPacket(PacketBlockParticle.class);
         GregTechAPI.networkHandler.registerPacket(PacketClipboard.class);
         GregTechAPI.networkHandler.registerPacket(PacketPluginSynced.class);

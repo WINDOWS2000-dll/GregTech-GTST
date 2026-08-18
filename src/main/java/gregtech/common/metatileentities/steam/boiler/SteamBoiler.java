@@ -342,11 +342,6 @@ public abstract class SteamBoiler extends MetaTileEntity implements IDataInfoPro
     }
 
     @Override
-    public boolean usesMui2() {
-        return true;
-    }
-
-    @Override
     public GTGuiTheme getUITheme() {
         return isHighPressure ? GTGuiTheme.STEEL : GTGuiTheme.BRONZE;
     }

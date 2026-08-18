@@ -175,11 +175,6 @@ public class MetaTileEntityClipboard extends MetaTileEntity implements IFastRend
     }
 
     @Override
-    public boolean usesMui2() {
-        return true;
-    }
-
-    @Override
     public ModularPanel buildUI(PosGuiData guiData, PanelSyncManager panelSyncManager, UISettings settings) {
         if (!getClipboard().isItemEqual(CLIPBOARD.getStackForm())) return null;
         return ClipboardBehavior.buildEditablePanel(GTGuis.createPanel(this, 186, 263), getClipboard(),

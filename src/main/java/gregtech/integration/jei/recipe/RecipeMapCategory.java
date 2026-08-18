@@ -12,6 +12,7 @@ import gregtech.api.recipes.properties.impl.ResearchPropertyData;
 import gregtech.api.util.AssemblyLineManager;
 import gregtech.api.util.GTUtility;
 import gregtech.api.util.LocalizationUtils;
+import gregtech.api.util.function.impl.TimedProgressSupplier;
 import gregtech.common.ConfigHolder;
 import gregtech.common.mui.widget.GTFluidSlot;
 import gregtech.integration.jei.JustEnoughItemsModule;
@@ -33,7 +34,9 @@ import com.cleanroommc.modularui.screen.ModularScreen;
 import com.cleanroommc.modularui.screen.UISettings;
 import com.cleanroommc.modularui.screen.viewport.ModularGuiContext;
 import com.cleanroommc.modularui.theme.WidgetThemeEntry;
+import com.cleanroommc.modularui.value.sync.DoubleSyncValue;
 import com.cleanroommc.modularui.widget.ParentWidget;
+import com.cleanroommc.modularui.widget.Widget;
 import com.cleanroommc.modularui.widget.WidgetTree;
 import com.cleanroommc.modularui.widget.sizer.Area;
 import com.cleanroommc.modularui.widgets.slot.ItemSlot;
@@ -102,7 +105,8 @@ public class RecipeMapCategory implements IRecipeCategory<GTRecipeWrapper> {
         this.importFluids = new FluidTankList(false, importFluidTanks);
         this.exportFluids = new FluidTankList(false, exportFluidTanks);
 
-        ParentWidget<?> content = recipeMap.getRecipeMapUI().buildUITemplate(() -> 0.5,
+        ParentWidget<?> content = recipeMap.getRecipeMapUI().buildUITemplate(
+                new TimedProgressSupplier(200, 20, false),
                 importItems, exportItems, importFluids, exportFluids);
 
         // headless panel: never shown on screen, only used to resolve widget positions/sizes for JEI.
@@ -297,6 +301,13 @@ public class RecipeMapCategory implements IRecipeCategory<GTRecipeWrapper> {
         ITheme theme = panel.getTheme();
         WidgetTree.foreachChildBFS(panel, widget -> {
             if (!widget.isEnabled()) return true;
+            // This panel is never driven by a PanelSyncManager tick, so DoubleSyncValue's cache (used by the
+            // progress bar's animated DoubleSupplier, e.g. TimedProgressSupplier) is never refreshed on its own;
+            // force it to re-read its source every frame so the progress bar actually animates here.
+            if (widget instanceof Widget<?> w && w.isSynced() &&
+                    w.getSyncHandler() instanceof DoubleSyncValue doubleSyncValue) {
+                doubleSyncValue.updateCacheFromSource(false);
+            }
             Area area = relativeArea(widget.getArea());
             WidgetThemeEntry<?> widgetTheme = widget.getWidgetTheme(theme);
             GlStateManager.pushMatrix();

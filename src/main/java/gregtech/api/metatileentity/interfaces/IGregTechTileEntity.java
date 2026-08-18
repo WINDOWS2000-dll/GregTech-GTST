@@ -1,6 +1,5 @@
 package gregtech.api.metatileentity.interfaces;
 
-import gregtech.api.gui.IUIHolder;
 import gregtech.api.metatileentity.MetaTileEntity;
 
 import net.minecraft.nbt.NBTTagCompound;
@@ -14,9 +13,11 @@ import org.jetbrains.annotations.Nullable;
  * Also delivers most of the Information about TileEntities.
  * <p/>
  */
-public interface IGregTechTileEntity extends IHasWorldObjectAndCoords, INeighborCache, ISyncedTileEntity, IUIHolder {
+public interface IGregTechTileEntity extends IHasWorldObjectAndCoords, INeighborCache, ISyncedTileEntity {
 
     MetaTileEntity getMetaTileEntity();
+
+    boolean isValid();
 
     default MetaTileEntity setMetaTileEntity(MetaTileEntity metaTileEntity) {
         return setMetaTileEntity(metaTileEntity, null);
