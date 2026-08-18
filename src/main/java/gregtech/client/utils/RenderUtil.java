@@ -1,6 +1,5 @@
 package gregtech.client.utils;
 
-import gregtech.api.gui.resources.TextureArea;
 import gregtech.api.util.JEIUtil;
 
 import net.minecraft.client.Minecraft;
@@ -29,6 +28,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import codechicken.lib.vec.Matrix4;
 import com.cleanroommc.modularui.api.widget.IWidget;
 import com.cleanroommc.modularui.drawable.GuiDraw;
+import com.cleanroommc.modularui.drawable.UITexture;
 import com.cleanroommc.modularui.integration.recipeviewer.RecipeViewerGhostIngredientSlot;
 import com.cleanroommc.modularui.theme.SlotTheme;
 import com.cleanroommc.modularui.theme.WidgetThemeEntry;
@@ -445,20 +445,15 @@ public class RenderUtil {
         }
     }
 
-    public static void renderTextureArea(TextureArea textureArea, float x, float y, float width, float height,
-                                         float z) {
-        double imageU = textureArea.offsetX;
-        double imageV = textureArea.offsetY;
-        double imageWidth = textureArea.imageWidth;
-        double imageHeight = textureArea.imageHeight;
-        Minecraft.getMinecraft().renderEngine.bindTexture(textureArea.imageLocation);
+    public static void renderTextureArea(UITexture texture, float x, float y, float width, float height, float z) {
+        Minecraft.getMinecraft().renderEngine.bindTexture(texture.getLocation());
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder bufferbuilder = tessellator.getBuffer();
         bufferbuilder.begin(7, DefaultVertexFormats.POSITION_TEX);
-        bufferbuilder.pos(x, y + height, z).tex(imageU, imageV + imageHeight).endVertex();
-        bufferbuilder.pos(x + width, y + height, z).tex(imageU + imageWidth, imageV + imageHeight).endVertex();
-        bufferbuilder.pos(x + width, y, z).tex(imageU + imageWidth, imageV).endVertex();
-        bufferbuilder.pos(x, y, z).tex(imageU, imageV).endVertex();
+        bufferbuilder.pos(x, y + height, z).tex(texture.u0, texture.v1).endVertex();
+        bufferbuilder.pos(x + width, y + height, z).tex(texture.u1, texture.v1).endVertex();
+        bufferbuilder.pos(x + width, y, z).tex(texture.u1, texture.v0).endVertex();
+        bufferbuilder.pos(x, y, z).tex(texture.u0, texture.v0).endVertex();
         tessellator.draw();
     }
 

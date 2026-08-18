@@ -142,7 +142,8 @@ public class MetaTileEntityClipboard extends MetaTileEntity implements IFastRend
 
     /**
      * Draws the always-visible page projection onto this placed clipboard. Called from
-     * {@link ClipboardRenderer#renderWorldLastEvent} during {@link net.minecraftforge.client.event.RenderWorldLastEvent},
+     * {@link ClipboardRenderer#renderWorldLastEvent} during
+     * {@link net.minecraftforge.client.event.RenderWorldLastEvent},
      * i.e. after all normal world geometry has been drawn and the Tessellator is free for MUI2 to use safely.
      *
      * {@code x}/{@code y}/{@code z} are the camera-relative position of this clipboard, matching the convention of

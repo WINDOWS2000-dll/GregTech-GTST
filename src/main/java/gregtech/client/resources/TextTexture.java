@@ -1,4 +1,6 @@
-package gregtech.api.gui.resources;
+package gregtech.client.resources;
+
+import gregtech.api.gui.resources.IGuiTexture;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;

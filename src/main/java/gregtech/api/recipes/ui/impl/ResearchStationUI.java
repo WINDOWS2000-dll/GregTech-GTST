@@ -1,7 +1,6 @@
 package gregtech.api.recipes.ui.impl;
 
 import gregtech.api.capability.impl.FluidTankList;
-import gregtech.api.gui.GuiTextures;
 import gregtech.api.gui.widgets.ProgressWidget;
 import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.recipes.RecipeMap;
@@ -24,9 +23,7 @@ public class ResearchStationUI<R extends RecipeMap<?>> extends RecipeMapUI<R> {
 
     public ResearchStationUI(@NotNull R recipeMap) {
         super(recipeMap, true, true, true, true, false);
-        setItemSlotOverlay(GuiTextures.SCANNER_OVERLAY, false);
-        setItemSlotOverlay(GuiTextures.RESEARCH_STATION_OVERLAY, true);
-        setProgressBar(GuiTextures.PROGRESS_BAR_ARROW, ProgressWidget.MoveType.HORIZONTAL);
+        setProgressBarMoveType(ProgressWidget.MoveType.HORIZONTAL);
     }
 
     @Override

@@ -1,10 +1,10 @@
 package gregtech.client.renderer.texture.cube;
 
 import gregtech.api.GTValues;
-import gregtech.api.gui.resources.ResourceHelper;
 import gregtech.client.renderer.ICubeRenderer;
 import gregtech.client.renderer.cclop.LightMapOperation;
 import gregtech.client.renderer.texture.Textures;
+import gregtech.client.resources.ResourceHelper;
 import gregtech.client.utils.BloomEffectUtil;
 import gregtech.common.ConfigHolder;
 

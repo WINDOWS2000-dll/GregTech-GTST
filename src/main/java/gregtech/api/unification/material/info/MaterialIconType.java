@@ -1,7 +1,7 @@
 package gregtech.api.unification.material.info;
 
-import gregtech.api.gui.resources.ResourceHelper;
 import gregtech.api.util.GTUtility;
+import gregtech.client.resources.ResourceHelper;
 
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.FMLCommonHandler;

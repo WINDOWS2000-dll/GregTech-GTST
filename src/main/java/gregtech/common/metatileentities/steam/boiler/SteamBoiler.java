@@ -4,7 +4,6 @@ import gregtech.api.GTValues;
 import gregtech.api.capability.impl.CommonFluidFilters;
 import gregtech.api.capability.impl.FilteredFluidHandler;
 import gregtech.api.capability.impl.FluidTankList;
-import gregtech.api.gui.resources.TextureArea;
 import gregtech.api.items.itemhandlers.GTItemStackHandler;
 import gregtech.api.metatileentity.IDataInfoProvider;
 import gregtech.api.metatileentity.MetaTileEntity;
@@ -63,20 +62,12 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static gregtech.api.capability.GregtechDataCodes.IS_WORKING;
 
 public abstract class SteamBoiler extends MetaTileEntity implements IDataInfoProvider {
 
-    private static final Pattern STRING_SUBSTITUTION_PATTERN = Pattern.compile("%s", Pattern.LITERAL);
-
     private static final EnumFacing[] STEAM_PUSH_DIRECTIONS = ArrayUtils.add(EnumFacing.HORIZONTALS, EnumFacing.UP);
-
-    public final TextureArea bronzeSlotBackgroundTexture;
-
-    public final TextureArea slotFurnaceBackground;
 
     protected final boolean isHighPressure;
     private final ICubeRenderer renderer;
@@ -98,8 +89,6 @@ public abstract class SteamBoiler extends MetaTileEntity implements IDataInfoPro
         super(metaTileEntityId);
         this.renderer = renderer;
         this.isHighPressure = isHighPressure;
-        this.bronzeSlotBackgroundTexture = getGuiTexture("slot_%s");
-        this.slotFurnaceBackground = getGuiTexture("slot_%s_furnace_background");
         this.containerInventory = new GTItemStackHandler(this, 2);
     }
 
@@ -350,12 +339,6 @@ public abstract class SteamBoiler extends MetaTileEntity implements IDataInfoPro
     protected FluidTankList createExportFluidHandler() {
         this.steamFluidTank = new FluidTank(16000);
         return new FluidTankList(false, steamFluidTank);
-    }
-
-    protected TextureArea getGuiTexture(String pathTemplate) {
-        String type = isHighPressure ? "steel" : "bronze";
-        return TextureArea.fullImage(String.format("textures/gui/steam/%s/%s.png",
-                type, STRING_SUBSTITUTION_PATTERN.matcher(pathTemplate).replaceAll(Matcher.quoteReplacement(type))));
     }
 
     @Override

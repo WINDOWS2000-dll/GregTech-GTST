@@ -1,5 +1,6 @@
 package gregtech.common.metatileentities.multi.multiblockpart;
 
+import gregtech.api.GTValues;
 import gregtech.api.capability.IMaintenanceHatch;
 import gregtech.api.items.itemhandlers.GTItemStackHandler;
 import gregtech.api.items.toolitem.ItemGTToolbelt;
@@ -16,6 +17,8 @@ import gregtech.client.utils.TooltipHelper;
 import gregtech.common.ConfigHolder;
 import gregtech.common.inventory.handlers.TapeItemStackHandler;
 import gregtech.common.items.MetaItems;
+import gregtech.common.mui.widget.among_us.FixWiringSyncHandler;
+import gregtech.common.mui.widget.among_us.FixWiringTaskWidget;
 
 import net.minecraft.client.resources.I18n;
 import net.minecraft.creativetab.CreativeTabs;
@@ -411,23 +414,32 @@ public class MetaTileEntityMaintenanceHatch extends MetaTileEntityMultiblockPart
                 .child(IKey.lang(getMetaFullName()).asWidget().pos(5, 5))
                 .child(SlotGroupWidget.playerInventory(false).left(7).bottom(7));
 
-        // Note: the April Fools' "fix wiring" minigame (FixWiringTaskWidget) has no MUI2 equivalent yet,
-        // so the normal tape/tool UI is always shown here.
-        panel.child(new ItemSlot()
-                .pos(89 - 10, 18 - 1)
-                .background(GTGuiTextures.SLOT, GTGuiTextures.DUCT_TAPE_OVERLAY)
-                .slot(new ModularSlot(itemStackHandler, 0))
-                .tooltipBuilder(t -> t.addLine(IKey.lang("gregtech.machine.maintenance_hatch_tape_slot.tooltip"))))
-                .child(new ButtonWidget<>()
-                        .pos(89 - 10 - 1, 18 * 2 + 3)
-                        .size(20, 20)
-                        .overlay(GTGuiTextures.MAINTENANCE_ICON)
-                        .onMousePressed(data -> {
-                            fixMaintenanceProblems(guiData.getPlayer());
-                            return true;
-                        })
-                        .tooltipBuilder(
-                                t -> t.addLine(IKey.lang("gregtech.machine.maintenance_hatch_tool_slot.tooltip"))));
+        if (!isConfigurable && GTValues.FOOLS.get()) {
+            FixWiringSyncHandler fixWiringHandler = new FixWiringSyncHandler()
+                    .setOnFinished(this::fixAllMaintenanceProblems);
+            panelSyncManager.syncValue("fix_wiring", fixWiringHandler);
+            panel.child(new FixWiringTaskWidget()
+                    .syncHandler(fixWiringHandler)
+                    .pos(48, 15).size(80, 50)
+                    .setCanInteractPredicate(this::isAttachedToMultiBlock));
+        } else {
+            panel.child(new ItemSlot()
+                    .pos(89 - 10, 18 - 1)
+                    .background(GTGuiTextures.SLOT, GTGuiTextures.DUCT_TAPE_OVERLAY)
+                    .slot(new ModularSlot(itemStackHandler, 0))
+                    .tooltipBuilder(
+                            t -> t.addLine(IKey.lang("gregtech.machine.maintenance_hatch_tape_slot.tooltip"))))
+                    .child(new ButtonWidget<>()
+                            .pos(89 - 10 - 1, 18 * 2 + 3)
+                            .size(20, 20)
+                            .overlay(GTGuiTextures.MAINTENANCE_ICON)
+                            .onMousePressed(data -> {
+                                fixMaintenanceProblems(guiData.getPlayer());
+                                return true;
+                            })
+                            .tooltipBuilder(t -> t
+                                    .addLine(IKey.lang("gregtech.machine.maintenance_hatch_tool_slot.tooltip"))));
+        }
 
         if (isConfigurable) {
             panel.child(IKey.dynamic(() -> I18n.format("gregtech.maintenance.configurable_duration",
@@ -459,7 +471,7 @@ public class MetaTileEntityMaintenanceHatch extends MetaTileEntityMultiblockPart
     }
 
     private static void addMultiplierTooltip(com.cleanroommc.modularui.screen.RichTooltip tooltip, String type,
-                                              double multiplier) {
+                                             double multiplier) {
         if (multiplier == 1.0) {
             tooltip.addLine(IKey.lang("gregtech.maintenance.configurable_" + type + ".unchanged_description"));
         } else {

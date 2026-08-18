@@ -1,10 +1,10 @@
 package gregtech.client.renderer.texture.custom;
 
-import gregtech.api.gui.resources.TextTexture;
 import gregtech.api.metatileentity.ITieredMetaTileEntity;
 import gregtech.api.util.TextFormattingUtil;
 import gregtech.client.renderer.texture.Textures;
 import gregtech.client.renderer.texture.cube.SimpleSidedCubeRenderer.RenderSide;
+import gregtech.client.resources.TextTexture;
 import gregtech.client.texture.IconRegistrar;
 import gregtech.client.utils.RenderUtil;
 import gregtech.common.ConfigHolder;

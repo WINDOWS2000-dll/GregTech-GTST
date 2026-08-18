@@ -1,7 +1,6 @@
 package gregtech.api.recipes.ui.impl;
 
 import gregtech.api.capability.impl.FluidTankList;
-import gregtech.api.gui.GuiTextures;
 import gregtech.api.gui.widgets.ProgressWidget;
 import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.recipes.RecipeMap;
@@ -20,10 +19,7 @@ public class CrackerUnitUI<R extends RecipeMap<?>> extends RecipeMapUI<R> {
 
     public CrackerUnitUI(@NotNull R recipeMap) {
         super(recipeMap, true, true, false, true, false);
-        setFluidSlotOverlay(GuiTextures.CRACKING_OVERLAY_1, false);
-        setFluidSlotOverlay(GuiTextures.CRACKING_OVERLAY_2, true);
-        setItemSlotOverlay(GuiTextures.CIRCUIT_OVERLAY, false);
-        setProgressBar(GuiTextures.PROGRESS_BAR_CRACKING, ProgressWidget.MoveType.HORIZONTAL);
+        setProgressBarMoveType(ProgressWidget.MoveType.HORIZONTAL);
 
         setFluidSlotOverlayMui2(GTGuiTextures.CRACKING_OVERLAY_1, false);
         setFluidSlotOverlayMui2(GTGuiTextures.CRACKING_OVERLAY_2, true);

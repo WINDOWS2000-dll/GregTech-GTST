@@ -196,10 +196,10 @@ public class WidgetProspectingMap extends Widget<WidgetProspectingMap> implement
         int[] cell = hoveredCell(getContext());
         if (cell == null) return Result.IGNORE;
 
-        int xPos = ((Minecraft.getMinecraft().player.chunkCoordX + cell[0] - this.syncHandler.getChunkRadius() + 1)
-                << 4) + 8;
-        int zPos = ((Minecraft.getMinecraft().player.chunkCoordZ + cell[1] - this.syncHandler.getChunkRadius() + 1)
-                << 4) + 8;
+        int xPos = ((Minecraft.getMinecraft().player.chunkCoordX + cell[0] - this.syncHandler.getChunkRadius() + 1) <<
+                4) + 8;
+        int zPos = ((Minecraft.getMinecraft().player.chunkCoordZ + cell[1] - this.syncHandler.getChunkRadius() + 1) <<
+                4) + 8;
         int yPos = this.hoveredHeight != 0 ? this.hoveredHeight : Minecraft.getMinecraft().world.getHeight(xPos, zPos);
         BlockPos pos = new BlockPos(xPos, yPos, zPos);
 

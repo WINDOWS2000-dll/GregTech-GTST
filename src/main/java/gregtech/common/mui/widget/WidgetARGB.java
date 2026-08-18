@@ -37,7 +37,7 @@ public class WidgetARGB extends ParentWidget<WidgetARGB> {
     }
 
     private static GTTextFieldWidget channelField(int x, int height, int shift, IntSupplier colorGetter,
-                                                   IntConsumer colorSetter) {
+                                                  IntConsumer colorSetter) {
         int keepMask = ~(0xFF << shift);
         return new GTTextFieldWidget()
                 .pos(x, 0)

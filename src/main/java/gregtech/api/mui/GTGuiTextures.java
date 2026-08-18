@@ -761,6 +761,17 @@ public class GTGuiTextures {
     public static final UITexture EXTRACTOR_RECYLCING_CATEGORY = fullImage(
             "textures/gui/icon/extractor_recycling.png");
 
+    // LAMP ITEM OVERLAY
+    public static final UITexture LAMP_NO_BLOOM = fullImage("textures/gui/item_overlay/lamp_no_bloom.png");
+    public static final UITexture LAMP_NO_LIGHT = fullImage("textures/gui/item_overlay/lamp_no_light.png");
+
+    // AMONG US (April Fools' fix wiring minigame)
+    public static final UITexture ELECTRICITY_WIRES_BASEBACK = fullImage(
+            "textures/gui/widget/electricity_wires_baseback.png");
+    public static final UITexture ELECTRICITY_WIRES = fullImage("textures/gui/widget/electricity_wires.png");
+    public static final UITexture ELECTRICITY_WIRES_BASE = fullImage(
+            "textures/gui/widget/electricity_wires_base.png");
+
     public static void init() {/**/}
 
     private static UITexture fullImage(String path) {

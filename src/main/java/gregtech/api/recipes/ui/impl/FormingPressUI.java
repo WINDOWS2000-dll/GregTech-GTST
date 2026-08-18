@@ -1,7 +1,6 @@
 package gregtech.api.recipes.ui.impl;
 
 import gregtech.api.capability.impl.FluidTankList;
-import gregtech.api.gui.GuiTextures;
 import gregtech.api.gui.widgets.ProgressWidget;
 import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.recipes.RecipeMap;
@@ -22,7 +21,7 @@ public class FormingPressUI<R extends RecipeMap<?>> extends RecipeMapUI<R> {
 
     public FormingPressUI(@NotNull R recipeMap) {
         super(recipeMap, true, true, true, true, false);
-        setProgressBar(GuiTextures.PROGRESS_BAR_COMPRESS, ProgressWidget.MoveType.HORIZONTAL);
+        setProgressBarMoveType(ProgressWidget.MoveType.HORIZONTAL);
         setProgressBarTextureMui2(GTGuiTextures.PROGRESS_BAR_COMPRESS);
     }
 

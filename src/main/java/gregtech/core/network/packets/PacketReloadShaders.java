@@ -1,8 +1,8 @@
 package gregtech.core.network.packets;
 
-import gregtech.api.gui.resources.ShaderTexture;
 import gregtech.api.network.IClientExecutor;
 import gregtech.api.network.IPacket;
+import gregtech.client.resources.ShaderTexture;
 import gregtech.client.shader.Shaders;
 
 import net.minecraft.client.network.NetHandlerPlayClient;

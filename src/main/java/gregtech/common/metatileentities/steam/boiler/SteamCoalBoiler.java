@@ -107,7 +107,7 @@ public class SteamCoalBoiler extends SteamBoiler implements ICategoryOverride {
                         .texture(isHighPressure ? GTGuiTextures.PROGRESS_BAR_BOILER_FUEL_STEEL :
                                 GTGuiTextures.PROGRESS_BAR_BOILER_FUEL_BRONZE, 18)
                         .direction(ProgressWidget.Direction.UP)); // texture(UITexture, int) uses top-half=empty,
-                                                                   // bottom-half=full layout
+                                                                  // bottom-half=full layout
         return panel;
     }
 

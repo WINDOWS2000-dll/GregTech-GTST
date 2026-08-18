@@ -3,10 +3,6 @@ package gregtech.api.recipes;
 import gregtech.api.GTValues;
 import gregtech.api.GregTechAPI;
 import gregtech.api.capability.IMultipleTankHandler;
-import gregtech.api.capability.impl.FluidTankList;
-import gregtech.api.gui.ModularUI;
-import gregtech.api.gui.resources.TextureArea;
-import gregtech.api.gui.widgets.ProgressWidget.MoveType;
 import gregtech.api.recipes.category.GTRecipeCategory;
 import gregtech.api.recipes.chance.boost.ChanceBoostFunction;
 import gregtech.api.recipes.ingredients.GTRecipeInput;
@@ -77,7 +73,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
-import java.util.function.DoubleSupplier;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -192,42 +187,6 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
                             "Seems like cross-mod compatibility issue. Report to GTCEu github.",
                     currentOrePrefix, currentMaterial);
         }
-    }
-
-    /**
-     * @deprecated {@link RecipeMapUI#setProgressBar(TextureArea, MoveType)}
-     */
-    @ApiStatus.ScheduledForRemoval(inVersion = "2.9")
-    @Deprecated
-    public RecipeMap<R> setProgressBar(TextureArea progressBar, MoveType moveType) {
-        this.recipeMapUI.setProgressBar(progressBar, moveType);
-        return this;
-    }
-
-    /**
-     * @deprecated {@link RecipeMapUI#setItemSlotOverlay(TextureArea, boolean, boolean)}
-     *             {@link RecipeMapUI#setFluidSlotOverlay(TextureArea, boolean, boolean)}
-     */
-    @ApiStatus.ScheduledForRemoval(inVersion = "2.9")
-    @Deprecated
-    public RecipeMap<R> setSlotOverlay(boolean isOutput, boolean isFluid, TextureArea slotOverlay) {
-        return this.setSlotOverlay(isOutput, isFluid, false, slotOverlay).setSlotOverlay(isOutput, isFluid, true,
-                slotOverlay);
-    }
-
-    /**
-     * @deprecated {@link RecipeMapUI#setItemSlotOverlay(TextureArea, boolean, boolean)}
-     *             {@link RecipeMapUI#setFluidSlotOverlay(TextureArea, boolean, boolean)}
-     */
-    @ApiStatus.ScheduledForRemoval(inVersion = "2.9")
-    @Deprecated
-    public RecipeMap<R> setSlotOverlay(boolean isOutput, boolean isFluid, boolean isLast, TextureArea slotOverlay) {
-        if (isFluid) {
-            this.recipeMapUI.setFluidSlotOverlay(slotOverlay, isOutput, isLast);
-        } else {
-            this.recipeMapUI.setItemSlotOverlay(slotOverlay, isOutput, isLast);
-        }
-        return this;
     }
 
     public RecipeMap<R> setSound(SoundEvent sound) {
@@ -1126,16 +1085,6 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
             }
             if (!ls.isEmpty()) list.add(ls);
         }
-    }
-
-    /**
-     * @deprecated {@link RecipeMapUI#setSpecialTexture(TextureArea, int, int, int, int)}
-     */
-    @ApiStatus.ScheduledForRemoval(inVersion = "2.9")
-    @Deprecated
-    protected RecipeMap<R> setSpecialTexture(int x, int y, int width, int height, TextureArea area) {
-        recipeMapUI.setSpecialTexture(area, x, y, width, height);
-        return this;
     }
 
     public Collection<Recipe> getRecipeList() {

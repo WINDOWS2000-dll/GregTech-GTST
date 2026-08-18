@@ -1,6 +1,5 @@
 package gregtech.api.recipes;
 
-import gregtech.api.gui.resources.TextureArea;
 import gregtech.api.gui.widgets.ProgressWidget;
 import gregtech.api.recipes.ui.RecipeMapUI;
 import gregtech.api.recipes.ui.RecipeMapUIFunction;
@@ -24,7 +23,6 @@ public class RecipeMapBuilder<B extends RecipeBuilder<B>> {
     private final String unlocalizedName;
     private final B defaultRecipeBuilder;
 
-    private final Byte2ObjectMap<TextureArea> slotOverlays = new Byte2ObjectArrayMap<>();
     private final Byte2ObjectMap<UITexture> slotOverlaysMui2 = new Byte2ObjectArrayMap<>();
 
     private int itemInputs;
@@ -38,12 +36,8 @@ public class RecipeMapBuilder<B extends RecipeBuilder<B>> {
 
     private boolean isGenerator;
 
-    private @Nullable TextureArea progressBar;
     private @Nullable UITexture progressBarMui2;
     private @Nullable ProgressWidget.MoveType moveType;
-
-    private @Nullable TextureArea specialTexture;
-    private int @Nullable [] specialTextureLocation;
 
     private RecipeMapUIFunction recipeMapUIFunction = this::buildUI;
 
@@ -146,159 +140,69 @@ public class RecipeMapBuilder<B extends RecipeBuilder<B>> {
     }
 
     /**
-     * @param progressBar the progress bar texture to use
+     * @param progressBarMui2 the progress bar texture to use
      * @return this
      */
-    public @NotNull RecipeMapBuilder<B> progressBar(@Nullable TextureArea progressBar) {
-        this.progressBar = progressBar;
-        return this;
-    }
-
-    /**
-     * @param progressBar the progress bar texture to use
-     * @param moveType    the progress bar move type to use
-     * @return this
-     */
-    public @NotNull RecipeMapBuilder<B> progressBar(@Nullable TextureArea progressBar,
-                                                    @Nullable ProgressWidget.MoveType moveType) {
-        this.progressBar = progressBar;
-        this.moveType = moveType;
-        return this;
-    }
-
-    /**
-     * @param progressBar     the MUI1 progress bar texture to use
-     * @param progressBarMui2 the MUI2 progress bar texture to use
-     * @return this
-     */
-    public @NotNull RecipeMapBuilder<B> progressBar(@Nullable TextureArea progressBar,
-                                                    @NotNull UITexture progressBarMui2) {
-        this.progressBar = progressBar;
+    public @NotNull RecipeMapBuilder<B> progressBar(@NotNull UITexture progressBarMui2) {
         this.progressBarMui2 = progressBarMui2;
         return this;
     }
 
     /**
-     * @param progressBar     the MUI1 progress bar texture to use
-     * @param progressBarMui2 the MUI2 progress bar texture to use
+     * @param progressBarMui2 the progress bar texture to use
      * @param moveType        the progress bar move type to use
      * @return this
      */
-    public @NotNull RecipeMapBuilder<B> progressBar(@Nullable TextureArea progressBar,
-                                                    @NotNull UITexture progressBarMui2,
+    public @NotNull RecipeMapBuilder<B> progressBar(@NotNull UITexture progressBarMui2,
                                                     @Nullable ProgressWidget.MoveType moveType) {
-        this.progressBar = progressBar;
         this.progressBarMui2 = progressBarMui2;
         this.moveType = moveType;
         return this;
     }
 
     /**
-     * @param texture  the texture to use
-     * @param isOutput if the slot is an output slot
-     * @return this
-     */
-    public @NotNull RecipeMapBuilder<B> itemSlotOverlay(@NotNull TextureArea texture, boolean isOutput) {
-        this.slotOverlays.put(computeOverlayKey(isOutput, false, false), texture);
-        this.slotOverlays.put(computeOverlayKey(isOutput, false, true), texture);
-        return this;
-    }
-
-    /**
-     * @param texture    the texture to use
-     * @param isOutput   if the slot is an output slot
-     * @param isLastSlot if the slot is the last slot
-     * @return this
-     */
-    public @NotNull RecipeMapBuilder<B> itemSlotOverlay(@NotNull TextureArea texture, boolean isOutput,
-                                                        boolean isLastSlot) {
-        this.slotOverlays.put(computeOverlayKey(isOutput, false, isLastSlot), texture);
-        return this;
-    }
-
-    /**
-     * @param texture  the texture to use
-     * @param isOutput if the slot is an output slot
-     * @return this
-     */
-    public @NotNull RecipeMapBuilder<B> fluidSlotOverlay(@NotNull TextureArea texture, boolean isOutput) {
-        this.slotOverlays.put(computeOverlayKey(isOutput, true, false), texture);
-        this.slotOverlays.put(computeOverlayKey(isOutput, true, true), texture);
-        return this;
-    }
-
-    /**
-     * @param texture    the texture to use
-     * @param isOutput   if the slot is an output slot
-     * @param isLastSlot if the slot is the last slot
-     * @return this
-     */
-    public @NotNull RecipeMapBuilder<B> fluidSlotOverlay(@NotNull TextureArea texture, boolean isOutput,
-                                                         boolean isLastSlot) {
-        this.slotOverlays.put(computeOverlayKey(isOutput, true, isLastSlot), texture);
-        return this;
-    }
-
-    /**
-     * @param texture     the MUI1 texture to use
-     * @param textureMui2 the MUI2 texture to use
+     * @param textureMui2 the texture to use
      * @param isOutput    if the slot is an output slot
      * @return this
      */
-    public @NotNull RecipeMapBuilder<B> itemSlotOverlay(@NotNull TextureArea texture, @NotNull UITexture textureMui2,
-                                                        boolean isOutput) {
-        itemSlotOverlay(texture, isOutput);
+    public @NotNull RecipeMapBuilder<B> itemSlotOverlay(@NotNull UITexture textureMui2, boolean isOutput) {
         this.slotOverlaysMui2.put(computeOverlayKey(isOutput, false, false), textureMui2);
         this.slotOverlaysMui2.put(computeOverlayKey(isOutput, false, true), textureMui2);
         return this;
     }
 
     /**
-     * @param texture     the MUI1 texture to use
-     * @param textureMui2 the MUI2 texture to use
+     * @param textureMui2 the texture to use
      * @param isOutput    if the slot is an output slot
      * @param isLastSlot  if the slot is the last slot
      * @return this
      */
-    public @NotNull RecipeMapBuilder<B> itemSlotOverlay(@NotNull TextureArea texture, @NotNull UITexture textureMui2,
-                                                        boolean isOutput, boolean isLastSlot) {
-        itemSlotOverlay(texture, isOutput, isLastSlot);
+    public @NotNull RecipeMapBuilder<B> itemSlotOverlay(@NotNull UITexture textureMui2, boolean isOutput,
+                                                        boolean isLastSlot) {
         this.slotOverlaysMui2.put(computeOverlayKey(isOutput, false, isLastSlot), textureMui2);
         return this;
     }
 
     /**
-     * @param texture     the MUI1 texture to use
-     * @param textureMui2 the MUI2 texture to use
+     * @param textureMui2 the texture to use
      * @param isOutput    if the slot is an output slot
      * @return this
      */
-    public @NotNull RecipeMapBuilder<B> fluidSlotOverlay(@NotNull TextureArea texture, @NotNull UITexture textureMui2,
-                                                         boolean isOutput) {
-        fluidSlotOverlay(texture, isOutput);
+    public @NotNull RecipeMapBuilder<B> fluidSlotOverlay(@NotNull UITexture textureMui2, boolean isOutput) {
         this.slotOverlaysMui2.put(computeOverlayKey(isOutput, true, false), textureMui2);
         this.slotOverlaysMui2.put(computeOverlayKey(isOutput, true, true), textureMui2);
         return this;
     }
 
     /**
-     * @param texture     the MUI1 texture to use
-     * @param textureMui2 the MUI2 texture to use
+     * @param textureMui2 the texture to use
      * @param isOutput    if the slot is an output slot
      * @param isLastSlot  if the slot is the last slot
      * @return this
      */
-    public @NotNull RecipeMapBuilder<B> fluidSlotOverlay(@NotNull TextureArea texture, @NotNull UITexture textureMui2,
-                                                         boolean isOutput, boolean isLastSlot) {
-        fluidSlotOverlay(texture, isOutput, isLastSlot);
+    public @NotNull RecipeMapBuilder<B> fluidSlotOverlay(@NotNull UITexture textureMui2, boolean isOutput,
+                                                         boolean isLastSlot) {
         this.slotOverlaysMui2.put(computeOverlayKey(isOutput, true, isLastSlot), textureMui2);
-        return this;
-    }
-
-    public @NotNull RecipeMapBuilder<B> specialTexture(@NotNull TextureArea texture, int x, int y, int width,
-                                                       int height) {
-        this.specialTexture = texture;
-        this.specialTextureLocation = new int[] { x, y, width, height };
         return this;
     }
 
@@ -318,20 +222,11 @@ public class RecipeMapBuilder<B extends RecipeBuilder<B>> {
     private @NotNull RecipeMapUI<?> buildUI(@NotNull RecipeMap<?> recipeMap) {
         RecipeMapUI<?> ui = new RecipeMapUI<>(recipeMap, modifyItemInputs, modifyItemOutputs, modifyFluidInputs,
                 modifyFluidOutputs, isGenerator);
-        if (progressBar != null) {
-            ui.setProgressBarTexture(progressBar);
-        }
         if (progressBarMui2 != null) {
             ui.setProgressBarTextureMui2(progressBarMui2);
         }
         if (moveType != null) {
             ui.setProgressBarMoveType(moveType);
-        }
-        if (specialTexture != null && specialTextureLocation != null) {
-            ui.setSpecialTexture(specialTexture, specialTextureLocation);
-        }
-        for (var entry : slotOverlays.byte2ObjectEntrySet()) {
-            ui.setSlotOverlay(entry.getByteKey(), entry.getValue());
         }
         for (var entry : slotOverlaysMui2.byte2ObjectEntrySet()) {
             ui.setSlotOverlayMui2(entry.getByteKey(), entry.getValue());

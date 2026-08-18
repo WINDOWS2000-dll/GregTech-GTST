@@ -1,10 +1,10 @@
 package gregtech.api.gui;
 
 import gregtech.api.gui.impl.ModularUIGui;
+import gregtech.api.gui.resources.AdoptableTextureArea;
 import gregtech.api.gui.resources.IGuiTexture;
 import gregtech.api.gui.resources.TextureArea;
 import gregtech.api.gui.widgets.*;
-import gregtech.api.gui.widgets.ProgressWidget.MoveType;
 import gregtech.api.util.Position;
 import gregtech.common.ConfigHolder;
 
@@ -20,7 +20,6 @@ import com.google.common.collect.ImmutableList;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 /**
@@ -32,6 +31,14 @@ import java.util.function.Supplier;
  * To open and create ModularUI, see {@link UIFactory}
  */
 public final class ModularUI implements ISizeProvider {
+
+    // Formerly gregtech.api.gui.GuiTextures; inlined here as this is the only remaining consumer of these textures.
+    private static final TextureArea BACKGROUND = AdoptableTextureArea.fullImage("textures/gui/base/background.png",
+            176, 166, 3, 3);
+    private static final TextureArea BORDERED_BACKGROUND = AdoptableTextureArea
+            .fullImage("textures/gui/base/bordered_background.png", 195, 136, 4, 4);
+    private static final TextureArea SLOT = AdoptableTextureArea.fullImage("textures/gui/base/slot.png", 18, 18, 1,
+            1);
 
     public final ImmutableBiMap<Integer, Widget> guiWidgets;
 
@@ -122,19 +129,19 @@ public final class ModularUI implements ISizeProvider {
     }
 
     public static Builder defaultBuilder() {
-        return new Builder(GuiTextures.BACKGROUND, 176, 166);
+        return new Builder(BACKGROUND, 176, 166);
     }
 
     public static Builder defaultBuilder(int yOffset) {
-        return new Builder(GuiTextures.BACKGROUND, 176, 166 + yOffset);
+        return new Builder(BACKGROUND, 176, 166 + yOffset);
     }
 
     public static Builder borderedBuilder() {
-        return new Builder(GuiTextures.BORDERED_BACKGROUND, 195, 136);
+        return new Builder(BORDERED_BACKGROUND, 195, 136);
     }
 
     public static Builder extendedBuilder() {
-        return new Builder(GuiTextures.BACKGROUND, 176, 216);
+        return new Builder(BACKGROUND, 176, 216);
     }
 
     public static Builder builder(IGuiTexture background, int width, int height) {
@@ -233,12 +240,12 @@ public final class ModularUI implements ISizeProvider {
         }
 
         public Builder bindPlayerInventory(InventoryPlayer inventoryPlayer) {
-            bindPlayerInventory(inventoryPlayer, GuiTextures.SLOT, 0);
+            bindPlayerInventory(inventoryPlayer, SLOT, 0);
             return this;
         }
 
         public Builder bindPlayerInventory(InventoryPlayer inventoryPlayer, int startY) {
-            bindPlayerInventory(inventoryPlayer, GuiTextures.SLOT, 7, startY);
+            bindPlayerInventory(inventoryPlayer, SLOT, 7, startY);
             return this;
         }
 

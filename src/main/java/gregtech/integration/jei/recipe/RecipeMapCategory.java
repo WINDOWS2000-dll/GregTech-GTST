@@ -37,7 +37,6 @@ import com.cleanroommc.modularui.widget.ParentWidget;
 import com.cleanroommc.modularui.widget.WidgetTree;
 import com.cleanroommc.modularui.widget.sizer.Area;
 import com.cleanroommc.modularui.widgets.slot.ItemSlot;
-
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import mezz.jei.api.IGuiHelper;
 import mezz.jei.api.gui.IDrawable;

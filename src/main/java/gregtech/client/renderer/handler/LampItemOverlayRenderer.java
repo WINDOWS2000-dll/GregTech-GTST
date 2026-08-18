@@ -1,6 +1,6 @@
 package gregtech.client.renderer.handler;
 
-import gregtech.api.gui.GuiTextures;
+import gregtech.api.mui.GTGuiTextures;
 import gregtech.common.blocks.BlockLamp;
 
 import net.minecraft.block.Block;
@@ -43,11 +43,11 @@ public class LampItemOverlayRenderer {
         GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
 
         if (overlayType.noBloom()) {
-            GuiTextures.LAMP_NO_BLOOM.draw(xPosition, yPosition, 16, 16);
+            GTGuiTextures.LAMP_NO_BLOOM.draw(xPosition, yPosition, 16, 16);
         }
 
         if (overlayType.noLight()) {
-            GuiTextures.LAMP_NO_LIGHT.draw(xPosition, yPosition, 16, 16);
+            GTGuiTextures.LAMP_NO_LIGHT.draw(xPosition, yPosition, 16, 16);
         }
 
         GlStateManager.enableAlpha();

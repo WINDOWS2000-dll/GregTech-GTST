@@ -2,8 +2,6 @@ package gregtech.api.recipes.ui;
 
 import gregtech.api.GregTechAPI;
 import gregtech.api.capability.impl.FluidTankList;
-import gregtech.api.gui.GuiTextures;
-import gregtech.api.gui.resources.TextureArea;
 import gregtech.api.gui.widgets.ProgressWidget;
 import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.recipes.Recipe;
@@ -29,8 +27,6 @@ import it.unimi.dsi.fastutil.bytes.Byte2ObjectOpenHashMap;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.UnmodifiableView;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -40,7 +36,6 @@ import java.util.function.DoubleSupplier;
 @ApiStatus.Experimental
 public class RecipeMapUI<R extends RecipeMap<?>> {
 
-    private final Byte2ObjectMap<TextureArea> slotOverlays = new Byte2ObjectOpenHashMap<>();
     private final Byte2ObjectMap<UITexture> slotOverlaysMui2 = new Byte2ObjectOpenHashMap<>();
 
     private final R recipeMap;
@@ -51,13 +46,7 @@ public class RecipeMapUI<R extends RecipeMap<?>> {
 
     private final boolean isGenerator;
 
-    private TextureArea progressBarTexture = GuiTextures.PROGRESS_BAR_ARROW;
     private ProgressWidget.MoveType moveType = ProgressWidget.MoveType.HORIZONTAL;
-    private @Nullable TextureArea specialTexture;
-    private int @Nullable [] specialTexturePosition;
-
-    // MUI2 equivalent of progressBarTexture. Kept as a separate field since MUI1's TextureArea and MUI2's
-    // UITexture are not interconvertible (TextureArea only stores relative 0.0-1.0 UV coordinates).
     private @NotNull UITexture progressBarTextureMui2 = GTGuiTextures.PROGRESS_BAR_ARROW;
 
     private boolean isJEIVisible = true;
@@ -127,9 +116,7 @@ public class RecipeMapUI<R extends RecipeMap<?>> {
 
     /**
      * MUI2 equivalent of the old MUI1 createUITemplate. This DOES NOT include machine control widgets or bind the
-     * player inventory. <br>
-     * Note: slot overlays set via {@link #setItemSlotOverlay} / {@link #setFluidSlotOverlay} are MUI1-only
-     * ({@link TextureArea}) and are not applied here; only the base slot/fluid-slot background is used.
+     * player inventory.
      *
      * @param progressSupplier a supplier for the progress bar
      * @param importItems      the input item inventory
@@ -189,7 +176,7 @@ public class RecipeMapUI<R extends RecipeMap<?>> {
      * @return the JEI-aware progress widget, pre-configured only with its value
      */
     public @NotNull com.cleanroommc.modularui.widgets.ProgressWidget createJeiProgressWidget(
-                                                                                              @NotNull DoubleSupplier progressSupplier) {
+                                                                                             @NotNull DoubleSupplier progressSupplier) {
         RecipeMapProgressWidgetMui2 widget = new RecipeMapProgressWidgetMui2();
         widget.value(new DoubleSyncValue(progressSupplier));
         return widget;
@@ -329,7 +316,7 @@ public class RecipeMapUI<R extends RecipeMap<?>> {
      * @return the corresponding MUI2 direction
      */
     public static com.cleanroommc.modularui.widgets.ProgressWidget.@NotNull Direction toMui2Direction(
-                                                                                                        @NotNull ProgressWidget.MoveType moveType) {
+                                                                                                      @NotNull ProgressWidget.MoveType moveType) {
         return switch (moveType) {
             case HORIZONTAL -> com.cleanroommc.modularui.widgets.ProgressWidget.Direction.RIGHT;
             case HORIZONTAL_BACKWARDS -> com.cleanroommc.modularui.widgets.ProgressWidget.Direction.LEFT;
@@ -395,36 +382,10 @@ public class RecipeMapUI<R extends RecipeMap<?>> {
     }
 
     /**
-     * @return the texture of the progress bar
-     */
-    public @NotNull TextureArea progressBarTexture() {
-        return progressBarTexture;
-    }
-
-    /**
-     * @param progressBarTexture the new progress bar texture
-     */
-    public void setProgressBarTexture(@NotNull TextureArea progressBarTexture) {
-        this.progressBarTexture = progressBarTexture;
-    }
-
-    /**
-     * @param progressBarTexture the new progress bar texture
-     * @param moveType           the new progress bar move type
-     */
-    public void setProgressBar(@NotNull TextureArea progressBarTexture, @NotNull ProgressWidget.MoveType moveType) {
-        this.progressBarTexture = progressBarTexture;
-        this.moveType = moveType;
-    }
-
-    /**
-     * @param progressBarTexture     the new progress bar texture
      * @param progressBarTextureMui2 the new MUI2 progress bar texture
      * @param moveType               the new progress bar move type
      */
-    public void setProgressBar(@NotNull TextureArea progressBarTexture, @NotNull UITexture progressBarTextureMui2,
-                               @NotNull ProgressWidget.MoveType moveType) {
-        this.progressBarTexture = progressBarTexture;
+    public void setProgressBar(@NotNull UITexture progressBarTextureMui2, @NotNull ProgressWidget.MoveType moveType) {
         this.progressBarTextureMui2 = progressBarTextureMui2;
         this.moveType = moveType;
     }
@@ -441,40 +402,6 @@ public class RecipeMapUI<R extends RecipeMap<?>> {
      */
     public void setProgressBarTextureMui2(@NotNull UITexture progressBarTextureMui2) {
         this.progressBarTextureMui2 = progressBarTextureMui2;
-    }
-
-    /**
-     * @param specialTexture the special texture to set
-     * @param x              the x coordinate of the texture
-     * @param y              the y coordinate of the texture
-     * @param width          the width of the texture
-     * @param height         the height of the texture
-     */
-    public void setSpecialTexture(@NotNull TextureArea specialTexture, int x, int y, int width, int height) {
-        setSpecialTexture(specialTexture, new int[] { x, y, width, height });
-    }
-
-    /**
-     * @param specialTexture the special texture to set
-     * @param position       the position of the texture: [x, y, width, height]
-     */
-    public void setSpecialTexture(@NotNull TextureArea specialTexture, int @NotNull [] position) {
-        this.specialTexture = specialTexture;
-        this.specialTexturePosition = position;
-    }
-
-    /**
-     * @return the special texture
-     */
-    public @Nullable TextureArea specialTexture() {
-        return this.specialTexture;
-    }
-
-    /**
-     * @return the special texture's position
-     */
-    public int @Nullable @UnmodifiableView [] specialTexturePosition() {
-        return this.specialTexturePosition;
     }
 
     /**
@@ -527,53 +454,6 @@ public class RecipeMapUI<R extends RecipeMap<?>> {
     }
 
     /**
-     * @param texture  the texture to set
-     * @param isOutput if the slot is an output slot
-     */
-    public void setItemSlotOverlay(@NotNull TextureArea texture, boolean isOutput) {
-        this.slotOverlays.put(computeOverlayKey(isOutput, false, false), texture);
-        this.slotOverlays.put(computeOverlayKey(isOutput, false, true), texture);
-    }
-
-    /**
-     * @param texture    the texture to set
-     * @param isOutput   if the slot is an output slot
-     * @param isLastSlot if the slot is the last slot
-     */
-    public void setItemSlotOverlay(@NotNull TextureArea texture, boolean isOutput, boolean isLastSlot) {
-        this.slotOverlays.put(computeOverlayKey(isOutput, false, isLastSlot), texture);
-    }
-
-    /**
-     * @param texture  the texture to set
-     * @param isOutput if the slot is an output slot
-     */
-    public void setFluidSlotOverlay(@NotNull TextureArea texture, boolean isOutput) {
-        this.slotOverlays.put(computeOverlayKey(isOutput, true, false), texture);
-        this.slotOverlays.put(computeOverlayKey(isOutput, true, true), texture);
-    }
-
-    /**
-     * @param texture    the texture to set
-     * @param isOutput   if the slot is an output slot
-     * @param isLastSlot if the slot is the last slot
-     */
-    public void setFluidSlotOverlay(@NotNull TextureArea texture, boolean isOutput, boolean isLastSlot) {
-        this.slotOverlays.put(computeOverlayKey(isOutput, true, isLastSlot), texture);
-    }
-
-    /**
-     * @param key     the key to store the slot's texture with
-     * @param texture the texture to store
-     */
-    @ApiStatus.Internal
-    public void setSlotOverlay(byte key, @NotNull TextureArea texture) {
-        this.slotOverlays.put(key, texture);
-    }
-
-    /**
-     * MUI2 equivalent of {@link #setItemSlotOverlay(TextureArea, boolean)}.
-     *
      * @param texture  the MUI2 texture to set
      * @param isOutput if the slot is an output slot
      */
@@ -583,8 +463,6 @@ public class RecipeMapUI<R extends RecipeMap<?>> {
     }
 
     /**
-     * MUI2 equivalent of {@link #setItemSlotOverlay(TextureArea, boolean, boolean)}.
-     *
      * @param texture    the MUI2 texture to set
      * @param isOutput   if the slot is an output slot
      * @param isLastSlot if the slot is the last slot
@@ -594,8 +472,6 @@ public class RecipeMapUI<R extends RecipeMap<?>> {
     }
 
     /**
-     * MUI2 equivalent of {@link #setFluidSlotOverlay(TextureArea, boolean)}.
-     *
      * @param texture  the MUI2 texture to set
      * @param isOutput if the slot is an output slot
      */
@@ -605,8 +481,6 @@ public class RecipeMapUI<R extends RecipeMap<?>> {
     }
 
     /**
-     * MUI2 equivalent of {@link #setFluidSlotOverlay(TextureArea, boolean, boolean)}.
-     *
      * @param texture    the MUI2 texture to set
      * @param isOutput   if the slot is an output slot
      * @param isLastSlot if the slot is the last slot
@@ -616,8 +490,6 @@ public class RecipeMapUI<R extends RecipeMap<?>> {
     }
 
     /**
-     * MUI2 equivalent of {@link #setSlotOverlay(byte, TextureArea)}.
-     *
      * @param key     the key to store the slot's texture with
      * @param texture the MUI2 texture to store
      */

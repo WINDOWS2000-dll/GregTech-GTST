@@ -115,7 +115,8 @@ public class WidgetScreenGrid extends Widget<WidgetScreenGrid> implements Intera
         @Override
         public void readOnServer(int id, PacketBuffer buf) {
             if (id == OPEN_UI && screen != null) {
-                MetaTileEntityUIFactory.INSTANCE.openUI(screen.getHolder(), (EntityPlayerMP) getSyncManager().getPlayer());
+                MetaTileEntityUIFactory.INSTANCE.openUI(screen.getHolder(),
+                        (EntityPlayerMP) getSyncManager().getPlayer());
             }
         }
 

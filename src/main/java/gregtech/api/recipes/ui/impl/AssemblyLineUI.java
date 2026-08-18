@@ -1,7 +1,6 @@
 package gregtech.api.recipes.ui.impl;
 
 import gregtech.api.capability.impl.FluidTankList;
-import gregtech.api.gui.GuiTextures;
 import gregtech.api.gui.widgets.ProgressWidget;
 import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.recipes.RecipeMap;
@@ -26,7 +25,7 @@ public final class AssemblyLineUI<R extends RecipeMap<?>> extends RecipeMapUI<R>
      */
     public AssemblyLineUI(@NotNull R recipeMap) {
         super(recipeMap, false, false, false, false, false);
-        setProgressBar(GuiTextures.PROGRESS_BAR_ARROW, ProgressWidget.MoveType.HORIZONTAL);
+        setProgressBarMoveType(ProgressWidget.MoveType.HORIZONTAL);
     }
 
     @Override

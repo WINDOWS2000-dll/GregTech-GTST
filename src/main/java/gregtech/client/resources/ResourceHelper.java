@@ -1,4 +1,4 @@
-package gregtech.api.gui.resources;
+package gregtech.client.resources;
 
 import gregtech.api.GTValues;
 import gregtech.api.util.GTUtility;

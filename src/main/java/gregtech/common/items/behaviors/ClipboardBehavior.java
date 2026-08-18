@@ -10,6 +10,7 @@ import gregtech.api.mui.GTGuis;
 import gregtech.api.mui.factory.MetaItemGuiFactory;
 import gregtech.common.items.MetaItems;
 import gregtech.common.metatileentities.MetaTileEntityClipboard;
+import gregtech.common.mui.widget.GTTextFieldWidget;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -25,7 +26,6 @@ import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.World;
 
 import codechicken.lib.raytracer.RayTracer;
-
 import com.cleanroommc.modularui.api.drawable.IKey;
 import com.cleanroommc.modularui.api.value.IIntValue;
 import com.cleanroommc.modularui.api.widget.Interactable;
@@ -39,7 +39,6 @@ import com.cleanroommc.modularui.value.sync.StringSyncValue;
 import com.cleanroommc.modularui.widget.Widget;
 import com.cleanroommc.modularui.widgets.ButtonWidget;
 import com.cleanroommc.modularui.widgets.CycleButtonWidget;
-import gregtech.common.mui.widget.GTTextFieldWidget;
 
 import static gregtech.common.metatileentities.MetaTileEntities.CLIPBOARD_TILE;
 

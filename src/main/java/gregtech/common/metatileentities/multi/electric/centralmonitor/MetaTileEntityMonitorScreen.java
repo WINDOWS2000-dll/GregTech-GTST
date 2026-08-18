@@ -614,16 +614,20 @@ public class MetaTileEntityMonitorScreen extends MetaTileEntityMultiblockPart {
                         .pos(50, 50).size(20, 20).overlay(IKey.str("-1"))
                         .onMousePressed(m -> {
                             scaleValue.setDoubleValue(
-                                    Math.round((scaleValue.getDoubleValue() - (Interactable.hasShiftDown() ? 1.0 : 0.1)) *
-                                            10) / 10.0);
+                                    Math.round(
+                                            (scaleValue.getDoubleValue() - (Interactable.hasShiftDown() ? 1.0 : 0.1)) *
+                                                    10) /
+                                            10.0);
                             return true;
                         }))
                 .child(new ButtonWidget<>()
                         .pos(130, 50).size(20, 20).overlay(IKey.str("+1"))
                         .onMousePressed(m -> {
                             scaleValue.setDoubleValue(
-                                    Math.round((scaleValue.getDoubleValue() + (Interactable.hasShiftDown() ? 1.0 : 0.1)) *
-                                            10) / 10.0);
+                                    Math.round(
+                                            (scaleValue.getDoubleValue() + (Interactable.hasShiftDown() ? 1.0 : 0.1)) *
+                                                    10) /
+                                            10.0);
                             return true;
                         }))
                 .child(IKey.dynamic(() -> Float.toString(this.scale)).asWidget()

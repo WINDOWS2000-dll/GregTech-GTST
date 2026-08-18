@@ -1,9 +1,12 @@
-package gregtech.api.gui.resources;
+package gregtech.client.resources;
 
-import gregtech.api.gui.Widget;
+import gregtech.api.gui.resources.IGuiTexture;
 import gregtech.client.shader.Shaders;
 import gregtech.common.ConfigHolder;
 
+import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -103,8 +106,19 @@ public class ShaderTexture implements IGuiTexture {
                     uniformCache.accept(cache);
                 }
             });
-            Widget.drawTextureRect(x, y, width, height);
+            drawTextureRect(x, y, width, height);
             program.releaseShader();
         }
+    }
+
+    private static void drawTextureRect(double x, double y, double width, double height) {
+        Tessellator tessellator = Tessellator.getInstance();
+        BufferBuilder buffer = tessellator.getBuffer();
+        buffer.begin(7, DefaultVertexFormats.POSITION_TEX);
+        buffer.pos(x, y + height, 0.0D).tex(0, 0).endVertex();
+        buffer.pos(x + width, y + height, 0.0D).tex(1, 0).endVertex();
+        buffer.pos(x + width, y, 0.0D).tex(1, 1).endVertex();
+        buffer.pos(x, y, 0.0D).tex(0, 1).endVertex();
+        tessellator.draw();
     }
 }
