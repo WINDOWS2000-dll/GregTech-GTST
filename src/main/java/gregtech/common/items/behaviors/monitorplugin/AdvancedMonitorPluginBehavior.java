@@ -1,9 +1,6 @@
 package gregtech.common.items.behaviors.monitorplugin;
 
 import gregtech.api.capability.GregtechDataCodes;
-import gregtech.api.gui.IUIHolder;
-import gregtech.api.gui.widgets.LabelWidget;
-import gregtech.api.gui.widgets.ToggleButtonWidget;
 import gregtech.api.items.behavior.MonitorPluginBaseBehavior;
 import gregtech.api.items.behavior.ProxyHolderPluginBehavior;
 import gregtech.api.metatileentity.MetaTileEntity;
@@ -14,8 +11,6 @@ import gregtech.client.renderer.scene.FBOWorldSceneRenderer;
 import gregtech.client.renderer.scene.WorldSceneRenderer;
 import gregtech.client.utils.RenderUtil;
 import gregtech.client.utils.TrackedDummyWorld;
-import gregtech.common.gui.widget.WidgetScrollBar;
-import gregtech.common.gui.widget.monitor.WidgetPluginConfig;
 import gregtech.common.metatileentities.multi.electric.centralmonitor.MetaTileEntityCentralMonitor;
 import gregtech.common.metatileentities.multi.electric.centralmonitor.MetaTileEntityMonitorScreen;
 
@@ -45,6 +40,15 @@ import codechicken.lib.render.CCRenderState;
 import codechicken.lib.render.pipeline.ColourMultiplier;
 import codechicken.lib.vec.Cuboid6;
 import codechicken.lib.vec.Translation;
+import com.cleanroommc.modularui.api.GuiAxis;
+import com.cleanroommc.modularui.api.drawable.IKey;
+import com.cleanroommc.modularui.api.widget.IWidget;
+import com.cleanroommc.modularui.value.sync.BooleanSyncValue;
+import com.cleanroommc.modularui.value.sync.DoubleSyncValue;
+import com.cleanroommc.modularui.value.sync.PanelSyncManager;
+import com.cleanroommc.modularui.widget.ParentWidget;
+import com.cleanroommc.modularui.widgets.SliderWidget;
+import com.cleanroommc.modularui.widgets.ToggleButton;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.input.Mouse;
@@ -281,23 +285,41 @@ public class AdvancedMonitorPluginBehavior extends ProxyHolderPluginBehavior {
     }
 
     @Override
-    public WidgetPluginConfig customUI(WidgetPluginConfig widgetGroup, IUIHolder holder, EntityPlayer entityPlayer) {
-        return widgetGroup.setSize(260, 170)
-                .widget(new WidgetScrollBar(25, 20, 210, 0.3f, 2, 0.1f,
-                        value -> setConfig(value, this.rotationPitch, this.rotationYaw, this.spin, this.connect))
-                                .setTitle("zoom", 0XFFFFFFFF).setInitValue(this.scale))
-                .widget(new WidgetScrollBar(25, 40, 210, 0, 360, 1,
-                        value -> setConfig(this.scale, value.intValue(), this.rotationYaw, this.spin, this.connect))
-                                .setTitle("rotationPitch", 0XFFFFFFFF).setInitValue(this.rotationPitch))
-                .widget(new WidgetScrollBar(25, 60, 210, -90, 90, 1,
-                        value -> setConfig(this.scale, this.rotationPitch, value.intValue(), this.spin, this.connect))
-                                .setTitle("rotationYaw", 0XFFFFFFFF).setInitValue(this.rotationYaw))
-                .widget(new WidgetScrollBar(25, 100, 210, 0, 2, 0.1f,
-                        value -> setConfig(this.scale, this.rotationPitch, this.rotationYaw, value, this.connect))
-                                .setTitle("spinDur", 0XFFFFFFFF).setInitValue(this.spin))
-                .widget(new LabelWidget(25, 135, "Fake GUI:", 0XFFFFFFFF))
-                .widget(new ToggleButtonWidget(80, 130, 20, 20, () -> this.connect,
-                        state -> setConfig(this.scale, this.rotationPitch, this.rotationYaw, this.spin, state)));
+    public IWidget customUI(PanelSyncManager syncManager) {
+        DoubleSyncValue zoomValue = new DoubleSyncValue(
+                () -> (this.scale - 0.3) / (2 - 0.3),
+                v -> setConfig((float) (Math.round((0.3 + v * (2 - 0.3)) * 10) / 10.0), this.rotationPitch,
+                        this.rotationYaw, this.spin, this.connect));
+        DoubleSyncValue rotationPitchValue = new DoubleSyncValue(
+                () -> this.rotationPitch / 360.0,
+                v -> setConfig(this.scale, (int) Math.round(v * 360), this.rotationYaw, this.spin, this.connect));
+        DoubleSyncValue rotationYawValue = new DoubleSyncValue(
+                () -> (this.rotationYaw + 90) / 180.0,
+                v -> setConfig(this.scale, this.rotationPitch, (int) Math.round(v * 180 - 90), this.spin,
+                        this.connect));
+        DoubleSyncValue spinValue = new DoubleSyncValue(
+                () -> this.spin / 2.0,
+                v -> setConfig(this.scale, this.rotationPitch, this.rotationYaw,
+                        (float) (Math.round(v * 2 * 10) / 10.0), this.connect));
+        BooleanSyncValue connectValue = new BooleanSyncValue(() -> this.connect,
+                v -> setConfig(this.scale, this.rotationPitch, this.rotationYaw, this.spin, v));
+
+        ParentWidget<?> panel = new ParentWidget<>();
+        panel.child(new SliderWidget()
+                .pos(25, 20).size(210, 10).bounds(0, 1).setAxis(GuiAxis.X)
+                .value(zoomValue).overlay(IKey.str("zoom")));
+        panel.child(new SliderWidget()
+                .pos(25, 40).size(210, 10).bounds(0, 1).setAxis(GuiAxis.X)
+                .value(rotationPitchValue).overlay(IKey.str("rotationPitch")));
+        panel.child(new SliderWidget()
+                .pos(25, 60).size(210, 10).bounds(0, 1).setAxis(GuiAxis.X)
+                .value(rotationYawValue).overlay(IKey.str("rotationYaw")));
+        panel.child(new SliderWidget()
+                .pos(25, 100).size(210, 10).bounds(0, 1).setAxis(GuiAxis.X)
+                .value(spinValue).overlay(IKey.str("spinDur")));
+        panel.child(IKey.str("Fake GUI:").asWidget().pos(25, 135));
+        panel.child(new ToggleButton().pos(80, 130).size(20).value(connectValue));
+        return panel;
     }
 
     @Override

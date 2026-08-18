@@ -362,6 +362,10 @@ public class MetaTileEntityCentralMonitor extends MultiblockWithDisplayBase impl
             readCovers(buf);
         } else if (id == GregtechDataCodes.UPDATE_HEIGHT) {
             this.height = buf.readInt();
+            // resize screens to match the new height immediately: otherwise a render tick landing before the
+            // follow-up UPDATE_ALL (sent once the server re-forms the structure) reads screens[w] at its old,
+            // now too-small length and throws ArrayIndexOutOfBoundsException.
+            clearScreens();
             this.reinitializeStructurePattern();
         } else if (id == GregtechDataCodes.UPDATE_ACTIVE) {
             this.isActive = buf.readBoolean();
@@ -541,9 +545,15 @@ public class MetaTileEntityCentralMonitor extends MultiblockWithDisplayBase impl
                 RayTraceResult rayTraceResult = player == null ? null : player
                         .rayTrace(Minecraft.getMinecraft().playerController.getBlockReachDistance(), partialTicks);
                 int size = 0;
-                for (int w = 0; w < width; w++) {
-                    for (int h = 0; h < height; h++) {
-                        MetaTileEntityMonitorScreen screen = screens[w][h];
+                // clamp against screens' actual bounds, not just width/height: those two fields and the screens
+                // array are updated by separate packets (see receiveCustomData), so a render tick can land while
+                // they're transiently out of sync with each other.
+                int renderWidth = Math.min(width, screens.length);
+                for (int w = 0; w < renderWidth; w++) {
+                    MetaTileEntityMonitorScreen[] column = screens[w];
+                    int renderHeight = Math.min(height, column.length);
+                    for (int h = 0; h < renderHeight; h++) {
+                        MetaTileEntityMonitorScreen screen = column[h];
                         if (screen != null) {
                             size++;
                             if (screen.isActive()) {

@@ -1,6 +1,4 @@
-package gregtech.api.gui.resources.picturetexture;
-
-import gregtech.api.gui.resources.utils.ProcessedImageData;
+package gregtech.client.renderer.texture.picture;
 
 public class OrdinaryTexture extends PictureTexture {
 

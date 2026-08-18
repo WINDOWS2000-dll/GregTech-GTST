@@ -121,11 +121,7 @@ public class GregtechDataCodes {
     public static final int UPDATE_PLUGIN_DATA = assignId();
     public static final int UPDATE_PLUGIN_CONFIG = assignId();
     public static final int ACTION_PLUGIN_CONFIG = assignId();
-    public static final int UPDATE_PLUGIN_CLICK = assignId();
     public static final int UPDATE_ADVANCED_VALID_POS = assignId();
-    public static final int UPDATE_FAKE_GUI = assignId();
-    public static final int ACTION_FAKE_GUI = assignId();
-    public static final int UPDATE_FAKE_GUI_DETECT = assignId();
 
     // Digital Interface
     public static final int UPDATE_COVER_MODE = assignId();

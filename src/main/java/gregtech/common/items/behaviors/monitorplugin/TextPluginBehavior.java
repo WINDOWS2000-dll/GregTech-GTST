@@ -1,19 +1,21 @@
 package gregtech.common.items.behaviors.monitorplugin;
 
 import gregtech.api.capability.GregtechDataCodes;
-import gregtech.api.gui.IUIHolder;
-import gregtech.api.gui.widgets.TextFieldWidget;
 import gregtech.api.items.behavior.MonitorPluginBaseBehavior;
 import gregtech.client.utils.RenderUtil;
-import gregtech.common.gui.widget.WidgetARGB;
-import gregtech.common.gui.widget.monitor.WidgetPluginConfig;
+import gregtech.common.mui.widget.GTTextFieldWidget;
+import gregtech.common.mui.widget.WidgetARGB;
 
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+
+import com.cleanroommc.modularui.api.widget.IWidget;
+import com.cleanroommc.modularui.value.sync.PanelSyncManager;
+import com.cleanroommc.modularui.value.sync.StringSyncValue;
+import com.cleanroommc.modularui.widget.ParentWidget;
 
 import java.util.Arrays;
 
@@ -92,15 +94,16 @@ public class TextPluginBehavior extends MonitorPluginBaseBehavior {
     }
 
     @Override
-    public WidgetPluginConfig customUI(WidgetPluginConfig widgets, IUIHolder holder, EntityPlayer entityPlayer) {
-        widgets.setSize(260, 210);
+    public IWidget customUI(PanelSyncManager syncManager) {
+        ParentWidget<?> panel = new ParentWidget<>();
         for (int i = 0; i < texts.length; i++) {
-            int finalI = i;
-            widgets.addWidget(new TextFieldWidget(25, 25 + i * 10, 100, 10, true, () -> this.texts[finalI],
-                    (text) -> setText(finalI, text, this.colors[finalI])).setValidator((data) -> true));
-            widgets.addWidget(new WidgetARGB(135, 25 + i * 10, 10, colors[i],
-                    color -> setText(finalI, this.texts[finalI], color)));
+            int line = i;
+            panel.child(new GTTextFieldWidget()
+                    .pos(25, 25 + line * 10).size(100, 10)
+                    .value(new StringSyncValue(() -> texts[line], text -> setText(line, text, colors[line]))));
+            panel.child(new WidgetARGB(10, () -> colors[line], color -> setText(line, texts[line], color))
+                    .pos(135, 25 + line * 10));
         }
-        return widgets;
+        return panel;
     }
 }

@@ -1,4 +1,4 @@
-package gregtech.api.gui.resources.utils;
+package gregtech.client.renderer.texture.picture;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -16,7 +16,7 @@ import java.util.ArrayList;
  * Example:
  *
  * <pre>
- * 
+ *
  * {
  *     &#64;code
  *     GifDecoder d = new GifDecoder();

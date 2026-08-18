@@ -1,12 +1,7 @@
 package gregtech.common.items.behaviors.monitorplugin;
 
+import gregtech.api.GregTechAPI;
 import gregtech.api.capability.GregtechDataCodes;
-import gregtech.api.gui.GuiTextures;
-import gregtech.api.gui.IUIHolder;
-import gregtech.api.gui.ModularUI;
-import gregtech.api.gui.Widget;
-import gregtech.api.gui.impl.FakeModularGui;
-import gregtech.api.gui.widgets.*;
 import gregtech.api.items.behavior.MonitorPluginBaseBehavior;
 import gregtech.api.items.behavior.ProxyHolderPluginBehavior;
 import gregtech.api.items.toolitem.ToolClasses;
@@ -15,17 +10,16 @@ import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.metatileentity.multiblock.IMultiblockPart;
 import gregtech.api.metatileentity.multiblock.MultiblockControllerBase;
+import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.pattern.PatternMatchContext;
 import gregtech.api.util.GTLog;
-import gregtech.api.util.GregFakePlayer;
-import gregtech.common.gui.impl.FakeModularUIPluginContainer;
-import gregtech.common.gui.widget.monitor.WidgetPluginConfig;
+import gregtech.common.metatileentities.multi.electric.centralmonitor.MetaTileEntityMonitorScreen;
+import gregtech.common.mui.fakegui.FakeGuiClientSession;
+import gregtech.common.mui.fakegui.FakeGuiServerSession;
+import gregtech.core.network.packets.PacketFakeGuiSession;
 
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.inventory.IInventory;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.tileentity.TileEntity;
@@ -33,39 +27,54 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
-import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import net.minecraftforge.items.wrapper.PlayerMainInvWrapper;
 
-import java.lang.reflect.Method;
-import java.util.*;
+import com.cleanroommc.modularui.api.drawable.IKey;
+import com.cleanroommc.modularui.api.widget.IWidget;
+import com.cleanroommc.modularui.value.sync.PanelSyncManager;
+import com.cleanroommc.modularui.widget.ParentWidget;
+import com.cleanroommc.modularui.widgets.ButtonWidget;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
+/**
+ * Mirrors another machine's real MUI2 GUI onto the monitor screen it's plugged into, live: sneak-clicking the
+ * mirror relays the click into it, and a plain right-click opens the real machine's GUI directly.
+ * <p>
+ * Every viewing player gets their own {@link FakeGuiServerSession}/{@link FakeGuiClientSession} pair, built by
+ * simply calling the target's own {@code buildUI(...)} and registering the resulting sync manager with MUI2's real
+ * network layer - without ever making Minecraft think that player's GUI is actually open. See those classes for
+ * how.
+ */
 public class FakeGuiPluginBehavior extends ProxyHolderPluginBehavior {
 
     private int partIndex;
 
     // run-time
-    @SideOnly(Side.CLIENT)
-    private FakeModularGui fakeModularGui;
     private BlockPos partPos;
-    private FakeModularUIPluginContainer fakeModularUIContainer;
-    private GregFakePlayer fakePlayer;
-    private static final Method methodCreateUI = ObfuscationReflectionHelper.findMethod(MetaTileEntity.class,
-            "createUI", ModularUI.class, EntityPlayer.class);
-    static {
-        methodCreateUI.setAccessible(true);
-    }
+    private final Map<UUID, FakeGuiServerSession> serverSessions = new HashMap<>();
+    @SideOnly(Side.CLIENT)
+    private FakeGuiClientSession clientSession;
 
     public void setConfig(int partIndex) {
         if (this.partIndex == partIndex || partIndex < 0) return;
         this.partIndex = partIndex;
         this.partPos = null;
+        disposeServerSessions();
         writePluginData(GregtechDataCodes.UPDATE_PLUGIN_CONFIG, buffer -> buffer.writeVarInt(this.partIndex));
         markAsDirty();
     }
 
     public MetaTileEntity getRealMTE() {
+        if (this.holder == null) return null; // no proxied target bound (e.g. mode isn't PROXY, or no cover picked)
         MetaTileEntity target = this.holder.getMetaTileEntity();
         if (target instanceof MultiblockControllerBase multi && partIndex > 0) {
             if (partPos != null) {
@@ -96,62 +105,49 @@ public class FakeGuiPluginBehavior extends ProxyHolderPluginBehavior {
         return target;
     }
 
-    public void createFakeGui() {
-        if (this.holder == null || this.screen == null || !this.screen.isValid()) return;
+    /** Called client-side once the server has granted us a session to mirror the current target. */
+    @SideOnly(Side.CLIENT)
+    public void onSessionGranted(int networkId) {
+        MetaTileEntity target = getRealMTE();
+        if (target == null) return; // stale reply, target already changed again
+        disposeClientSession();
         try {
-            fakePlayer = new GregFakePlayer(this.screen.getWorld());
-            MetaTileEntity mte = getRealMTE();
-            if (mte == null || (this.partIndex > 0 && this.holder.getMetaTileEntity() == mte)) {
-                fakeModularUIContainer = null;
-                if (this.screen.getWorld().isRemote) {
-                    fakeModularGui = null;
-                }
-                return;
-            }
-            ModularUI ui = (ModularUI) methodCreateUI.invoke(mte, fakePlayer);
-            if (ui == null) {
-                fakeModularUIContainer = null;
-                if (this.screen.getWorld().isRemote) {
-                    fakeModularGui = null;
-                }
-                return;
-            }
-            List<Widget> widgets = new ArrayList<>();
-            boolean hasPlayerInventory = false;
-            for (Widget widget : ui.guiWidgets.values()) {
-                if (widget instanceof SlotWidget) {
-                    IInventory handler = ((SlotWidget) widget).getHandle().inventory;
-                    if (handler instanceof PlayerMainInvWrapper || handler instanceof InventoryPlayer) {
-                        hasPlayerInventory = true;
-                        continue;
-                    }
-                }
-                widgets.add(widget);
-            }
-            ModularUI.Builder builder = new ModularUI.Builder(ui.backgroundPath, ui.getWidth(),
-                    ui.getHeight() - (hasPlayerInventory ? 80 : 0));
-            for (Widget widget : widgets) {
-                builder.widget(widget);
-            }
-            ui = builder.build(ui.holder, ui.entityPlayer);
-            fakeModularUIContainer = new FakeModularUIPluginContainer(ui, this);
-            if (this.screen.getWorld().isRemote) {
-                fakeModularGui = new FakeModularGui(ui, fakeModularUIContainer);
-                writePluginAction(GregtechDataCodes.ACTION_PLUGIN_CONFIG, buffer -> {});
-            }
+            clientSession = new FakeGuiClientSession(target, networkId);
         } catch (Exception e) {
-            GTLog.logger.error(e);
+            GTLog.logger.error("Could not build FakeGui mirror session for {}", target, e);
+        }
+    }
+
+    private void disposeServerSessions() {
+        if (!serverSessions.isEmpty()) {
+            serverSessions.values().forEach(FakeGuiServerSession::dispose);
+            serverSessions.clear();
+        }
+    }
+
+    @SideOnly(Side.CLIENT)
+    private void disposeClientSession() {
+        if (clientSession != null) {
+            clientSession.dispose();
+            clientSession = null;
         }
     }
 
     @Override
     public void readPluginAction(EntityPlayerMP player, int id, PacketBuffer buf) {
         if (id == GregtechDataCodes.ACTION_PLUGIN_CONFIG) {
-            createFakeGui();
-        }
-        if (id == GregtechDataCodes.ACTION_FAKE_GUI) {
-            if (this.fakeModularUIContainer != null) {
-                fakeModularUIContainer.handleClientAction(buf);
+            FakeGuiServerSession old = serverSessions.remove(player.getUniqueID());
+            if (old != null) old.dispose();
+            MetaTileEntity target = getRealMTE();
+            if (target != null) {
+                try {
+                    FakeGuiServerSession session = new FakeGuiServerSession(target, player);
+                    serverSessions.put(player.getUniqueID(), session);
+                    GregTechAPI.networkHandler.sendTo(new PacketFakeGuiSession(this.screen.getPos(),
+                            session.getNetworkId()), player);
+                } catch (Exception e) {
+                    GTLog.logger.error("Could not build FakeGui mirror session for {}", target, e);
+                }
             }
         }
     }
@@ -170,15 +166,19 @@ public class FakeGuiPluginBehavior extends ProxyHolderPluginBehavior {
 
     @Override
     public void onHolderChanged(IGregTechTileEntity lastHolder) {
-        if (holder == null) {
-            if (this.screen.getWorld() != null && this.screen.getWorld().isRemote) {
-                fakeModularGui = null;
-            }
-            fakeModularUIContainer = null;
-            fakePlayer = null;
-        } else {
-            if (this.screen.getWorld().isRemote) {
-                createFakeGui();
+        disposeServerSessions();
+        if (this.screen.getWorld() != null && this.screen.getWorld().isRemote) {
+            disposeClientSession();
+        }
+    }
+
+    @Override
+    public void onMonitorValid(MetaTileEntityMonitorScreen screen, boolean valid) {
+        super.onMonitorValid(screen, valid);
+        if (!valid) {
+            disposeServerSessions();
+            if (screen != null && screen.getWorld() != null && screen.getWorld().isRemote) {
+                disposeClientSession();
             }
         }
     }
@@ -186,22 +186,25 @@ public class FakeGuiPluginBehavior extends ProxyHolderPluginBehavior {
     @Override
     public void update() {
         super.update();
+        MetaTileEntity target = getRealMTE();
         if (this.screen.getWorld().isRemote) {
-            if (partIndex > 0 && fakeModularUIContainer == null && this.screen.getOffsetTimer() % 20 == 0) {
-                createFakeGui();
+            if (target == null) {
+                disposeClientSession();
+            } else if (clientSession == null && this.screen.getOffsetTimer() % 20 == 0) {
+                writePluginAction(GregtechDataCodes.ACTION_PLUGIN_CONFIG, buffer -> {});
             }
-            if (fakeModularGui != null)
-                fakeModularGui.updateScreen();
+        } else if (target == null) {
+            disposeServerSessions();
         } else {
-            if (partIndex > 0 && this.screen.getOffsetTimer() % 20 == 0) {
-                if (fakeModularUIContainer != null && getRealMTE() == null) {
-                    this.writePluginData(GregtechDataCodes.UPDATE_PLUGIN_CONFIG,
-                            buf -> buf.writeVarInt(this.partIndex));
-                    fakeModularUIContainer = null;
+            serverSessions.entrySet().removeIf(entry -> {
+                EntityPlayerMP viewer = entry.getValue().getViewer();
+                if (!viewer.world.playerEntities.contains(viewer)) {
+                    entry.getValue().dispose();
+                    return true;
                 }
-            }
-            if (fakeModularUIContainer != null)
-                fakeModularUIContainer.detectAndSendChanges();
+                entry.getValue().tick();
+                return false;
+            });
         }
     }
 
@@ -210,46 +213,35 @@ public class FakeGuiPluginBehavior extends ProxyHolderPluginBehavior {
         return new FakeGuiPluginBehavior();
     }
 
+    @SideOnly(Side.CLIENT)
     @Override
     public void renderPlugin(float partialTicks, RayTraceResult rayTraceResult) {
-        if (fakeModularGui != null) {
-            double[] result = this.screen.checkLookingAt(rayTraceResult);
-            GlStateManager.translate(0, 0, 0.01);
-            if (result == null)
-                fakeModularGui.drawScreen(0, 0, partialTicks);
-            else
-                fakeModularGui.drawScreen(result[0], result[1], partialTicks);
+        if (clientSession == null) return;
+        double[] result = this.screen.checkLookingAt(rayTraceResult);
+        if (result == null) {
+            clientSession.render(0, 0, partialTicks);
+        } else {
+            clientSession.render(result[0], result[1], partialTicks);
         }
     }
 
     @Override
     public boolean onClickLogic(EntityPlayer playerIn, EnumHand hand, EnumFacing facing, boolean isRight, double x,
                                 double y) {
-        if (this.screen.getWorld().isRemote) return true;
-        if (fakeModularUIContainer != null && fakeModularUIContainer.modularUI != null &&
-                !ToolHelper.isTool(playerIn.getHeldItemMainhand(), ToolClasses.SCREWDRIVER)) {
-            int width = fakeModularUIContainer.modularUI.getWidth();
-            int height = fakeModularUIContainer.modularUI.getHeight();
-            float halfW = width / 2f;
-            float halfH = height / 2f;
-            float scale = 0.5f / Math.max(halfW, halfH);
-            int mouseX = (int) ((x / scale) + (halfW > halfH ? 0 : (halfW - halfH)));
-            int mouseY = (int) ((y / scale) + (halfH > halfW ? 0 : (halfH - halfW)));
-            MetaTileEntity mte = getRealMTE();
-            if (mte != null && 0 <= mouseX && mouseX <= width && 0 <= mouseY && mouseY <= height) {
-                if (playerIn.isSneaking()) {
-                    writePluginData(GregtechDataCodes.UPDATE_PLUGIN_CLICK, buf -> {
-                        buf.writeVarInt(mouseX);
-                        buf.writeVarInt(mouseY);
-                        buf.writeVarInt(isRight ? 1 : 0);
-                        buf.writeVarInt(fakeModularUIContainer.syncId);
-                    });
-                } else {
-                    return isRight && mte.onRightClick(playerIn, hand, facing, null);
-                }
+        MetaTileEntity mte = getRealMTE();
+        if (mte == null || ToolHelper.isTool(playerIn.getHeldItemMainhand(), ToolClasses.SCREWDRIVER)) return false;
+        if (!this.screen.getWorld().isRemote) {
+            // Server: a plain (non-sneak) right-click is a shortcut that opens the real machine's own GUI directly.
+            // Sneak-clicks are relayed by the clicking player's own client below and don't need anything here.
+            if (!playerIn.isSneaking()) {
+                return isRight && mte.onRightClick(playerIn, hand, facing, null);
             }
+            return true;
         }
-        return false;
+        if (playerIn.isSneaking() && clientSession != null) {
+            clientSession.click(x, y, isRight ? 1 : 0);
+        }
+        return true;
     }
 
     @Override
@@ -257,34 +249,26 @@ public class FakeGuiPluginBehavior extends ProxyHolderPluginBehavior {
         if (id == GregtechDataCodes.UPDATE_PLUGIN_CONFIG) {
             this.partIndex = buf.readVarInt();
             this.partPos = null;
-            createFakeGui();
-        } else if (id == GregtechDataCodes.UPDATE_FAKE_GUI) {
-            int windowID = buf.readVarInt();
-            int widgetID = buf.readVarInt();
-            if (fakeModularGui != null)
-                fakeModularGui.handleWidgetUpdate(windowID, widgetID, buf);
-        } else if (id == GregtechDataCodes.UPDATE_FAKE_GUI_DETECT) {
-            if (fakeModularUIContainer != null)
-                fakeModularUIContainer.handleSlotUpdate(buf);
-        } else if (id == GregtechDataCodes.UPDATE_PLUGIN_CLICK) {
-            int mouseX = buf.readVarInt();
-            int mouseY = buf.readVarInt();
-            int button = buf.readVarInt();
-            int syncID = buf.readVarInt();
-            if (fakeModularGui != null && fakeModularUIContainer != null) {
-                fakeModularUIContainer.syncId = syncID;
-                fakeModularGui.mouseClicked(mouseX, mouseY, button);
-            }
+            disposeClientSession();
         }
     }
 
     @Override
-    public WidgetPluginConfig customUI(WidgetPluginConfig widgetGroup, IUIHolder holder, EntityPlayer entityPlayer) {
-        return widgetGroup.setSize(170, 50)
-                .widget(new LabelWidget(20, 20, "Part:", 0xFFFFFFFF))
-                .widget(new ClickButtonWidget(55, 15, 20, 20, "-1", (data) -> setConfig(this.partIndex - 1)))
-                .widget(new ClickButtonWidget(135, 15, 20, 20, "+1", (data) -> setConfig(this.partIndex + 1)))
-                .widget(new ImageWidget(75, 15, 60, 20, GuiTextures.DISPLAY))
-                .widget(new SimpleTextWidget(105, 25, "", 16777215, () -> Integer.toString(this.partIndex)));
+    public IWidget customUI(PanelSyncManager syncManager) {
+        ParentWidget<?> panel = new ParentWidget<>();
+        panel.child(IKey.str("Part:").asWidget().pos(20, 20));
+        panel.child(new ButtonWidget<>().pos(55, 15).size(20, 20).overlay(IKey.str("-1"))
+                .onMousePressed(mouseButton -> {
+                    setConfig(this.partIndex - 1);
+                    return true;
+                }));
+        panel.child(new ButtonWidget<>().pos(135, 15).size(20, 20).overlay(IKey.str("+1"))
+                .onMousePressed(mouseButton -> {
+                    setConfig(this.partIndex + 1);
+                    return true;
+                }));
+        panel.child(IKey.dynamic(() -> Integer.toString(this.partIndex))
+                .asWidget().pos(75, 15).size(60, 20).background(GTGuiTextures.DISPLAY));
+        return panel;
     }
 }

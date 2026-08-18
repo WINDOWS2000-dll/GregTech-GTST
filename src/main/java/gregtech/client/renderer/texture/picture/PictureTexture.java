@@ -1,13 +1,11 @@
-package gregtech.api.gui.resources.picturetexture;
-
-import gregtech.api.gui.resources.IGuiTexture;
+package gregtech.client.renderer.texture.picture;
 
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
 
 import org.lwjgl.opengl.GL11;
 
-public abstract class PictureTexture implements IGuiTexture {
+public abstract class PictureTexture {
 
     public int width;
     public int height;
@@ -18,11 +16,6 @@ public abstract class PictureTexture implements IGuiTexture {
     }
 
     public void beforeRender() {}
-
-    @Override
-    public void draw(double x, double y, int width, int height) {
-        render((float) x, (float) y, 1, 1, 0, width, height, false, false);
-    }
 
     public void render(float x, float y, float width, float height, float rotation, float scaleX, float scaleY,
                        boolean flippedX, boolean flippedY) {

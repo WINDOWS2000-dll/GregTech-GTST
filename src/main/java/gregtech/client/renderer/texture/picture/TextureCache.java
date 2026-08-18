@@ -1,4 +1,4 @@
-package gregtech.api.gui.resources.utils;
+package gregtech.client.renderer.texture.picture;
 
 import net.minecraft.client.Minecraft;
 

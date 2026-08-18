@@ -2,15 +2,13 @@ package gregtech.api.items.behavior;
 
 import gregtech.api.GregTechAPI;
 import gregtech.api.capability.GregtechDataCodes;
-import gregtech.api.gui.GuiTextures;
-import gregtech.api.gui.IUIHolder;
-import gregtech.api.gui.ModularUI;
 import gregtech.api.items.gui.ItemUIFactory;
-import gregtech.api.items.gui.PlayerInventoryHolder;
 import gregtech.api.items.metaitem.MetaItem;
 import gregtech.api.items.metaitem.stats.IItemBehaviour;
+import gregtech.api.mui.GTGuiTextures;
+import gregtech.api.mui.GTGuis;
+import gregtech.api.mui.factory.MetaItemGuiFactory;
 import gregtech.api.util.IDirtyNotifiable;
-import gregtech.common.gui.widget.monitor.WidgetPluginConfig;
 import gregtech.common.metatileentities.multi.electric.centralmonitor.MetaTileEntityMonitorScreen;
 import gregtech.core.network.packets.PacketPluginSynced;
 
@@ -29,6 +27,12 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+import com.cleanroommc.modularui.api.widget.IWidget;
+import com.cleanroommc.modularui.factory.HandGuiData;
+import com.cleanroommc.modularui.screen.ModularPanel;
+import com.cleanroommc.modularui.screen.UISettings;
+import com.cleanroommc.modularui.value.sync.PanelSyncManager;
+import com.cleanroommc.modularui.widget.ParentWidget;
 import io.netty.buffer.Unpooled;
 import org.jetbrains.annotations.NotNull;
 
@@ -41,8 +45,7 @@ public abstract class MonitorPluginBaseBehavior implements IItemBehaviour, ItemU
     private NBTTagCompound nbtTagCompound;
 
     public static MonitorPluginBaseBehavior getBehavior(ItemStack itemStack) {
-        if (itemStack.getItem() instanceof MetaItem<?>) {
-            MetaItem<?> item = (MetaItem<?>) itemStack.getItem();
+        if (itemStack.getItem() instanceof MetaItem<?> item) {
             for (IItemBehaviour behaviour : item.getBehaviours(itemStack)) {
                 if (behaviour instanceof MonitorPluginBaseBehavior) {
                     return (MonitorPluginBaseBehavior) behaviour;
@@ -59,14 +62,16 @@ public abstract class MonitorPluginBaseBehavior implements IItemBehaviour, ItemU
     abstract public MonitorPluginBaseBehavior createPlugin();
 
     /***
-     * Do not override createUI below.
-     * 
-     * @param holder       It should be one of PlayerInventoryHolder or MetaTileEntityHolder.
-     * @param entityPlayer Player
-     * @return WidgetGroup back
+     * Do not override buildUI below.
+     *
+     * @param syncManager the sync manager of the panel this plugin's widgets are being embedded into: either its
+     *                    own standalone panel (item right-clicked in hand) or a
+     *                    {@code MetaTileEntityMonitorScreen}'s own config panel. Use it to register any additional
+     *                    sync values the widgets need.
+     * @return the plugin's config widgets
      */
-    public WidgetPluginConfig customUI(WidgetPluginConfig widgetGroup, IUIHolder holder, EntityPlayer entityPlayer) {
-        return widgetGroup;
+    public IWidget customUI(PanelSyncManager syncManager) {
+        return new ParentWidget<>();
     }
 
     /***
@@ -80,14 +85,14 @@ public abstract class MonitorPluginBaseBehavior implements IItemBehaviour, ItemU
      * Server / Client. Itemstack will be synced to client when init so... yeah normally you don't need to consider nbt
      * init.
      * this will be called when you markDirty.
-     * 
+     *
      * @param data nbtTag
      */
     public void writeToNBT(NBTTagCompound data) {}
 
     /***
      * Server / Client. Initialization of Server and Client.
-     * 
+     *
      * @param data nbtTag
      */
     public void readFromNBT(NBTTagCompound data) {
@@ -96,7 +101,7 @@ public abstract class MonitorPluginBaseBehavior implements IItemBehaviour, ItemU
 
     /***
      * Server. Same as writeCustomData in MetaTileEntity.
-     * 
+     *
      * @param id  PacketID
      * @param buf PacketBuffer
      */
@@ -111,7 +116,7 @@ public abstract class MonitorPluginBaseBehavior implements IItemBehaviour, ItemU
 
     /***
      * Client. Same as receiveCustomData in MetaTileEntity.
-     * 
+     *
      * @param id  PacketID
      * @param buf PacketBuffer
      */
@@ -119,7 +124,7 @@ public abstract class MonitorPluginBaseBehavior implements IItemBehaviour, ItemU
 
     /***
      * Client. Send data to Server.
-     * 
+     *
      * @param id         PacketID
      * @param dataWriter PacketBuffer
      */
@@ -134,7 +139,7 @@ public abstract class MonitorPluginBaseBehavior implements IItemBehaviour, ItemU
 
     /***
      * Server. receive data from client
-     * 
+     *
      * @param player player
      * @param id     PacketID
      * @param buf    PacketBuffer
@@ -143,14 +148,14 @@ public abstract class MonitorPluginBaseBehavior implements IItemBehaviour, ItemU
 
     /***
      * Server. Same as writeInitialSyncData in MetaTileEntity.
-     * 
+     *
      * @param buf PacketBuffer
      */
     public void writeInitialSyncData(PacketBuffer buf) {}
 
     /***
      * Client. Same as receiveInitialSyncData in MetaTileEntity.
-     * 
+     *
      * @param buf PacketBuffer
      */
     public void receiveInitialSyncData(PacketBuffer buf) {}
@@ -168,7 +173,7 @@ public abstract class MonitorPluginBaseBehavior implements IItemBehaviour, ItemU
 
     /***
      * Server / Client. Called when player touch the screen.
-     * 
+     *
      * @param playerIn Player
      * @param hand     Hand
      * @param facing   Facing
@@ -195,7 +200,7 @@ public abstract class MonitorPluginBaseBehavior implements IItemBehaviour, ItemU
 
     /***
      * Server / Client. Called when plugin is added or removed from the screen.
-     * 
+     *
      * @param screen
      * @param valid
      */
@@ -215,8 +220,7 @@ public abstract class MonitorPluginBaseBehavior implements IItemBehaviour, ItemU
             ItemStack itemStack = player.getHeldItem(hand);
             MonitorPluginBaseBehavior behavior = getBehavior(itemStack);
             if (behavior != null && behavior.hasUI()) {
-                PlayerInventoryHolder holder = new PlayerInventoryHolder(player, hand);
-                holder.openUI();
+                MetaItemGuiFactory.open(player, hand);
                 return ActionResult.newResult(EnumActionResult.SUCCESS, itemStack);
             }
         }
@@ -224,19 +228,16 @@ public abstract class MonitorPluginBaseBehavior implements IItemBehaviour, ItemU
     }
 
     @Override
-    public final ModularUI createUI(PlayerInventoryHolder playerInventoryHolder, EntityPlayer entityPlayer) {
-        ItemStack itemStack = playerInventoryHolder.getCurrentItem();
+    public ModularPanel buildUI(HandGuiData guiData, PanelSyncManager syncManager, UISettings settings) {
+        ItemStack itemStack = guiData.getUsedItemStack();
         MonitorPluginBaseBehavior behavior = MonitorPluginBaseBehavior.getBehavior(itemStack);
-        if (behavior != null) {
-            behavior = behavior.createPlugin();
-            behavior.readFromNBT(itemStack.getOrCreateSubCompound("monitor_plugin"));
-            return ModularUI.builder(GuiTextures.BOXED_BACKGROUND, 260, 210)
-                    .widget(behavior.customUI(new WidgetPluginConfig().setBackGround(GuiTextures.BACKGROUND),
-                            playerInventoryHolder, entityPlayer))
-                    .bindCloseListener(this::markAsDirty)
-                    .build(playerInventoryHolder, entityPlayer);
-        }
-        return null;
+        if (behavior == null) return null;
+        behavior = behavior.createPlugin();
+        behavior.readFromNBT(itemStack.getOrCreateSubCompound("monitor_plugin"));
+        // no close listener needed: every setter (setText, setConfig, ...) already calls markAsDirty() itself.
+        return GTGuis.createPanel(itemStack, 260, 210)
+                .background(GTGuiTextures.BACKGROUND)
+                .child(behavior.customUI(syncManager));
     }
 
     @Override
