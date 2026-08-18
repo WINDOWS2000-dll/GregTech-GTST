@@ -1,13 +1,12 @@
 package gregtech.common.mui.widget.monitor;
 
-import gregtech.api.metatileentity.MetaTileEntityUIFactory;
+import gregtech.api.mui.factory.MetaTileEntityGuiFactory;
 import gregtech.client.utils.RenderUtil;
 import gregtech.common.metatileentities.multi.electric.centralmonitor.MetaTileEntityCentralMonitor;
 import gregtech.common.metatileentities.multi.electric.centralmonitor.MetaTileEntityMonitorScreen;
 
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.PacketBuffer;
 
 import com.cleanroommc.modularui.api.widget.Interactable;
@@ -115,8 +114,7 @@ public class WidgetScreenGrid extends Widget<WidgetScreenGrid> implements Intera
         @Override
         public void readOnServer(int id, PacketBuffer buf) {
             if (id == OPEN_UI && screen != null) {
-                MetaTileEntityUIFactory.INSTANCE.openUI(screen.getHolder(),
-                        (EntityPlayerMP) getSyncManager().getPlayer());
+                MetaTileEntityGuiFactory.open(getSyncManager().getPlayer(), screen);
             }
         }
 
