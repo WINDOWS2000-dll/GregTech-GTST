@@ -1,7 +1,7 @@
 package gregtech.integration.jei.basic;
 
 import gregtech.api.GTValues;
-import gregtech.api.gui.GuiTextures;
+import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.recipes.chance.output.ChancedOutputLogic;
 import gregtech.api.unification.OreDictUnifier;
 import gregtech.api.unification.material.Materials;
@@ -115,9 +115,9 @@ public class OreByProductCategory extends BasicRecipeCategory<OreByProduct, OreB
                 guiHelper.createBlankDrawable(176, 166),
                 guiHelper);
 
-        this.slot = guiHelper.drawableBuilder(GuiTextures.SLOT.imageLocation, 0, 0, 18, 18).setTextureSize(18, 18)
+        this.slot = guiHelper.drawableBuilder(GTGuiTextures.SLOT.getLocation(), 0, 0, 18, 18).setTextureSize(18, 18)
                 .build();
-        this.fluidSlot = guiHelper.drawableBuilder(GuiTextures.FLUID_SLOT.imageLocation, 0, 0, 18, 18)
+        this.fluidSlot = guiHelper.drawableBuilder(GTGuiTextures.FLUID_SLOT.getLocation(), 0, 0, 18, 18)
                 .setTextureSize(18, 18).build();
 
         String baseloc = GTValues.MODID + ":textures/gui/arrows/";

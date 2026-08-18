@@ -1,7 +1,7 @@
 package gregtech.integration.jei.basic;
 
 import gregtech.api.GTValues;
-import gregtech.api.gui.GuiTextures;
+import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.util.GTStringUtils;
 import gregtech.api.worldgen.config.WorldGenRegistry;
 import gregtech.integration.jei.utils.JEIResourceDepositCategoryUtils;
@@ -49,7 +49,7 @@ public class GTFluidVeinCategory extends BasicRecipeCategory<GTFluidVeinInfo, GT
                 guiHelper.createBlankDrawable(176, 166),
                 guiHelper);
 
-        this.slot = guiHelper.drawableBuilder(GuiTextures.SLOT.imageLocation, 0, 0, 18, 18).setTextureSize(18, 18)
+        this.slot = guiHelper.drawableBuilder(GTGuiTextures.SLOT.getLocation(), 0, 0, 18, 18).setTextureSize(18, 18)
                 .build();
     }
 

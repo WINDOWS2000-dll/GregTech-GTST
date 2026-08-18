@@ -751,6 +751,16 @@ public class GTGuiTextures {
     public static final UITexture[] AUTO_PULL = slice("textures/gui/widget/button_me_auto_pull.png",
             16, 32, 16, 16, ColorType.DEFAULT);
 
+    // JEI
+    public static final UITexture INFO_ICON = fullImage("textures/gui/widget/information.png");
+    public static final UITexture MULTIBLOCK_CATEGORY = fullImage("textures/gui/icon/multiblock_category.png");
+    public static final UITexture ARC_FURNACE_RECYLCING_CATEGORY = fullImage(
+            "textures/gui/icon/arc_furnace_recycling.png");
+    public static final UITexture MACERATOR_RECYLCING_CATEGORY = fullImage(
+            "textures/gui/icon/macerator_recycling.png");
+    public static final UITexture EXTRACTOR_RECYLCING_CATEGORY = fullImage(
+            "textures/gui/icon/extractor_recycling.png");
+
     public static void init() {/**/}
 
     private static UITexture fullImage(String path) {

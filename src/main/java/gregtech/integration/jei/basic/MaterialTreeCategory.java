@@ -1,7 +1,7 @@
 package gregtech.integration.jei.basic;
 
 import gregtech.api.GTValues;
-import gregtech.api.gui.GuiTextures;
+import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.recipes.properties.impl.TemperatureProperty;
 import gregtech.api.unification.OreDictUnifier;
 import gregtech.api.unification.material.Materials;
@@ -87,7 +87,7 @@ public class MaterialTreeCategory extends BasicRecipeCategory<MaterialTree, Mate
                 guiHelper.createBlankDrawable(176, 166),
                 guiHelper);
 
-        this.slot = guiHelper.drawableBuilder(GuiTextures.SLOT.imageLocation, 0, 0, 18, 18).setTextureSize(18, 18)
+        this.slot = guiHelper.drawableBuilder(GTGuiTextures.SLOT.getLocation(), 0, 0, 18, 18).setTextureSize(18, 18)
                 .build();
         this.icon = guiHelper.createDrawableIngredient(OreDictUnifier.get(OrePrefix.ingot, Materials.Aluminium));
 

@@ -1,8 +1,8 @@
 package gregtech.integration.jei.utils;
 
-import gregtech.api.gui.resources.IGuiTexture;
-
 import net.minecraft.client.Minecraft;
+
+import com.cleanroommc.modularui.drawable.UITexture;
 
 import java.util.List;
 import java.util.function.BooleanSupplier;
@@ -10,7 +10,7 @@ import java.util.function.Consumer;
 
 public class JeiButton {
 
-    private IGuiTexture[] textures = {};
+    private UITexture[] textures = {};
     private final float x;
     private final float y;
     private final int width;
@@ -26,7 +26,7 @@ public class JeiButton {
         this.height = height;
     }
 
-    public JeiButton setTextures(IGuiTexture... textures) {
+    public JeiButton setTextures(UITexture... textures) {
         this.textures = textures;
         return this;
     }
@@ -60,7 +60,7 @@ public class JeiButton {
     public void render(Minecraft minecraft, int recipeWidth, int recipeHeight, int mouseX, int mouseY) {
         if (!activeSupplier.getAsBoolean())
             return;
-        for (IGuiTexture texture : textures) {
+        for (UITexture texture : textures) {
             texture.draw(x, y, width, height);
         }
     }

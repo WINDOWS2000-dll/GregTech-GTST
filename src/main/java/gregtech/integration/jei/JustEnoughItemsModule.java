@@ -6,7 +6,6 @@ import gregtech.api.capability.GregtechTileCapabilities;
 import gregtech.api.capability.IControllable;
 import gregtech.api.capability.IMultipleRecipeMaps;
 import gregtech.api.capability.impl.AbstractRecipeLogic;
-import gregtech.api.gui.resources.TextureArea;
 import gregtech.api.items.metaitem.MetaItem;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.SteamMetaTileEntity;
@@ -60,6 +59,7 @@ import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.event.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
+import com.cleanroommc.modularui.drawable.UITexture;
 import mezz.jei.Internal;
 import mezz.jei.api.IGuiHelper;
 import mezz.jei.api.IJeiHelpers;
@@ -370,8 +370,8 @@ public class JustEnoughItemsModule extends IntegrationSubmodule implements IModP
             // don't allow a Steam Machine to be a JEI tab icon
             if (jeiCategory != null && !(metaTileEntity instanceof SteamMetaTileEntity)) {
                 Object icon = category.getJEIIcon();
-                if (icon instanceof TextureArea textureArea) {
-                    icon = guiHelper.drawableBuilder(textureArea.imageLocation, 0, 0, 18, 18)
+                if (icon instanceof UITexture texture) {
+                    icon = guiHelper.drawableBuilder(texture.getLocation(), 0, 0, 18, 18)
                             .setTextureSize(18, 18)
                             .build();
                 } else if (icon == null) {

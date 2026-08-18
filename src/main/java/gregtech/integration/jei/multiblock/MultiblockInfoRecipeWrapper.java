@@ -1,9 +1,9 @@
 package gregtech.integration.jei.multiblock;
 
-import gregtech.api.gui.GuiTextures;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.metatileentity.multiblock.MultiblockControllerBase;
+import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.pattern.BlockWorldState;
 import gregtech.api.pattern.MultiblockShapeInfo;
 import gregtech.api.pattern.PatternMatchContext;
@@ -153,9 +153,9 @@ public class MultiblockInfoRecipeWrapper implements IRecipeWrapper {
     public void setRecipeLayout(RecipeLayout layout, IGuiHelper guiHelper) {
         this.recipeLayout = layout;
 
-        this.slot = guiHelper.drawableBuilder(GuiTextures.SLOT.imageLocation, 0, 0, SLOT_SIZE, SLOT_SIZE)
+        this.slot = guiHelper.drawableBuilder(GTGuiTextures.SLOT.getLocation(), 0, 0, SLOT_SIZE, SLOT_SIZE)
                 .setTextureSize(SLOT_SIZE, SLOT_SIZE).build();
-        this.infoIcon = guiHelper.drawableBuilder(GuiTextures.INFO_ICON.imageLocation, 0, 0, ICON_SIZE, ICON_SIZE)
+        this.infoIcon = guiHelper.drawableBuilder(GTGuiTextures.INFO_ICON.getLocation(), 0, 0, ICON_SIZE, ICON_SIZE)
                 .setTextureSize(ICON_SIZE, ICON_SIZE).build();
 
         IDrawable border = layout.getRecipeCategory().getBackground();

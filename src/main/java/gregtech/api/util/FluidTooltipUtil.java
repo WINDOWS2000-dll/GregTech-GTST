@@ -157,16 +157,37 @@ public class FluidTooltipUtil {
     }
 
     public static void addIngotMolFluidTooltip(@NotNull RichTooltip tooltip, @NotNull FluidStack fluidStack) {
-        // Add tooltip showing how many "ingot moles" (increments of 144) this fluid is if shift is held
-        if (TooltipHelper.isShiftDown() && fluidStack.amount > GTValues.L) {
-            int numIngots = fluidStack.amount / GTValues.L;
-            int extra = fluidStack.amount % GTValues.L;
-            String fluidAmount = String.format(" %,d L = %,d * %d L", fluidStack.amount, numIngots, GTValues.L);
-            if (extra != 0) {
-                fluidAmount += String.format(" + %d L", extra);
-            }
+        String fluidAmount = buildIngotMolFluidAmountLine(fluidStack);
+        if (fluidAmount != null) {
             tooltip.addLine(KeyUtil.lang(TextFormatting.GRAY, "gregtech.gui.amount_raw", fluidAmount));
         }
+    }
+
+    /**
+     * Non-MUI equivalent of {@link #addIngotMolFluidTooltip(RichTooltip, FluidStack)}, for tooltip consumers (e.g.
+     * JEI) that aren't built around a {@link RichTooltip}.
+     */
+    public static void addIngotMolFluidTooltip(@NotNull List<String> tooltip, @NotNull FluidStack fluidStack) {
+        String fluidAmount = buildIngotMolFluidAmountLine(fluidStack);
+        if (fluidAmount != null) {
+            tooltip.add(TextFormatting.GRAY + LocalizationUtils.format("gregtech.gui.amount_raw", fluidAmount));
+        }
+    }
+
+    /**
+     * @return the formatted "ingot mole" (increments of 144) breakdown of the fluid amount if shift is held and the
+     *         amount is large enough to be worth showing, otherwise {@code null}.
+     */
+    @Nullable
+    private static String buildIngotMolFluidAmountLine(@NotNull FluidStack fluidStack) {
+        if (!TooltipHelper.isShiftDown() || fluidStack.amount <= GTValues.L) return null;
+        int numIngots = fluidStack.amount / GTValues.L;
+        int extra = fluidStack.amount % GTValues.L;
+        String fluidAmount = String.format(" %,d L = %,d * %d L", fluidStack.amount, numIngots, GTValues.L);
+        if (extra != 0) {
+            fluidAmount += String.format(" + %d L", extra);
+        }
+        return fluidAmount;
     }
 
     public static @NotNull IKey getFluidModNameKey(@NotNull FluidStack fluidStack) {
