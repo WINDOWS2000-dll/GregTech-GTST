@@ -1,6 +1,5 @@
 package gregtech.client.resources;
 
-import gregtech.api.gui.resources.IGuiTexture;
 import gregtech.client.shader.Shaders;
 import gregtech.common.ConfigHolder;
 
@@ -18,7 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
-public class ShaderTexture implements IGuiTexture {
+public class ShaderTexture {
 
     @SideOnly(Side.CLIENT)
     private static final Map<String, ShaderTexture> PROGRAMS = new HashMap<>();
@@ -93,7 +92,6 @@ public class ShaderTexture implements IGuiTexture {
         return resolution;
     }
 
-    @Override
     public void draw(double x, double y, int width, int height) {
         this.draw(x, y, width, height, null);
     }

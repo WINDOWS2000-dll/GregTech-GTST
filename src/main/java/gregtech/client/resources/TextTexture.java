@@ -1,7 +1,5 @@
 package gregtech.client.resources;
 
-import gregtech.api.gui.resources.IGuiTexture;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.GlStateManager;
@@ -13,7 +11,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import java.util.Collections;
 import java.util.List;
 
-public class TextTexture implements IGuiTexture {
+public class TextTexture {
 
     public String text;
     public int color;
@@ -76,7 +74,6 @@ public class TextTexture implements IGuiTexture {
         return this;
     }
 
-    @Override
     public void draw(double x, double y, int width, int height) {
         FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
         int textH = fontRenderer.FONT_HEIGHT;
