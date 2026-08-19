@@ -29,9 +29,9 @@ public final class AssemblyLineUI<R extends RecipeMap<?>> extends RecipeMapUI<R>
     }
 
     @Override
-    protected void addInventorySlotGroupMui2(@NotNull ParentWidget<?> parent,
-                                             @NotNull IItemHandlerModifiable itemHandler,
-                                             @NotNull FluidTankList fluidHandler, boolean isOutputs) {
+    protected void addInventorySlotGroup(@NotNull ParentWidget<?> parent,
+                                         @NotNull IItemHandlerModifiable itemHandler,
+                                         @NotNull FluidTankList fluidHandler, boolean isOutputs) {
         int startInputsX = 80 - 4 * 18;
         int startInputsY = 37 - 2 * 18;
 
@@ -46,7 +46,7 @@ public final class AssemblyLineUI<R extends RecipeMap<?>> extends RecipeMapUI<R>
             for (int i = 0; i < 4; i++) {
                 for (int j = 0; j < 4; j++) {
                     int slotIndex = i * 4 + j;
-                    addSlotMui2(parent, startInputsX + 18 * j, startInputsY + 18 * i, slotIndex, itemHandler,
+                    addSlot(parent, startInputsX + 18 * j, startInputsY + 18 * i, slotIndex, itemHandler,
                             fluidHandler, false, false);
                 }
             }
@@ -54,11 +54,11 @@ public final class AssemblyLineUI<R extends RecipeMap<?>> extends RecipeMapUI<R>
             // fluid slots
             int startFluidX = startInputsX + 18 * 5;
             for (int i = 0; i < 4; i++) {
-                addSlotMui2(parent, startFluidX, startInputsY + 18 * i, i, itemHandler, fluidHandler, true, false);
+                addSlot(parent, startFluidX, startInputsY + 18 * i, i, itemHandler, fluidHandler, true, false);
             }
         } else {
             // output slot
-            addSlotMui2(parent, startInputsX + 18 * 7, 1, 0, itemHandler, fluidHandler, false, true);
+            addSlot(parent, startInputsX + 18 * 7, 1, 0, itemHandler, fluidHandler, false, true);
         }
     }
 
@@ -72,13 +72,13 @@ public final class AssemblyLineUI<R extends RecipeMap<?>> extends RecipeMapUI<R>
         parent.child(createJeiProgressWidget(progressSupplier)
                 .pos(80, 1).size(54, 72)
                 .texture(GTGuiTextures.PROGRESS_BAR_ASSEMBLY_LINE, 54)
-                .direction(RecipeMapUI.toMui2Direction(ProgressBarMoveType.HORIZONTAL)));
+                .direction(RecipeMapUI.toDirection(ProgressBarMoveType.HORIZONTAL)));
         parent.child(createJeiProgressWidget(progressSupplier)
                 .pos(138, 19).size(10, 18)
                 .texture(GTGuiTextures.PROGRESS_BAR_ASSEMBLY_LINE_ARROW, 18)
-                .direction(RecipeMapUI.toMui2Direction(ProgressBarMoveType.VERTICAL)));
-        addInventorySlotGroupMui2(parent, importItems, importFluids, false);
-        addInventorySlotGroupMui2(parent, exportItems, exportFluids, true);
+                .direction(RecipeMapUI.toDirection(ProgressBarMoveType.VERTICAL)));
+        addInventorySlotGroup(parent, importItems, importFluids, false);
+        addInventorySlotGroup(parent, exportItems, exportFluids, true);
         return parent;
     }
 }

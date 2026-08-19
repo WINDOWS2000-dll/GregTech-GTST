@@ -35,7 +35,7 @@ import java.util.function.DoubleSupplier;
 @ApiStatus.Experimental
 public class RecipeMapUI<R extends RecipeMap<?>> {
 
-    private final Byte2ObjectMap<UITexture> slotOverlaysMui2 = new Byte2ObjectOpenHashMap<>();
+    private final Byte2ObjectMap<UITexture> slotOverlays = new Byte2ObjectOpenHashMap<>();
 
     private final R recipeMap;
     private final boolean modifyItemInputs;
@@ -46,7 +46,7 @@ public class RecipeMapUI<R extends RecipeMap<?>> {
     private final boolean isGenerator;
 
     private ProgressBarMoveType moveType = ProgressBarMoveType.HORIZONTAL;
-    private @NotNull UITexture progressBarTextureMui2 = GTGuiTextures.PROGRESS_BAR_ARROW;
+    private @NotNull UITexture progressBarTexture = GTGuiTextures.PROGRESS_BAR_ARROW;
 
     private boolean isJEIVisible = true;
 
@@ -114,7 +114,7 @@ public class RecipeMapUI<R extends RecipeMap<?>> {
     }
 
     /**
-     * MUI2 equivalent of the old MUI1 createUITemplate. This DOES NOT include machine control widgets or bind the
+     * Builds this recipemap's default UI layout. This DOES NOT include machine control widgets or bind the
      * player inventory.
      *
      * @param progressSupplier a supplier for the progress bar
@@ -130,14 +130,14 @@ public class RecipeMapUI<R extends RecipeMap<?>> {
                                                     @NotNull FluidTankList importFluids,
                                                     @NotNull FluidTankList exportFluids) {
         ParentWidget<?> parent = new ParentWidget<>();
-        parent.child(buildProgressWidgetMui2(progressSupplier));
-        addInventorySlotGroupMui2(parent, importItems, importFluids, false);
-        addInventorySlotGroupMui2(parent, exportItems, exportFluids, true);
+        parent.child(buildProgressWidget(progressSupplier));
+        addInventorySlotGroup(parent, importItems, importFluids, false);
+        addInventorySlotGroup(parent, exportItems, exportFluids, true);
         return parent;
     }
 
     /**
-     * MUI2 equivalent of {@link #createUITemplateNoOutputs}.
+     * Same as {@link #buildUITemplate}, but for recipemaps without any outputs.
      *
      * @param progressSupplier a supplier for the progress bar
      * @param importItems      the input item inventory
@@ -148,26 +148,26 @@ public class RecipeMapUI<R extends RecipeMap<?>> {
                                                              @NotNull IItemHandlerModifiable importItems,
                                                              @NotNull FluidTankList importFluids) {
         ParentWidget<?> parent = new ParentWidget<>();
-        parent.child(buildProgressWidgetMui2(progressSupplier));
-        addInventorySlotGroupMui2(parent, importItems, importFluids, false);
+        parent.child(buildProgressWidget(progressSupplier));
+        addInventorySlotGroup(parent, importItems, importFluids, false);
         return parent;
     }
 
-    private RecipeMapProgressWidgetMui2 buildProgressWidgetMui2(@NotNull DoubleSupplier progressSupplier) {
+    private RecipeMapProgressWidget buildProgressWidget(@NotNull DoubleSupplier progressSupplier) {
         // ProgressWidget's fluent setters return the non-generic base type, so the chain can't be
-        // typed as RecipeMapProgressWidgetMui2; apply it to the instance directly instead.
-        RecipeMapProgressWidgetMui2 widget = new RecipeMapProgressWidgetMui2();
+        // typed as RecipeMapProgressWidget; apply it to the instance directly instead.
+        RecipeMapProgressWidget widget = new RecipeMapProgressWidget();
         widget.value(new DoubleSyncValue(progressSupplier))
                 .pos(78, 23)
                 .size(20, 20)
-                .texture(progressBarTextureMui2, 20)
-                .direction(toMui2Direction(moveType));
+                .texture(progressBarTexture, 20)
+                .direction(toDirection(moveType));
         return widget;
     }
 
     /**
-     * Creates a MUI2 progress bar widget that opens JEI to this recipe map's categories when clicked, same as
-     * {@link #buildProgressWidgetMui2}, but without any default position, size, or texture. Intended for machines
+     * Creates a progress bar widget that opens JEI to this recipe map's categories when clicked, same as
+     * {@link #buildProgressWidget}, but without any default position, size, or texture. Intended for machines
      * that build their own custom layout instead of using {@link #buildUITemplate}, so they can still expose the
      * click-to-open-JEI behavior on their progress bar.
      *
@@ -176,19 +176,18 @@ public class RecipeMapUI<R extends RecipeMap<?>> {
      */
     public @NotNull com.cleanroommc.modularui.widgets.ProgressWidget createJeiProgressWidget(
                                                                                              @NotNull DoubleSupplier progressSupplier) {
-        RecipeMapProgressWidgetMui2 widget = new RecipeMapProgressWidgetMui2();
+        RecipeMapProgressWidget widget = new RecipeMapProgressWidget();
         widget.value(new DoubleSyncValue(progressSupplier));
         return widget;
     }
 
     /**
-     * MUI2 equivalent of the old MUI1 RecipeProgressWidget. Clicking it opens JEI to this recipe map's categories,
-     * same as the MUI1 progress bar used to.
+     * Progress bar widget that opens JEI to this recipe map's categories when clicked.
      */
-    private class RecipeMapProgressWidgetMui2 extends com.cleanroommc.modularui.widgets.ProgressWidget
-                                              implements Interactable {
+    private class RecipeMapProgressWidget extends com.cleanroommc.modularui.widgets.ProgressWidget
+                                          implements Interactable {
 
-        private RecipeMapProgressWidgetMui2() {
+        private RecipeMapProgressWidget() {
             tooltipAutoUpdate(true);
             tooltipBuilder(t -> t.addLine(IKey.lang("gui.widget.recipeProgressWidget.default_tooltip")));
         }
@@ -227,9 +226,9 @@ public class RecipeMapUI<R extends RecipeMap<?>> {
      * @param fluidHandler the fluid handler to use
      * @param isOutputs    if slots should be output slots
      */
-    protected void addInventorySlotGroupMui2(@NotNull ParentWidget<?> parent,
-                                             @NotNull IItemHandlerModifiable itemHandler,
-                                             @NotNull FluidTankList fluidHandler, boolean isOutputs) {
+    protected void addInventorySlotGroup(@NotNull ParentWidget<?> parent,
+                                         @NotNull IItemHandlerModifiable itemHandler,
+                                         @NotNull FluidTankList fluidHandler, boolean isOutputs) {
         int itemInputsCount = itemHandler.getSlots();
         int fluidInputsCount = fluidHandler.getTanks();
         boolean invertFluids = false;
@@ -253,7 +252,7 @@ public class RecipeMapUI<R extends RecipeMap<?>> {
                 if (slotIndex >= itemInputsCount) break;
                 int x = startInputsX + 18 * j;
                 int y = startInputsY + 18 * i;
-                addSlotMui2(parent, x, y, slotIndex, itemHandler, fluidHandler, invertFluids, isOutputs);
+                addSlot(parent, x, y, slotIndex, itemHandler, fluidHandler, invertFluids, isOutputs);
             }
         }
         if (wasGroup) startInputsY += 2;
@@ -262,7 +261,7 @@ public class RecipeMapUI<R extends RecipeMap<?>> {
                 int startSpecX = isOutputs ? startInputsX + itemSlotsToLeft * 18 : startInputsX - 18;
                 for (int i = 0; i < fluidInputsCount; i++) {
                     int y = startInputsY + 18 * i;
-                    addSlotMui2(parent, startSpecX, y, i, itemHandler, fluidHandler, !invertFluids, isOutputs);
+                    addSlot(parent, startSpecX, y, i, itemHandler, fluidHandler, !invertFluids, isOutputs);
                 }
             } else {
                 int startSpecY = startInputsY + itemSlotsToDown * 18;
@@ -270,14 +269,14 @@ public class RecipeMapUI<R extends RecipeMap<?>> {
                     int x = isOutputs ? startInputsX + 18 * (i % 3) :
                             startInputsX + itemSlotsToLeft * 18 - 18 - 18 * (i % 3);
                     int y = startSpecY + (i / 3) * 18;
-                    addSlotMui2(parent, x, y, i, itemHandler, fluidHandler, !invertFluids, isOutputs);
+                    addSlot(parent, x, y, i, itemHandler, fluidHandler, !invertFluids, isOutputs);
                 }
             }
         }
     }
 
     /**
-     * MUI2 equivalent of {@link #addSlot}.
+     * Adds a single item or fluid slot to the parent widget.
      *
      * @param parent       the parent widget to add to
      * @param x            the x coordinate of the slot
@@ -288,19 +287,19 @@ public class RecipeMapUI<R extends RecipeMap<?>> {
      * @param isFluid      if the slot is a fluid slot
      * @param isOutputs    if slots should be output slots
      */
-    protected void addSlotMui2(@NotNull ParentWidget<?> parent, int x, int y, int slotIndex,
-                               @NotNull IItemHandlerModifiable itemHandler, @NotNull FluidTankList fluidHandler,
-                               boolean isFluid, boolean isOutputs) {
+    protected void addSlot(@NotNull ParentWidget<?> parent, int x, int y, int slotIndex,
+                           @NotNull IItemHandlerModifiable itemHandler, @NotNull FluidTankList fluidHandler,
+                           boolean isFluid, boolean isOutputs) {
         if (!isFluid) {
             parent.child(new ItemSlot()
                     .pos(x, y)
-                    .background(getOverlaysForSlotMui2(isOutputs, false, slotIndex == itemHandler.getSlots() - 1))
+                    .background(getOverlaysForSlot(isOutputs, false, slotIndex == itemHandler.getSlots() - 1))
                     .slot(new ModularSlot(itemHandler, slotIndex).accessibility(!isOutputs, true)));
         } else {
             parent.child(new GTFluidSlot()
                     .pos(x, y)
                     .size(18)
-                    .background(getOverlaysForSlotMui2(isOutputs, true, slotIndex == fluidHandler.getTanks() - 1))
+                    .background(getOverlaysForSlot(isOutputs, true, slotIndex == fluidHandler.getTanks() - 1))
                     .syncHandler(GTFluidSlot.sync(fluidHandler.getTankAt(slotIndex))
                             .showAmount(true, true)
                             .accessibility(!isOutputs, true)));
@@ -314,8 +313,8 @@ public class RecipeMapUI<R extends RecipeMap<?>> {
      * @param moveType the move type
      * @return the corresponding MUI2 direction
      */
-    public static com.cleanroommc.modularui.widgets.ProgressWidget.@NotNull Direction toMui2Direction(
-                                                                                                      @NotNull ProgressBarMoveType moveType) {
+    public static com.cleanroommc.modularui.widgets.ProgressWidget.@NotNull Direction toDirection(
+                                                                                                  @NotNull ProgressBarMoveType moveType) {
         return switch (moveType) {
             case HORIZONTAL -> com.cleanroommc.modularui.widgets.ProgressWidget.Direction.RIGHT;
             case HORIZONTAL_BACKWARDS -> com.cleanroommc.modularui.widgets.ProgressWidget.Direction.LEFT;
@@ -326,18 +325,18 @@ public class RecipeMapUI<R extends RecipeMap<?>> {
     }
 
     /**
-     * MUI2 equivalent of the old MUI1 getOverlaysForSlot.
+     * Determines the overlay textures for a slot.
      *
      * @param isOutput if the slot is an output slot
      * @param isFluid  if the slot is a fluid slot
      * @param isLast   if the slot is the last slot of its type
      * @return the overlays for a slot
      */
-    protected UITexture @NotNull [] getOverlaysForSlotMui2(boolean isOutput, boolean isFluid, boolean isLast) {
+    protected UITexture @NotNull [] getOverlaysForSlot(boolean isOutput, boolean isFluid, boolean isLast) {
         UITexture base = isFluid ? GTGuiTextures.FLUID_SLOT : GTGuiTextures.SLOT;
         byte overlayKey = computeOverlayKey(isOutput, isFluid, isLast);
-        if (slotOverlaysMui2.containsKey(overlayKey)) {
-            return new UITexture[] { base, slotOverlaysMui2.get(overlayKey) };
+        if (slotOverlays.containsKey(overlayKey)) {
+            return new UITexture[] { base, slotOverlays.get(overlayKey) };
         }
         return new UITexture[] { base };
     }
@@ -381,26 +380,26 @@ public class RecipeMapUI<R extends RecipeMap<?>> {
     }
 
     /**
-     * @param progressBarTextureMui2 the new MUI2 progress bar texture
-     * @param moveType               the new progress bar move type
+     * @param progressBarTexture the new progress bar texture
+     * @param moveType           the new progress bar move type
      */
-    public void setProgressBar(@NotNull UITexture progressBarTextureMui2, @NotNull ProgressBarMoveType moveType) {
-        this.progressBarTextureMui2 = progressBarTextureMui2;
+    public void setProgressBar(@NotNull UITexture progressBarTexture, @NotNull ProgressBarMoveType moveType) {
+        this.progressBarTexture = progressBarTexture;
         this.moveType = moveType;
     }
 
     /**
-     * @return the MUI2 texture of the progress bar
+     * @return the texture of the progress bar
      */
-    public @NotNull UITexture progressBarTextureMui2() {
-        return progressBarTextureMui2;
+    public @NotNull UITexture progressBarTexture() {
+        return progressBarTexture;
     }
 
     /**
-     * @param progressBarTextureMui2 the new MUI2 progress bar texture
+     * @param progressBarTexture the new progress bar texture
      */
-    public void setProgressBarTextureMui2(@NotNull UITexture progressBarTextureMui2) {
-        this.progressBarTextureMui2 = progressBarTextureMui2;
+    public void setProgressBarTexture(@NotNull UITexture progressBarTexture) {
+        this.progressBarTexture = progressBarTexture;
     }
 
     /**
@@ -453,48 +452,48 @@ public class RecipeMapUI<R extends RecipeMap<?>> {
     }
 
     /**
-     * @param texture  the MUI2 texture to set
+     * @param texture  the texture to set
      * @param isOutput if the slot is an output slot
      */
-    public void setItemSlotOverlayMui2(@NotNull UITexture texture, boolean isOutput) {
-        this.slotOverlaysMui2.put(computeOverlayKey(isOutput, false, false), texture);
-        this.slotOverlaysMui2.put(computeOverlayKey(isOutput, false, true), texture);
+    public void setItemSlotOverlay(@NotNull UITexture texture, boolean isOutput) {
+        this.slotOverlays.put(computeOverlayKey(isOutput, false, false), texture);
+        this.slotOverlays.put(computeOverlayKey(isOutput, false, true), texture);
     }
 
     /**
-     * @param texture    the MUI2 texture to set
+     * @param texture    the texture to set
      * @param isOutput   if the slot is an output slot
      * @param isLastSlot if the slot is the last slot
      */
-    public void setItemSlotOverlayMui2(@NotNull UITexture texture, boolean isOutput, boolean isLastSlot) {
-        this.slotOverlaysMui2.put(computeOverlayKey(isOutput, false, isLastSlot), texture);
+    public void setItemSlotOverlay(@NotNull UITexture texture, boolean isOutput, boolean isLastSlot) {
+        this.slotOverlays.put(computeOverlayKey(isOutput, false, isLastSlot), texture);
     }
 
     /**
-     * @param texture  the MUI2 texture to set
+     * @param texture  the texture to set
      * @param isOutput if the slot is an output slot
      */
-    public void setFluidSlotOverlayMui2(@NotNull UITexture texture, boolean isOutput) {
-        this.slotOverlaysMui2.put(computeOverlayKey(isOutput, true, false), texture);
-        this.slotOverlaysMui2.put(computeOverlayKey(isOutput, true, true), texture);
+    public void setFluidSlotOverlay(@NotNull UITexture texture, boolean isOutput) {
+        this.slotOverlays.put(computeOverlayKey(isOutput, true, false), texture);
+        this.slotOverlays.put(computeOverlayKey(isOutput, true, true), texture);
     }
 
     /**
-     * @param texture    the MUI2 texture to set
+     * @param texture    the texture to set
      * @param isOutput   if the slot is an output slot
      * @param isLastSlot if the slot is the last slot
      */
-    public void setFluidSlotOverlayMui2(@NotNull UITexture texture, boolean isOutput, boolean isLastSlot) {
-        this.slotOverlaysMui2.put(computeOverlayKey(isOutput, true, isLastSlot), texture);
+    public void setFluidSlotOverlay(@NotNull UITexture texture, boolean isOutput, boolean isLastSlot) {
+        this.slotOverlays.put(computeOverlayKey(isOutput, true, isLastSlot), texture);
     }
 
     /**
      * @param key     the key to store the slot's texture with
-     * @param texture the MUI2 texture to store
+     * @param texture the texture to store
      */
     @ApiStatus.Internal
-    public void setSlotOverlayMui2(byte key, @NotNull UITexture texture) {
-        this.slotOverlaysMui2.put(key, texture);
+    public void setSlotOverlay(byte key, @NotNull UITexture texture) {
+        this.slotOverlays.put(key, texture);
     }
 
     /**

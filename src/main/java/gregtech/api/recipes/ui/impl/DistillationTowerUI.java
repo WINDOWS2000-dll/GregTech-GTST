@@ -25,9 +25,9 @@ public class DistillationTowerUI<R extends RecipeMap<?>> extends RecipeMapUI<R> 
     }
 
     @Override
-    protected void addSlotMui2(@NotNull ParentWidget<?> parent, int x, int y, int slotIndex,
-                               @NotNull IItemHandlerModifiable itemHandler, @NotNull FluidTankList fluidHandler,
-                               boolean isFluid, boolean isOutputs) {
+    protected void addSlot(@NotNull ParentWidget<?> parent, int x, int y, int slotIndex,
+                           @NotNull IItemHandlerModifiable itemHandler, @NotNull FluidTankList fluidHandler,
+                           boolean isFluid, boolean isOutputs) {
         if (isFluid) {
             @Nullable
             UITexture overlay;
@@ -67,21 +67,21 @@ public class DistillationTowerUI<R extends RecipeMap<?>> extends RecipeMapUI<R> 
         parent.child(createJeiProgressWidget(progressSupplier)
                 .pos(47, 8).size(66, 58)
                 .texture(GTGuiTextures.PROGRESS_BAR_DISTILLATION_TOWER, 66)
-                .direction(RecipeMapUI.toMui2Direction(ProgressBarMoveType.HORIZONTAL)));
-        addInventorySlotGroupMui2(parent, importItems, importFluids, false);
-        addInventorySlotGroupMui2(parent, exportItems, exportFluids, true);
+                .direction(RecipeMapUI.toDirection(ProgressBarMoveType.HORIZONTAL)));
+        addInventorySlotGroup(parent, importItems, importFluids, false);
+        addInventorySlotGroup(parent, exportItems, exportFluids, true);
         // note: MUI1-only setSpecialTexture()/specialTexture() is not currently mirrored on the MUI2 side;
         // no RecipeMap using this UI sets one at the time of writing.
         return parent;
     }
 
     /**
-     * MUI2 equivalent of the yOffset-9 variant of {@link RecipeMapUI#addInventorySlotGroupMui2}.
+     * The yOffset-9 variant of {@link RecipeMapUI#addInventorySlotGroup}.
      */
     @Override
-    protected void addInventorySlotGroupMui2(@NotNull ParentWidget<?> parent,
-                                             @NotNull IItemHandlerModifiable itemHandler,
-                                             @NotNull FluidTankList fluidHandler, boolean isOutputs) {
+    protected void addInventorySlotGroup(@NotNull ParentWidget<?> parent,
+                                         @NotNull IItemHandlerModifiable itemHandler,
+                                         @NotNull FluidTankList fluidHandler, boolean isOutputs) {
         int yOffset = 9;
         int itemInputsCount = itemHandler.getSlots();
         int fluidInputsCount = fluidHandler.getTanks();
@@ -101,10 +101,10 @@ public class DistillationTowerUI<R extends RecipeMap<?>> extends RecipeMapUI<R> 
         if (wasGroupOutput && isOutputs) startInputsY -= 9;
         if (itemHandler.getSlots() == 6 && fluidHandler.getTanks() == 2 && !isOutputs) startInputsY -= 9;
         if (!isOutputs) {
-            addSlotMui2(parent, 40, startInputsY + (itemSlotsToDown - 1) * 18 - 18, 0, itemHandler, fluidHandler,
+            addSlot(parent, 40, startInputsY + (itemSlotsToDown - 1) * 18 - 18, 0, itemHandler, fluidHandler,
                     invertFluids, false);
         } else {
-            addSlotMui2(parent, 94, startInputsY + (itemSlotsToDown - 1) * 18, 0, itemHandler, fluidHandler,
+            addSlot(parent, 94, startInputsY + (itemSlotsToDown - 1) * 18, 0, itemHandler, fluidHandler,
                     invertFluids, true);
         }
 
@@ -122,7 +122,7 @@ public class DistillationTowerUI<R extends RecipeMap<?>> extends RecipeMapUI<R> 
             for (int i = 0; i < fluidInputsCount; i++) {
                 int x = startInputsX + 18 * (i % 3);
                 int y = startSpecY - (i / 3) * 18;
-                addSlotMui2(parent, x, y, i, itemHandler, fluidHandler, true, true);
+                addSlot(parent, x, y, i, itemHandler, fluidHandler, true, true);
             }
         }
     }

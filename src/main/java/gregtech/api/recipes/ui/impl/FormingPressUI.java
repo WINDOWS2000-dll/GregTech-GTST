@@ -22,15 +22,15 @@ public class FormingPressUI<R extends RecipeMap<?>> extends RecipeMapUI<R> {
     public FormingPressUI(@NotNull R recipeMap) {
         super(recipeMap, true, true, true, true, false);
         setProgressBarMoveType(ProgressBarMoveType.HORIZONTAL);
-        setProgressBarTextureMui2(GTGuiTextures.PROGRESS_BAR_COMPRESS);
+        setProgressBarTexture(GTGuiTextures.PROGRESS_BAR_COMPRESS);
     }
 
     @Override
-    protected void addSlotMui2(@NotNull ParentWidget<?> parent, int x, int y, int slotIndex,
-                               @NotNull IItemHandlerModifiable itemHandler, @NotNull FluidTankList fluidHandler,
-                               boolean isFluid, boolean isOutputs) {
+    protected void addSlot(@NotNull ParentWidget<?> parent, int x, int y, int slotIndex,
+                           @NotNull IItemHandlerModifiable itemHandler, @NotNull FluidTankList fluidHandler,
+                           boolean isFluid, boolean isOutputs) {
         if (isFluid) {
-            super.addSlotMui2(parent, x, y, slotIndex, itemHandler, fluidHandler, true, isOutputs);
+            super.addSlot(parent, x, y, slotIndex, itemHandler, fluidHandler, true, isOutputs);
             return;
         }
 

@@ -39,11 +39,11 @@ public class ResearchStationUI<R extends RecipeMap<?>> extends RecipeMapUI<R> {
         parent.child(createJeiProgressWidget(progressSupplier)
                 .pos(72, 28).size(54, 5)
                 .texture(GTGuiTextures.PROGRESS_BAR_RESEARCH_STATION_1, 54)
-                .direction(RecipeMapUI.toMui2Direction(ProgressBarMoveType.HORIZONTAL)));
+                .direction(RecipeMapUI.toDirection(ProgressBarMoveType.HORIZONTAL)));
         parent.child(createJeiProgressWidget(progressSupplier)
                 .pos(119, 32).size(10, 18)
                 .texture(GTGuiTextures.PROGRESS_BAR_RESEARCH_STATION_2, 18)
-                .direction(RecipeMapUI.toMui2Direction(ProgressBarMoveType.VERTICAL_DOWNWARDS)));
+                .direction(RecipeMapUI.toDirection(ProgressBarMoveType.VERTICAL_DOWNWARDS)));
         parent.child(new ItemSlot()
                 .pos(115, 50)
                 .background(new UITexture[] { GTGuiTextures.SLOT, GTGuiTextures.DATA_ORB_OVERLAY })

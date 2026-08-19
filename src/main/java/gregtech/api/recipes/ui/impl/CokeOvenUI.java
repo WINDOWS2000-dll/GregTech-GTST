@@ -34,10 +34,10 @@ public class CokeOvenUI<R extends RecipeMap<?>> extends RecipeMapUI<R> {
         parent.child(createJeiProgressWidget(progressSupplier)
                 .pos(70, 19).size(36, 18)
                 .texture(GTGuiTextures.PROGRESS_BAR_COKE_OVEN, 36)
-                .direction(RecipeMapUI.toMui2Direction(ProgressBarMoveType.HORIZONTAL)));
-        addSlotMui2(parent, 52, 10, 0, importItems, importFluids, false, false);
-        addSlotMui2(parent, 106, 10, 0, exportItems, exportFluids, false, true);
-        addSlotMui2(parent, 106, 28, 0, exportItems, exportFluids, true, true);
+                .direction(RecipeMapUI.toDirection(ProgressBarMoveType.HORIZONTAL)));
+        addSlot(parent, 52, 10, 0, importItems, importFluids, false, false);
+        addSlot(parent, 106, 10, 0, exportItems, exportFluids, false, true);
+        addSlot(parent, 106, 28, 0, exportItems, exportFluids, true, true);
         return parent;
     }
 }

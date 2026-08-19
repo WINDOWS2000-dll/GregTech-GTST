@@ -318,11 +318,11 @@ public final class RecipeMaps {
             new SimpleRecipeBuilder(), recipeMap -> {
 
                 RecipeMapUI<?> ui = new RecipeMapUI<>(recipeMap, true, true, true, true, false);
-                ui.setItemSlotOverlayMui2(GTGuiTextures.CANNER_OVERLAY, false, false);
-                ui.setItemSlotOverlayMui2(GTGuiTextures.CANISTER_OVERLAY, false, true);
-                ui.setItemSlotOverlayMui2(GTGuiTextures.CANISTER_OVERLAY, true);
-                ui.setFluidSlotOverlayMui2(GTGuiTextures.DARK_CANISTER_OVERLAY, false);
-                ui.setFluidSlotOverlayMui2(GTGuiTextures.DARK_CANISTER_OVERLAY, true);
+                ui.setItemSlotOverlay(GTGuiTextures.CANNER_OVERLAY, false, false);
+                ui.setItemSlotOverlay(GTGuiTextures.CANISTER_OVERLAY, false, true);
+                ui.setItemSlotOverlay(GTGuiTextures.CANISTER_OVERLAY, true);
+                ui.setFluidSlotOverlay(GTGuiTextures.DARK_CANISTER_OVERLAY, false);
+                ui.setFluidSlotOverlay(GTGuiTextures.DARK_CANISTER_OVERLAY, true);
                 ui.setProgressBar(GTGuiTextures.PROGRESS_BAR_CANNER, ProgressBarMoveType.HORIZONTAL);
                 return ui;
             });
@@ -925,7 +925,7 @@ public final class RecipeMaps {
     public static final RecipeMap<SimpleRecipeBuilder> FURNACE_RECIPES = new RecipeMapFurnace("electric_furnace",
             new SimpleRecipeBuilder(), recipeMap -> {
                 RecipeMapUI<?> ui = new RecipeMapUI<>(recipeMap, true, true, true, true, false);
-                ui.setItemSlotOverlayMui2(GTGuiTextures.FURNACE_OVERLAY_1, false);
+                ui.setItemSlotOverlay(GTGuiTextures.FURNACE_OVERLAY_1, false);
                 ui.setProgressBar(GTGuiTextures.PROGRESS_BAR_ARROW, ProgressBarMoveType.HORIZONTAL);
                 return ui;
             });
@@ -1350,8 +1350,8 @@ public final class RecipeMaps {
     public static final RecipeMap<SimpleRecipeBuilder> SCANNER_RECIPES = new RecipeMapScanner("scanner",
             new SimpleRecipeBuilder(), recipeMap -> {
                 RecipeMapUI<?> ui = new RecipeMapUI<>(recipeMap, true, true, true, true, false);
-                ui.setItemSlotOverlayMui2(GTGuiTextures.DATA_ORB_OVERLAY, false, false);
-                ui.setItemSlotOverlayMui2(GTGuiTextures.SCANNER_OVERLAY, false, true);
+                ui.setItemSlotOverlay(GTGuiTextures.DATA_ORB_OVERLAY, false, false);
+                ui.setItemSlotOverlay(GTGuiTextures.SCANNER_OVERLAY, false, true);
                 ui.setProgressBar(GTGuiTextures.PROGRESS_BAR_ARROW, ProgressBarMoveType.HORIZONTAL);
                 return ui;
             });
