@@ -2,6 +2,7 @@ package gregtech.api.cover;
 
 import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.mui.GTGuiTheme;
+import gregtech.api.mui.GTGuis;
 import gregtech.api.mui.GregTechGuiScreen;
 import gregtech.api.mui.factory.CoverGuiFactory;
 import gregtech.api.util.IDirtyNotifiable;
@@ -155,7 +156,7 @@ public interface CoverWithUI extends Cover, IGuiHolder<SidedPosGuiData>, IDirtyN
      * meaning only one of them can be pressed at a time.
      */
     default <T extends Enum<T>> BoolValue.Dynamic boolValueOf(EnumSyncValue<T> syncValue, T value) {
-        return new BoolValue.Dynamic(() -> syncValue.getValue() == value, $ -> syncValue.setValue(value));
+        return GTGuis.boolValueOf(syncValue, value);
     }
 
     /**
@@ -163,7 +164,7 @@ public interface CoverWithUI extends Cover, IGuiHolder<SidedPosGuiData>, IDirtyN
      * meaning only one of them can be pressed at a time.
      */
     default BoolValue.Dynamic boolValueOf(IntSyncValue syncValue, int value) {
-        return new BoolValue.Dynamic(() -> syncValue.getValue() == value, $ -> syncValue.setValue(value));
+        return GTGuis.boolValueOf(syncValue, value);
     }
 
     class EnumRowBuilder<T extends Enum<T>> {
@@ -212,16 +213,12 @@ public interface CoverWithUI extends Cover, IGuiHolder<SidedPosGuiData>, IDirtyN
             return this;
         }
 
-        private BoolValue.Dynamic boolValueOf(EnumSyncValue<T> syncValue, T value) {
-            return new BoolValue.Dynamic(() -> syncValue.getValue() == value, $ -> syncValue.setValue(value));
-        }
-
         public Flow build() {
             var row = Flow.row().marginBottom(2).coverChildrenHeight().widthRel(1f);
             if (this.enumValue != null && this.syncValue != null) {
                 for (var enumVal : enumValue.getEnumConstants()) {
                     var button = new ToggleButton().size(18).marginRight(2)
-                            .value(boolValueOf(this.syncValue, enumVal));
+                            .value(GTGuis.boolValueOf(this.syncValue, enumVal));
 
                     if (this.background != null && this.background.length > 0)
                         button.background(this.background);

@@ -8,18 +8,13 @@ import com.cleanroommc.modularui.drawable.ColorType;
 import com.cleanroommc.modularui.drawable.UITexture;
 import com.cleanroommc.modularui.screen.viewport.GuiContext;
 import com.cleanroommc.modularui.theme.WidgetTheme;
-import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * GT MUI textures.<br>
- * Marked experimental as some of these textures may disappear or be renamed at some point
- * while MUI port is still ongoing. When MUI port is done, this annotation will be removed.
+ * GT MUI textures.
  */
-// TODO ^
 @SuppressWarnings("unused")
-@ApiStatus.Experimental
 public class GTGuiTextures {
 
     /** Keys used for GT assets registered for use in Themes */

@@ -63,16 +63,14 @@ public class MetaTileEntityGuiFactory extends AbstractUIFactory<PosGuiData> {
 
     @Override
     public ModularPanel createPanel(PosGuiData guiData, PanelSyncManager syncManager, UISettings settings) {
-        ModularPanel panel = super.createPanel(guiData, syncManager, settings);
+        IGuiHolder<PosGuiData> holder = Objects.requireNonNull(getGuiHolder(guiData), "Gui holder must not be null!");
+        ModularPanel panel = holder.buildUI(guiData, syncManager, settings);
         // paint tint is a purely visual, client-side overlay; avoid touching client-only rendering
         // classes (GlStateManager, Gui) while building the panel on the server.
-        if (panel != null && NetworkUtils.isClient()) {
-            IGuiHolder<PosGuiData> holder = getGuiHolder(guiData);
-            if (holder instanceof MetaTileEntity mte) {
-                int colorOverride = mte.getUIColorOverride();
-                if (colorOverride != -1) {
-                    panel.overlay(new PaintTintOverlay(colorOverride));
-                }
+        if (panel != null && NetworkUtils.isClient() && holder instanceof MetaTileEntity mte) {
+            int colorOverride = mte.getUIColorOverride();
+            if (colorOverride != -1) {
+                panel.overlay(new PaintTintOverlay(colorOverride));
             }
         }
         return panel;

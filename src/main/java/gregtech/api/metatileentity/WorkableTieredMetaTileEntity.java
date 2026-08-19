@@ -39,6 +39,8 @@ import java.util.function.Function;
 public abstract class WorkableTieredMetaTileEntity extends TieredMetaTileEntity
                                                    implements IDataInfoProvider, ICleanroomReceiver {
 
+    private static final int FONT_HEIGHT = 9; // Minecraft's FontRenderer FONT_HEIGHT value
+
     protected final AbstractRecipeLogic workable;
     protected final RecipeMap<?> recipeMap;
     protected final ICubeRenderer renderer;
@@ -151,6 +153,20 @@ public abstract class WorkableTieredMetaTileEntity extends TieredMetaTileEntity
 
     public Function<Integer, Integer> getTankScalingFunction() {
         return tankScalingFunction;
+    }
+
+    /**
+     * @return the extra vertical offset the GUI should reserve below the recipe UI when {@link #workable}'s
+     *         recipemap has enough item/fluid slots that its {@link RecipeMap#getRecipeMapUI()} needs an extra row
+     *         for them
+     */
+    protected int getRecipeUIYOffset() {
+        RecipeMap<?> workableRecipeMap = workable.getRecipeMap();
+        if (workableRecipeMap.getMaxInputs() >= 6 || workableRecipeMap.getMaxFluidInputs() >= 6 ||
+                workableRecipeMap.getMaxOutputs() >= 6 || workableRecipeMap.getMaxFluidOutputs() >= 6) {
+            return FONT_HEIGHT;
+        }
+        return 0;
     }
 
     public boolean isActive() {

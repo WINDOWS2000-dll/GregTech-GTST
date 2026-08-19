@@ -93,8 +93,6 @@ public class SimpleMachineMetaTileEntity extends WorkableTieredMetaTileEntity
 
     private IItemHandlerModifiable actualImportItems;
 
-    private static final int FONT_HEIGHT = 9; // Minecraft's FontRenderer FONT_HEIGHT value
-
     @Nullable // particle run every tick when the machine is active
     protected final IMachineParticleEffect tickingParticle;
     @Nullable // particle run in randomDisplayTick() when the machine is active
@@ -489,11 +487,7 @@ public class SimpleMachineMetaTileEntity extends WorkableTieredMetaTileEntity
     @Override
     public ModularPanel buildUI(PosGuiData guiData, PanelSyncManager panelSyncManager, UISettings settings) {
         RecipeMap<?> workableRecipeMap = workable.getRecipeMap();
-        int yOffset = 0;
-        if (workableRecipeMap.getMaxInputs() >= 6 || workableRecipeMap.getMaxFluidInputs() >= 6 ||
-                workableRecipeMap.getMaxOutputs() >= 6 || workableRecipeMap.getMaxFluidOutputs() >= 6) {
-            yOffset = FONT_HEIGHT;
-        }
+        int yOffset = getRecipeUIYOffset();
 
         BooleanSyncValue autoOutputItemsValue = new BooleanSyncValue(this::isAutoOutputItems,
                 this::setAutoOutputItems);

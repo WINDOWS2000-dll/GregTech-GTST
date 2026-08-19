@@ -28,7 +28,11 @@ public interface ItemUIFactory extends IItemComponent, IGuiHolder<HandGuiData> {
         return GTGuiTheme.STANDARD;
     }
 
-    // TODO: change to abstract once MUI2 port is complete
+    /**
+     * Defaults to no UI. Implementors that don't provide their own GUI (e.g. {@link gregtech.api.items.metaitem.MetaItem}
+     * itself, which only implements this interface so its {@code IItemComponent}s can be checked with
+     * {@code instanceof ItemUIFactory}) can rely on this default instead of overriding it.
+     */
     @Override
     default ModularPanel buildUI(HandGuiData guiData, PanelSyncManager guiSyncManager, UISettings settings) {
         return null;

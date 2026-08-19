@@ -73,12 +73,10 @@ public class MultiblockUIFactory {
                     .overlay(GTGuiTextures.GREGTECH_LOGO_DARK);
         }
 
-        MultiblockUIBuilder error = builder();
-        error.sync("error", syncManager);
+        MultiblockUIBuilder error = builder("error", syncManager);
         error.setAction(this.errorText);
 
-        MultiblockUIBuilder warning = builder();
-        warning.sync("warning", syncManager);
+        MultiblockUIBuilder warning = builder("warning", syncManager);
         warning.setAction(this.warningText);
         warning.onRebuild(() -> warning.updateFormed(mte.isStructureFormed()));
 
@@ -351,9 +349,8 @@ public class MultiblockUIFactory {
         var parent = new ParentWidget<>();
 
         if (displayText != NO_OP) {
-            MultiblockUIBuilder display = builder();
+            MultiblockUIBuilder display = builder("display", syncManager);
             display.setAction(this.displayText);
-            display.sync("display", syncManager);
 
             parent.child(new ScrollableTextWidget()
                     .debugName("display_text")

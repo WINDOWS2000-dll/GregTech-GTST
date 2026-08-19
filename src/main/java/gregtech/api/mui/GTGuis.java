@@ -13,6 +13,9 @@ import com.cleanroommc.modularui.api.IPanelHandler;
 import com.cleanroommc.modularui.factory.GuiManager;
 import com.cleanroommc.modularui.screen.ModularPanel;
 import com.cleanroommc.modularui.utils.Alignment;
+import com.cleanroommc.modularui.value.BoolValue;
+import com.cleanroommc.modularui.value.sync.EnumSyncValue;
+import com.cleanroommc.modularui.value.sync.IntSyncValue;
 import com.cleanroommc.modularui.widgets.ButtonWidget;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
@@ -103,6 +106,22 @@ public class GTGuis {
                 .disablePanelsBelow(disableBelow)
                 .closeOnOutOfBoundsClick(closeOnOutsideClick)
                 .deleteCachedPanel(deleteCachedPanel);
+    }
+
+    /**
+     * Get a BoolValue for use with toggle buttons which are "linked together," meaning only one of them can be
+     * pressed at a time.
+     */
+    public static <T extends Enum<T>> BoolValue.Dynamic boolValueOf(EnumSyncValue<T> syncValue, T value) {
+        return new BoolValue.Dynamic(() -> syncValue.getValue() == value, $ -> syncValue.setValue(value));
+    }
+
+    /**
+     * Get a BoolValue for use with toggle buttons which are "linked together," meaning only one of them can be
+     * pressed at a time.
+     */
+    public static BoolValue.Dynamic boolValueOf(IntSyncValue syncValue, int value) {
+        return new BoolValue.Dynamic(() -> syncValue.getValue() == value, $ -> syncValue.setValue(value));
     }
 
     public static class PopupPanel extends ModularPanel {
