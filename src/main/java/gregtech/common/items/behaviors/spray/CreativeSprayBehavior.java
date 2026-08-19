@@ -12,6 +12,7 @@ import gregtech.api.mui.drawable.DynamicColorRectangle;
 import gregtech.api.mui.factory.MetaItemGuiFactory;
 import gregtech.api.util.GTUtility;
 import gregtech.common.items.MetaItems;
+import gregtech.common.mui.widget.GTTextFieldWidget;
 
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.resources.I18n;
@@ -40,10 +41,12 @@ import com.cleanroommc.modularui.screen.UISettings;
 import com.cleanroommc.modularui.value.BoolValue;
 import com.cleanroommc.modularui.value.DoubleValue;
 import com.cleanroommc.modularui.value.IntValue;
+import com.cleanroommc.modularui.value.StringValue;
 import com.cleanroommc.modularui.value.sync.BooleanSyncValue;
 import com.cleanroommc.modularui.value.sync.IntSyncValue;
 import com.cleanroommc.modularui.value.sync.PanelSyncManager;
 import com.cleanroommc.modularui.value.sync.SyncHandlers;
+import com.cleanroommc.modularui.widgets.ButtonWidget;
 import com.cleanroommc.modularui.widgets.PageButton;
 import com.cleanroommc.modularui.widgets.PagedWidget;
 import com.cleanroommc.modularui.widgets.SliderWidget;
@@ -56,6 +59,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.function.BooleanSupplier;
+import java.util.regex.Pattern;
 
 import static gregtech.api.util.ColorUtil.*;
 
@@ -65,6 +69,8 @@ public class CreativeSprayBehavior extends AbstractSprayBehavior implements Item
     private static final String KEY_COLOR = "color";
     private static final String KEY_USES_RGB = "usesRGB";
     private static final String KEY_RGB_COLOR = "rgbColor";
+
+    private static final Pattern HEX_COLOR_PATTERN = Pattern.compile("(0[xX])?[0-9a-fA-F]{0,6}");
 
     @Override
     public ModularPanel buildUI(HandGuiData guiData, PanelSyncManager guiSyncManager, UISettings settings) {
@@ -80,6 +86,16 @@ public class CreativeSprayBehavior extends AbstractSprayBehavior implements Item
                 () -> GTUtility.getOrCreateNbtCompound(usedStack).getInteger(KEY_RGB_COLOR),
                 newColor -> setColor(usedStack, newColor));
         guiSyncManager.syncValue(KEY_RGB_COLOR, 0, rgbColorSync);
+        // Only committed to rgbColorSync when Apply is pressed. Read directly from the widget (rather than through
+        // its IStringValue, which GTTextFieldWidget only pushes to on focus loss) so a single click on Apply
+        // reads what's currently typed, even while the field is still focused.
+        GTTextFieldWidget hexField = new GTTextFieldWidget()
+                .width(100)
+                .setMaxLength(8)
+                .setPattern(HEX_COLOR_PATTERN)
+                .value(new StringValue(String.format("%06X", rgbColorSync.getIntValue() & 0xFFFFFF)))
+                .background(GTGuiTextures.DISPLAY)
+                .addTooltipLine(IKey.lang("metaitem.spray.creative.tip.hex"));
 
         PagedWidget.Controller pageController = new PagedWidget.Controller();
 
@@ -100,7 +116,11 @@ public class CreativeSprayBehavior extends AbstractSprayBehavior implements Item
                                 .tab(GuiTextures.TAB_TOP, 0)
                                 .overlay(GTGuiTextures.RGB_GRADIENT.asIcon()
                                         .size(16))
-                                .addTooltipLine(IKey.lang("metaitem.spray.creative.mode.rgb"))))
+                                .addTooltipLine(IKey.lang("metaitem.spray.creative.mode.rgb")))
+                        .child(new PageButton(2, pageController)
+                                .tab(GuiTextures.TAB_TOP, 0)
+                                .overlay(IKey.str("#"))
+                                .addTooltipLine(IKey.lang("metaitem.spray.creative.mode.hex"))))
                 .child(IKey.lang("metaitem.spray.creative.name_base")
                         .asWidget()
                         .left(7)
@@ -110,7 +130,8 @@ public class CreativeSprayBehavior extends AbstractSprayBehavior implements Item
                         .widthRel(1.0f)
                         .heightRel(1.0f)
                         .controller(pageController)
-                        .onPageChange(usesRGBSync::setIntValue)
+                        // Pages 1 (RGB sliders) and 2 (hex code) both use ARGB mode, only page 0 (dye colors) doesn't.
+                        .onPageChange(page -> usesRGBSync.setBoolValue(page != 0))
                         .initialPage(usesRGBSync.getIntValue())
                         .addPage(SlotGroupWidget.builder()
                                 .matrix("SCCCCCCCC",
@@ -149,7 +170,64 @@ public class CreativeSprayBehavior extends AbstractSprayBehavior implements Item
                                 .heightRel(1.0f)
                                 .child(createColorRow(ARGBHelper.RED, rgbColorSync, usesRGBSync::getBoolValue))
                                 .child(createColorRow(ARGBHelper.GREEN, rgbColorSync, usesRGBSync::getBoolValue))
-                                .child(createColorRow(ARGBHelper.BLUE, rgbColorSync, usesRGBSync::getBoolValue))));
+                                .child(createColorRow(ARGBHelper.BLUE, rgbColorSync, usesRGBSync::getBoolValue)))
+                        .addPage(Flow.column()
+                                .widthRel(1.0f)
+                                .heightRel(1.0f)
+                                .child(Flow.row()
+                                        .widthRel(1.0f)
+                                        .coverChildrenHeight()
+                                        .child(hexField)
+                                        .child(new DynamicColorRectangle(
+                                                () -> previewHexColor(hexField.getText()))
+                                                        .asIcon()
+                                                        .margin(4, 0)
+                                                        .size(16)
+                                                        .asWidget()))
+                                .child(new ButtonWidget<>()
+                                        .widthRel(1.0f)
+                                        .height(18)
+                                        .marginTop(4)
+                                        .background(GTGuiTextures.MC_BUTTON)
+                                        .overlay(IKey.lang("gregtech.gui.apply"))
+                                        .onMousePressed(mouseButton -> {
+                                            Integer parsed = parseHexColor(hexField.getText());
+                                            if (parsed != null) {
+                                                rgbColorSync.setIntValue(parsed);
+                                                usesRGBSync.setBoolValue(true);
+                                            }
+                                            return true;
+                                        }))));
+    }
+
+    /**
+     * Parse a hex color string (optionally prefixed with {@code 0x} or {@code #}) into an RGB integer.
+     *
+     * @return the parsed color, masked to the lowest 3 bytes, or {@code null} if the string wasn't valid hex
+     */
+    protected static @Nullable Integer parseHexColor(@NotNull String input) {
+        String cleaned = input.trim();
+        if (cleaned.startsWith("0x") || cleaned.startsWith("0X")) {
+            cleaned = cleaned.substring(2);
+        } else if (cleaned.startsWith("#")) {
+            cleaned = cleaned.substring(1);
+        }
+
+        if (cleaned.isEmpty()) return null;
+
+        try {
+            return Integer.parseInt(cleaned, 16) & 0xFFFFFF;
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    /**
+     * @return an opaque preview color for the hex code tab, or opaque red if the current input isn't valid hex
+     */
+    protected static int previewHexColor(@NotNull String input) {
+        Integer parsed = parseHexColor(input);
+        return (parsed == null ? 0xFF0000 : parsed) | 0xFF000000;
     }
 
     protected static Flow createColorRow(@NotNull ARGBHelper helper, @NotNull IntSyncValue rgbColorSync,
