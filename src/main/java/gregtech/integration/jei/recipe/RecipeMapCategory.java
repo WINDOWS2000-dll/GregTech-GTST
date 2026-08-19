@@ -304,7 +304,7 @@ public class RecipeMapCategory implements IRecipeCategory<GTRecipeWrapper> {
             // This panel is never driven by a PanelSyncManager tick, so DoubleSyncValue's cache (used by the
             // progress bar's animated DoubleSupplier, e.g. TimedProgressSupplier) is never refreshed on its own;
             // force it to re-read its source every frame so the progress bar actually animates here.
-            if (widget instanceof Widget<?> w && w.isSynced() &&
+            if (widget instanceof Widget<?>w && w.isSynced() &&
                     w.getSyncHandler() instanceof DoubleSyncValue doubleSyncValue) {
                 doubleSyncValue.updateCacheFromSource(false);
             }
