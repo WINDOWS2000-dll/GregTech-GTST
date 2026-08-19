@@ -459,6 +459,18 @@ public abstract class MetaTileEntity implements ISyncedTileEntity, CoverHolder, 
         return true;
     }
 
+    /**
+     * UI color override to tint this MetaTileEntity's GUI background with, based on its spray can painting color.
+     *
+     * @return the painting color, or -1 to not override the theme's default color
+     */
+    public int getUIColorOverride() {
+        if (ConfigHolder.client.useSprayCanColorInUI) {
+            return getPaintingColor();
+        }
+        return -1;
+    }
+
     @SideOnly(Side.CLIENT)
     @Override
     public final ModularScreen createScreen(PosGuiData posGuiData, ModularPanel mainPanel) {
