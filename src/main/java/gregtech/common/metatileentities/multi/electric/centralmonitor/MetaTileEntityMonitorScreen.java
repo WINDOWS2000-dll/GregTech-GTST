@@ -59,6 +59,7 @@ import com.cleanroommc.modularui.drawable.DynamicDrawable;
 import com.cleanroommc.modularui.factory.PosGuiData;
 import com.cleanroommc.modularui.screen.ModularPanel;
 import com.cleanroommc.modularui.screen.UISettings;
+import com.cleanroommc.modularui.utils.Alignment;
 import com.cleanroommc.modularui.value.sync.DoubleSyncValue;
 import com.cleanroommc.modularui.value.sync.EnumSyncValue;
 import com.cleanroommc.modularui.value.sync.IntSyncValue;
@@ -626,7 +627,7 @@ public class MetaTileEntityMonitorScreen extends MetaTileEntityMultiblockPart {
                             return true;
                         }))
                 .child(IKey.dynamic(() -> Float.toString(this.scale)).asWidget()
-                        .pos(70, 50).size(60, 20).background(GTGuiTextures.DISPLAY))
+                        .pos(70, 50).size(60, 20).textAlign(Alignment.Center).background(GTGuiTextures.DISPLAY))
 
                 .child(IKey.lang("monitor.gui.title.argb").asWidget().pos(15, 85))
                 .child(new WidgetARGB(20, () -> this.frameColor, color -> setConfig(this.slot, this.scale, color))
@@ -646,7 +647,7 @@ public class MetaTileEntityMonitorScreen extends MetaTileEntityMultiblockPart {
                             return true;
                         }))
                 .child(IKey.dynamic(() -> Integer.toString(this.slot)).asWidget()
-                        .pos(70, 105).size(60, 20).background(GTGuiTextures.DISPLAY))
+                        .pos(70, 105).size(60, 20).textAlign(Alignment.Center).background(GTGuiTextures.DISPLAY))
 
                 .child(IKey.lang("monitor.gui.title.plugin").asWidget().pos(15, 135))
                 .child(new ItemSlot()

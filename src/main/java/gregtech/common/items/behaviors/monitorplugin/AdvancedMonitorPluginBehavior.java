@@ -40,14 +40,13 @@ import codechicken.lib.render.CCRenderState;
 import codechicken.lib.render.pipeline.ColourMultiplier;
 import codechicken.lib.vec.Cuboid6;
 import codechicken.lib.vec.Translation;
-import com.cleanroommc.modularui.api.GuiAxis;
 import com.cleanroommc.modularui.api.drawable.IKey;
+import com.cleanroommc.modularui.api.widget.Interactable;
 import com.cleanroommc.modularui.api.widget.IWidget;
 import com.cleanroommc.modularui.value.sync.BooleanSyncValue;
 import com.cleanroommc.modularui.value.sync.DoubleSyncValue;
 import com.cleanroommc.modularui.value.sync.PanelSyncManager;
 import com.cleanroommc.modularui.widget.ParentWidget;
-import com.cleanroommc.modularui.widgets.SliderWidget;
 import com.cleanroommc.modularui.widgets.ToggleButton;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -304,21 +303,43 @@ public class AdvancedMonitorPluginBehavior extends ProxyHolderPluginBehavior {
         BooleanSyncValue connectValue = new BooleanSyncValue(() -> this.connect,
                 v -> setConfig(this.scale, this.rotationPitch, this.rotationYaw, this.spin, v));
 
-        ParentWidget<?> panel = new ParentWidget<>();
-        panel.child(new SliderWidget()
-                .pos(25, 20).size(210, 10).bounds(0, 1).setAxis(GuiAxis.X)
-                .value(zoomValue).overlay(IKey.str("zoom")));
-        panel.child(new SliderWidget()
-                .pos(25, 40).size(210, 10).bounds(0, 1).setAxis(GuiAxis.X)
-                .value(rotationPitchValue).overlay(IKey.str("rotationPitch")));
-        panel.child(new SliderWidget()
-                .pos(25, 60).size(210, 10).bounds(0, 1).setAxis(GuiAxis.X)
-                .value(rotationYawValue).overlay(IKey.str("rotationYaw")));
-        panel.child(new SliderWidget()
-                .pos(25, 100).size(210, 10).bounds(0, 1).setAxis(GuiAxis.X)
-                .value(spinValue).overlay(IKey.str("spinDur")));
-        panel.child(IKey.str("Fake GUI:").asWidget().pos(25, 135));
-        panel.child(new ToggleButton().pos(80, 130).size(20).value(connectValue));
+        // give the panel a fixed size so children (esp. plain text labels) resolve a sane default width
+        // instead of falling back to a near-zero one and wrapping their text mid-word
+        ParentWidget<?> panel = new ParentWidget<>().size(235, 195);
+
+        addAdjustableRow(panel, 20, "zoom", zoomValue,
+                () -> String.format("%.1f", this.scale),
+                () -> setConfig((float) MathHelper.clamp(
+                        Math.round((this.scale - (Interactable.hasShiftDown() ? 1.0 : 0.1)) * 10) / 10.0, 0.3, 2.0),
+                        this.rotationPitch, this.rotationYaw, this.spin, this.connect),
+                () -> setConfig((float) MathHelper.clamp(
+                        Math.round((this.scale + (Interactable.hasShiftDown() ? 1.0 : 0.1)) * 10) / 10.0, 0.3, 2.0),
+                        this.rotationPitch, this.rotationYaw, this.spin, this.connect));
+
+        addAdjustableRow(panel, 56, "rotationPitch", rotationPitchValue,
+                () -> Integer.toString(this.rotationPitch),
+                () -> setConfig(this.scale, MathHelper.clamp(this.rotationPitch - 1, 0, 360), this.rotationYaw,
+                        this.spin, this.connect),
+                () -> setConfig(this.scale, MathHelper.clamp(this.rotationPitch + 1, 0, 360), this.rotationYaw,
+                        this.spin, this.connect));
+
+        addAdjustableRow(panel, 92, "rotationYaw", rotationYawValue,
+                () -> Integer.toString(this.rotationYaw),
+                () -> setConfig(this.scale, this.rotationPitch, MathHelper.clamp(this.rotationYaw - 1, -90, 90),
+                        this.spin, this.connect),
+                () -> setConfig(this.scale, this.rotationPitch, MathHelper.clamp(this.rotationYaw + 1, -90, 90),
+                        this.spin, this.connect));
+
+        addAdjustableRow(panel, 128, "spinDur", spinValue,
+                () -> String.format("%.1f", this.spin),
+                () -> setConfig(this.scale, this.rotationPitch, this.rotationYaw,
+                        (float) MathHelper.clamp(Math.round((this.spin - 0.1) * 10) / 10.0, 0, 2), this.connect),
+                () -> setConfig(this.scale, this.rotationPitch, this.rotationYaw,
+                        (float) MathHelper.clamp(Math.round((this.spin + 0.1) * 10) / 10.0, 0, 2), this.connect));
+
+        panel.child(IKey.str("Fake GUI:").asWidget().pos(25, 168));
+        panel.child(new ToggleButton().pos(80, 164).size(20).value(connectValue)
+                .overlay(IKey.dynamic(() -> this.connect ? "ON" : "OFF")));
         return panel;
     }
 

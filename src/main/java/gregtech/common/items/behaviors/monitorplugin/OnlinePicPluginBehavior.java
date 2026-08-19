@@ -8,11 +8,11 @@ import gregtech.common.mui.widget.GTTextFieldWidget;
 
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-import com.cleanroommc.modularui.api.GuiAxis;
 import com.cleanroommc.modularui.api.drawable.IKey;
 import com.cleanroommc.modularui.api.widget.IWidget;
 import com.cleanroommc.modularui.value.sync.BooleanSyncValue;
@@ -21,7 +21,6 @@ import com.cleanroommc.modularui.value.sync.PanelSyncManager;
 import com.cleanroommc.modularui.value.sync.StringSyncValue;
 import com.cleanroommc.modularui.widget.ParentWidget;
 import com.cleanroommc.modularui.widgets.ButtonWidget;
-import com.cleanroommc.modularui.widgets.SliderWidget;
 import com.cleanroommc.modularui.widgets.ToggleButton;
 
 public class OnlinePicPluginBehavior extends MonitorPluginBaseBehavior {
@@ -132,39 +131,54 @@ public class OnlinePicPluginBehavior extends MonitorPluginBaseBehavior {
         BooleanSyncValue flippedYValue = new BooleanSyncValue(() -> this.flippedY,
                 v -> setConfig(this.url, this.rotation, this.scaleX, this.scaleY, this.flippedX, v));
 
-        ParentWidget<?> panel = new ParentWidget<>();
+        // give the panel a fixed size so children (esp. plain text labels) resolve a sane default width
+        // instead of falling back to a near-zero one and wrapping their text mid-word
+        ParentWidget<?> panel = new ParentWidget<>().size(250, 190);
         panel.child(IKey.dynamic(() -> url.length() > 40 ? (url.substring(0, 39) + "...") : url)
-                .asWidget().pos(20, 20));
+                .asWidget().pos(20, 15).size(225, 10));
         panel.child(new GTTextFieldWidget()
-                .pos(20, 30).size(175, 10)
+                .pos(20, 28).size(175, 12)
                 .setMaxLength(200)
                 .value(new StringSyncValue(() -> tmpUrl, text -> tmpUrl = text)));
         panel.child(new ButtonWidget<>()
-                .pos(200, 30).size(45, 10)
+                .pos(200, 28).size(45, 12)
                 .overlay(IKey.str("confirm"))
                 .onMousePressed(mouseButton -> {
                     setConfig(tmpUrl, this.rotation, this.scaleX, this.scaleY, this.flippedX, this.flippedY);
                     return true;
                 }));
-        panel.child(new SliderWidget()
-                .pos(25, 40).size(210, 10)
-                .bounds(0, 1).setAxis(GuiAxis.X)
-                .value(rotationValue)
-                .overlay(IKey.str("rotation")));
-        panel.child(new SliderWidget()
-                .pos(25, 60).size(210, 10)
-                .bounds(0, 1).setAxis(GuiAxis.X)
-                .value(scaleXValue)
-                .overlay(IKey.str("scaleX")));
-        panel.child(new SliderWidget()
-                .pos(25, 80).size(210, 10)
-                .bounds(0, 1).setAxis(GuiAxis.X)
-                .value(scaleYValue)
-                .overlay(IKey.str("scaleY")));
-        panel.child(IKey.str("flippedX:").asWidget().pos(40, 115));
-        panel.child(new ToggleButton().pos(90, 110).size(20).value(flippedXValue));
-        panel.child(IKey.str("flippedY:").asWidget().pos(140, 115));
-        panel.child(new ToggleButton().pos(190, 110).size(20).value(flippedYValue));
+
+        addAdjustableRow(panel, 46, "rotation", rotationValue,
+                () -> String.format("%.0f", this.rotation),
+                () -> setConfig(this.url, MathHelper.clamp(this.rotation - 1, -180, 180), this.scaleX, this.scaleY,
+                        this.flippedX, this.flippedY),
+                () -> setConfig(this.url, MathHelper.clamp(this.rotation + 1, -180, 180), this.scaleX, this.scaleY,
+                        this.flippedX, this.flippedY));
+
+        addAdjustableRow(panel, 82, "scaleX", scaleXValue,
+                () -> String.format("%.2f", this.scaleX),
+                () -> setConfig(this.url, this.rotation,
+                        (float) MathHelper.clamp(Math.round((this.scaleX - 0.05) / 0.05) * 0.05, 0.0, 1.0),
+                        this.scaleY, this.flippedX, this.flippedY),
+                () -> setConfig(this.url, this.rotation,
+                        (float) MathHelper.clamp(Math.round((this.scaleX + 0.05) / 0.05) * 0.05, 0.0, 1.0),
+                        this.scaleY, this.flippedX, this.flippedY));
+
+        addAdjustableRow(panel, 118, "scaleY", scaleYValue,
+                () -> String.format("%.2f", this.scaleY),
+                () -> setConfig(this.url, this.rotation, this.scaleX,
+                        (float) MathHelper.clamp(Math.round((this.scaleY - 0.05) / 0.05) * 0.05, 0.0, 1.0),
+                        this.flippedX, this.flippedY),
+                () -> setConfig(this.url, this.rotation, this.scaleX,
+                        (float) MathHelper.clamp(Math.round((this.scaleY + 0.05) / 0.05) * 0.05, 0.0, 1.0),
+                        this.flippedX, this.flippedY));
+
+        panel.child(IKey.str("flippedX:").asWidget().pos(25, 158).size(70, 10));
+        panel.child(new ToggleButton().pos(100, 154).size(20).value(flippedXValue)
+                .overlay(IKey.dynamic(() -> this.flippedX ? "ON" : "OFF")));
+        panel.child(IKey.str("flippedY:").asWidget().pos(140, 158).size(70, 10));
+        panel.child(new ToggleButton().pos(215, 154).size(20).value(flippedYValue)
+                .overlay(IKey.dynamic(() -> this.flippedY ? "ON" : "OFF")));
         return panel;
     }
 

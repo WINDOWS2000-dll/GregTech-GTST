@@ -27,17 +27,26 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+import com.cleanroommc.modularui.api.GuiAxis;
+import com.cleanroommc.modularui.api.drawable.IKey;
 import com.cleanroommc.modularui.api.widget.IWidget;
+import com.cleanroommc.modularui.drawable.Rectangle;
 import com.cleanroommc.modularui.factory.HandGuiData;
 import com.cleanroommc.modularui.screen.ModularPanel;
 import com.cleanroommc.modularui.screen.UISettings;
+import com.cleanroommc.modularui.utils.Alignment;
+import com.cleanroommc.modularui.utils.Color;
+import com.cleanroommc.modularui.value.sync.DoubleSyncValue;
 import com.cleanroommc.modularui.value.sync.PanelSyncManager;
 import com.cleanroommc.modularui.widget.ParentWidget;
+import com.cleanroommc.modularui.widgets.ButtonWidget;
+import com.cleanroommc.modularui.widgets.SliderWidget;
 import io.netty.buffer.Unpooled;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public abstract class MonitorPluginBaseBehavior implements IItemBehaviour, ItemUIFactory, IDirtyNotifiable {
 
@@ -72,6 +81,45 @@ public abstract class MonitorPluginBaseBehavior implements IItemBehaviour, ItemU
      */
     public IWidget customUI(PanelSyncManager syncManager) {
         return new ParentWidget<>();
+    }
+
+    /**
+     * Builds a row consisting of a draggable slider (top) and a Monitor Screen-style -1/value/+1 control (bottom),
+     * so numeric plugin settings can be adjusted either way. Shared by every {@link MonitorPluginBaseBehavior}
+     * subclass so their config widgets stay visually consistent with each other and with
+     * {@link MetaTileEntityMonitorScreen}'s own Scale/Slot controls.
+     *
+     * @param panel        the panel to add the row to
+     * @param y            y position of the row's slider; the button/value row is placed below it
+     * @param label        text drawn on top of the slider
+     * @param sliderValue  the normalized (0~1) value driving the slider
+     * @param displayText  formats the current raw value for the -1/+1 display
+     * @param onDecrement  applies one "-1" step to the raw value
+     * @param onIncrement  applies one "+1" step to the raw value
+     */
+    @SideOnly(Side.CLIENT)
+    protected static void addAdjustableRow(ParentWidget<?> panel, int y, String label, DoubleSyncValue sliderValue,
+                                            Supplier<String> displayText, Runnable onDecrement,
+                                            Runnable onIncrement) {
+        panel.child(new SliderWidget()
+                .pos(25, y).size(210, 10).bounds(0, 1).setAxis(GuiAxis.X)
+                .background(new Rectangle().setColor(Color.BLACK.brighter(2)).asIcon().height(8))
+                .value(sliderValue).overlay(IKey.str(label).color(Color.WHITE.main)));
+        panel.child(new ButtonWidget<>()
+                .pos(25, y + 14).size(18, 12).overlay(IKey.str("-1"))
+                .onMousePressed(m -> {
+                    onDecrement.run();
+                    return true;
+                }));
+        panel.child(IKey.dynamic(displayText).asWidget()
+                .pos(45, y + 14).size(172, 12).textAlign(Alignment.Center).color(Color.WHITE.main)
+                .background(GTGuiTextures.DISPLAY));
+        panel.child(new ButtonWidget<>()
+                .pos(217, y + 14).size(18, 12).overlay(IKey.str("+1"))
+                .onMousePressed(m -> {
+                    onIncrement.run();
+                    return true;
+                }));
     }
 
     /***
