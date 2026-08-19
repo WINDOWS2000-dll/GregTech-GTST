@@ -332,6 +332,7 @@ metaitem.spray.empty.name=Spray Can (Empty)
 metaitem.spray.empty.tooltip=Can be filled with sprays of various colors
 metaitem.spray.creative.name=Creative Spray Can (%s)
 metaitem.spray.creative.name_base=Creative Spray Can
+metaitem.spray.creative.tooltip.open_gui=Middle-click to open GUI
 metaitem.spray.creative.mode.normal=Normal Mode
 metaitem.spray.creative.mode.rgb=RGB Mode
 metaitem.spray.creative.tip.red=Red

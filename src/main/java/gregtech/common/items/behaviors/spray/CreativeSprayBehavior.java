@@ -54,6 +54,7 @@ import com.cleanroommc.modularui.widgets.textfield.TextFieldWidget;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
 import java.util.function.BooleanSupplier;
 
 import static gregtech.api.util.ColorUtil.*;
@@ -246,6 +247,11 @@ public class CreativeSprayBehavior extends AbstractSprayBehavior implements Item
         }
 
         return I18n.format(unlocalizedName, colorString);
+    }
+
+    @Override
+    public void addInformation(ItemStack sprayCan, List<String> lines) {
+        lines.add(I18n.format("metaitem.spray.creative.tooltip.open_gui"));
     }
 
     @SideOnly(Side.CLIENT)
