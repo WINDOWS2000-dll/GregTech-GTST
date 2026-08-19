@@ -29,7 +29,8 @@ public interface ItemUIFactory extends IItemComponent, IGuiHolder<HandGuiData> {
     }
 
     /**
-     * Defaults to no UI. Implementors that don't provide their own GUI (e.g. {@link gregtech.api.items.metaitem.MetaItem}
+     * Defaults to no UI. Implementors that don't provide their own GUI (e.g.
+     * {@link gregtech.api.items.metaitem.MetaItem}
      * itself, which only implements this interface so its {@code IItemComponent}s can be checked with
      * {@code instanceof ItemUIFactory}) can rely on this default instead of overriding it.
      */

@@ -89,18 +89,18 @@ public abstract class MonitorPluginBaseBehavior implements IItemBehaviour, ItemU
      * subclass so their config widgets stay visually consistent with each other and with
      * {@link MetaTileEntityMonitorScreen}'s own Scale/Slot controls.
      *
-     * @param panel        the panel to add the row to
-     * @param y            y position of the row's slider; the button/value row is placed below it
-     * @param label        text drawn on top of the slider
-     * @param sliderValue  the normalized (0~1) value driving the slider
-     * @param displayText  formats the current raw value for the -1/+1 display
-     * @param onDecrement  applies one "-1" step to the raw value
-     * @param onIncrement  applies one "+1" step to the raw value
+     * @param panel       the panel to add the row to
+     * @param y           y position of the row's slider; the button/value row is placed below it
+     * @param label       text drawn on top of the slider
+     * @param sliderValue the normalized (0~1) value driving the slider
+     * @param displayText formats the current raw value for the -1/+1 display
+     * @param onDecrement applies one "-1" step to the raw value
+     * @param onIncrement applies one "+1" step to the raw value
      */
     @SideOnly(Side.CLIENT)
     protected static void addAdjustableRow(ParentWidget<?> panel, int y, String label, DoubleSyncValue sliderValue,
-                                            Supplier<String> displayText, Runnable onDecrement,
-                                            Runnable onIncrement) {
+                                           Supplier<String> displayText, Runnable onDecrement,
+                                           Runnable onIncrement) {
         panel.child(new SliderWidget()
                 .pos(25, y).size(210, 10).bounds(0, 1).setAxis(GuiAxis.X)
                 .background(new Rectangle().setColor(Color.BLACK.brighter(2)).asIcon().height(8))
