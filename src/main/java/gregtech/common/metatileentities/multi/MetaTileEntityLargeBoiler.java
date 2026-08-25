@@ -1,11 +1,12 @@
 package gregtech.common.metatileentities.multi;
 
+import gregtech.api.capability.GregtechDataCodes;
 import gregtech.api.capability.IControllable;
-import gregtech.api.capability.impl.BoilerRecipeLogic;
 import gregtech.api.capability.impl.CommonFluidFilters;
 import gregtech.api.capability.impl.FluidTankList;
 import gregtech.api.capability.impl.ItemHandlerList;
-import gregtech.api.metatileentity.MTETrait;
+import gregtech.api.capability.impl.boiler.BoilerLogic;
+import gregtech.api.capability.impl.boiler.BoilerThermalModel;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.metatileentity.multiblock.*;
@@ -67,7 +68,7 @@ public class MetaTileEntityLargeBoiler extends MultiblockWithDisplayBase impleme
                                        IControllable {
 
     public final BoilerType boilerType;
-    protected BoilerRecipeLogic recipeLogic;
+    protected BoilerLogic recipeLogic;
     private FluidTankList fluidImportInventory;
     private ItemHandlerList itemImportInventory;
     private FluidTankList steamOutputTank;
@@ -77,7 +78,7 @@ public class MetaTileEntityLargeBoiler extends MultiblockWithDisplayBase impleme
     public MetaTileEntityLargeBoiler(ResourceLocation metaTileEntityId, BoilerType boilerType) {
         super(metaTileEntityId);
         this.boilerType = boilerType;
-        this.recipeLogic = new BoilerRecipeLogic(this);
+        this.recipeLogic = new BoilerLogic(this, boilerType.createThermalModel());
         resetTileAbilities();
     }
 
@@ -305,11 +306,15 @@ public class MetaTileEntityLargeBoiler extends MultiblockWithDisplayBase impleme
     public void addInformation(ItemStack stack, @Nullable World player, @NotNull List<String> tooltip,
                                boolean advanced) {
         super.addInformation(stack, player, tooltip, advanced);
+        int steamPerTick = boilerType.getTargetWaterBoilRate() * BoilerThermalModel.STEAM_PER_WATER;
         tooltip.add(I18n.format("gregtech.multiblock.large_boiler.rate_tooltip",
-                (int) (boilerType.steamPerTick() * 20 * boilerType.runtimeBoost(20) / 20.0)));
+                (int) (steamPerTick * 20 * boilerType.runtimeBoost(20) / 20.0)));
+        // TODO: heat_time_tooltip still reports the legacy warm-up estimate (getTicksToBoiling()); the thermal
+        // capacity model doesn't have a closed-form warm-up time, so this needs a simulated/approximated value
+        // once BoilerLogic is playtested.
         tooltip.add(
                 I18n.format("gregtech.multiblock.large_boiler.heat_time_tooltip", boilerType.getTicksToBoiling() / 20));
-        tooltip.add(I18n.format("gregtech.universal.tooltip.base_production_fluid", boilerType.steamPerTick()));
+        tooltip.add(I18n.format("gregtech.universal.tooltip.base_production_fluid", steamPerTick));
         tooltip.add(TooltipHelper.BLINKING_RED + I18n.format("gregtech.multiblock.large_boiler.explosion_tooltip"));
     }
 
@@ -358,12 +363,14 @@ public class MetaTileEntityLargeBoiler extends MultiblockWithDisplayBase impleme
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound data) {
         data.setInteger("ThrottlePercentage", throttlePercentage);
+        data.setTag("BoilerLogic", recipeLogic.serializeNBT());
         return super.writeToNBT(data);
     }
 
     @Override
     public void readFromNBT(NBTTagCompound data) {
         throttlePercentage = data.getInteger("ThrottlePercentage");
+        recipeLogic.deserializeNBT(data.hasKey("BoilerLogic") ? data.getCompoundTag("BoilerLogic") : null);
         super.readFromNBT(data);
     }
 
@@ -371,12 +378,22 @@ public class MetaTileEntityLargeBoiler extends MultiblockWithDisplayBase impleme
     public void writeInitialSyncData(PacketBuffer buf) {
         super.writeInitialSyncData(buf);
         buf.writeVarInt(throttlePercentage);
+        recipeLogic.writeInitialSyncData(buf);
     }
 
     @Override
     public void receiveInitialSyncData(PacketBuffer buf) {
         super.receiveInitialSyncData(buf);
         throttlePercentage = buf.readVarInt();
+        recipeLogic.receiveInitialSyncData(buf);
+    }
+
+    @Override
+    public void receiveCustomData(int dataId, PacketBuffer buf) {
+        super.receiveCustomData(dataId, buf);
+        if (dataId == GregtechDataCodes.WORKING_ENABLED || dataId == GregtechDataCodes.BOILER_LAST_TICK_STEAM) {
+            recipeLogic.receiveCustomData(dataId, buf);
+        }
     }
 
     public int getThrottle() {
@@ -396,11 +413,6 @@ public class MetaTileEntityLargeBoiler extends MultiblockWithDisplayBase impleme
     @Override
     public FluidTankList getExportFluids() {
         return steamOutputTank;
-    }
-
-    @Override
-    protected boolean shouldUpdate(MTETrait trait) {
-        return !(trait instanceof BoilerRecipeLogic);
     }
 
     @Override

@@ -265,6 +265,18 @@ public class MetaTileEntityFluidHatch extends MetaTileEntityMultiblockNotifiable
                 Arrays.asList(MultiblockAbility.IMPORT_FLUIDS, MultiblockAbility.IMPORT_ITEMS);
     }
 
+    /**
+     * Unlike {@link #getAbilities()}, this omits {@code IMPORT_ITEMS}: this hatch's ghost circuit inventory should
+     * still be aggregated into the multiblock's item inputs once formed (see {@link #registerAbilities}), but this
+     * hatch is a fluid hatch first and foremost and shouldn't itself satisfy (or count against) a structure
+     * pattern's {@code abilities(IMPORT_ITEMS)} requirements, such as a "no more than one Input Bus" limit.
+     */
+    @Override
+    public @NotNull List<MultiblockAbility<?>> getPatternAbilities() {
+        return isExportHatch ? Collections.singletonList(MultiblockAbility.EXPORT_FLUIDS) :
+                Collections.singletonList(MultiblockAbility.IMPORT_FLUIDS);
+    }
+
     @Override
     public void registerAbilities(@NotNull AbilityInstances abilityInstances) {
         if (abilityInstances.isKey(MultiblockAbility.EXPORT_FLUIDS) ||

@@ -190,8 +190,18 @@ public class BlockPattern {
                                     z = minZ++;
                                     matchContext.reset();
                                     findFirstAisle = false;
+                                    // Discard counts accumulated so far: they were tallied against a candidate
+                                    // starting position that turned out to be wrong, and would otherwise be added
+                                    // to (not replaced by) the counts from the retried match, causing predicates
+                                    // with setMaxGlobalLimited to see blocks counted more than once and spuriously
+                                    // fail (e.g. a single Input Bus being seen as two, exceeding a max of one).
+                                    this.globalCount.clear();
                                 }
                             } else {
+                                // Same reasoning as above: this candidate starting z didn't pan out either (we're
+                                // still searching for where the first aisle begins), so any counts tallied against
+                                // it so far must not carry over to the next candidate.
+                                this.globalCount.clear();
                                 z++;// continue searching for the first aisle
                             }
                             continue loop;

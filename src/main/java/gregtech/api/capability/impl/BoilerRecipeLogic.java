@@ -34,6 +34,14 @@ import java.util.Collections;
 import static gregtech.api.capability.GregtechDataCodes.BOILER_HEAT;
 import static gregtech.api.capability.GregtechDataCodes.BOILER_LAST_TICK_STEAM;
 
+/**
+ * @deprecated superseded by {@link gregtech.api.capability.impl.boiler.BoilerLogic}, a standalone thermal-capacity
+ *             based reimplementation (see {@code C:\MinecraftModding\GTST-recipe-rework-design\README.md} for the
+ *             rationale). {@link gregtech.common.metatileentities.multi.MetaTileEntityLargeBoiler} no longer
+ *             instantiates this class; it is kept only for reference until the new implementation has been
+ *             playtested, at which point this class will be removed entirely.
+ */
+@Deprecated
 public class BoilerRecipeLogic extends AbstractRecipeLogic implements ICategoryOverride {
 
     private static final int STEAM_PER_WATER = 160;
