@@ -186,6 +186,12 @@ public abstract class RecipeWorkableMultiblockController extends MultiblockWithD
         config.io.itemOutput = outputs -> GTTransferUtils.addItemsToItemHandler(getOutputInventory(), false, outputs);
         config.io.fluidOutput = outputs -> GTTransferUtils.addFluidsToFluidHandler(getOutputFluidInventory(), false,
                 outputs);
+        config.io.itemOutputSpace = items -> canVoidRecipeItemOutputs() ||
+                GTTransferUtils.addItemsToItemHandler(getOutputInventory(), true, items);
+        config.io.fluidOutputSpace = fluids -> canVoidRecipeFluidOutputs() ||
+                GTTransferUtils.addFluidsToFluidHandler(getOutputFluidInventory(), true, fluids);
+        config.io.itemTrim = () -> getItemOutputLimit() < 0 ? Integer.MAX_VALUE : getItemOutputLimit();
+        config.io.fluidTrim = () -> getFluidOutputLimit() < 0 ? Integer.MAX_VALUE : getFluidOutputLimit();
         config.power.properties = () -> {
             RecipePropertySet properties = EnergyContainerProperties.of(getEnergyContainer());
             properties.add(DimensionProperties.of(this));

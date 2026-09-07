@@ -157,6 +157,10 @@ public final class RecipeOverclockOperator implements GTStateMachineTransientOpe
      */
     private int upTransformOcAmount(long recipeEUt, long availableEUt) {
         if (availableEUt <= recipeEUt) return 0;
+        // costFactor <= 1.0 (the default is 4.0, but a misconfigured machine could set this) would make
+        // Math.log(costFactor) <= 0, turning this division into +-Infinity/NaN instead of a step count -- treat
+        // that as "no overclocking possible" rather than letting a garbage ocAmount reach OCParams.initialize.
+        if (config.overclock.costFactor <= 1.0) return 0;
         int ocAmount = (int) (Math.log((double) availableEUt / recipeEUt) / Math.log(config.overclock.costFactor));
         return Math.max(0, ocAmount);
     }
@@ -198,7 +202,8 @@ public final class RecipeOverclockOperator implements GTStateMachineTransientOpe
      * {@link #standardOcAmount}'s identical note.
      */
     static int countOverclocks(long baseEUt, long resultEUt, double costFactor) {
-        if (baseEUt <= 0 || resultEUt <= baseEUt) return 0;
+        // costFactor <= 1.0 would make Math.log(costFactor) <= 0 -- see upTransformOcAmount's identical guard.
+        if (baseEUt <= 0 || resultEUt <= baseEUt || costFactor <= 1.0) return 0;
         return (int) Math.round(Math.log((double) resultEUt / baseEUt) / Math.log(costFactor));
     }
 }

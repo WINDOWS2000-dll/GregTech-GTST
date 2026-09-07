@@ -109,6 +109,12 @@ public abstract class SteamMetaTileEntity extends MetaTileEntity implements ICon
         config.io.fluidInput = this::getImportFluids;
         config.io.itemOutput = outputs -> GTTransferUtils.addItemsToItemHandler(getExportItems(), false, outputs);
         config.io.fluidOutput = outputs -> GTTransferUtils.addFluidsToFluidHandler(getExportFluids(), false, outputs);
+        config.io.itemOutputSpace = items -> canVoidRecipeItemOutputs() ||
+                GTTransferUtils.addItemsToItemHandler(getExportItems(), true, items);
+        config.io.fluidOutputSpace = fluids -> canVoidRecipeFluidOutputs() ||
+                GTTransferUtils.addFluidsToFluidHandler(getExportFluids(), true, fluids);
+        config.io.itemTrim = () -> getItemOutputLimit() < 0 ? Integer.MAX_VALUE : getItemOutputLimit();
+        config.io.fluidTrim = () -> getFluidOutputLimit() < 0 ? Integer.MAX_VALUE : getFluidOutputLimit();
         config.power.properties = () -> {
             RecipePropertySet properties = RecipePropertySet.empty();
             properties.add(new PowerSupplyProperty(GTValues.V[GTValues.LV], 1));

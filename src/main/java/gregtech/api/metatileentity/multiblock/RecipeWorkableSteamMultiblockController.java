@@ -129,12 +129,14 @@ public abstract class RecipeWorkableSteamMultiblockController extends Multiblock
         RecipeLogicConfig config = new RecipeLogicConfig(() -> new RecipeMapLookup(recipeMap));
         config.io.itemInput = this::getInputInventory;
         config.io.itemOutput = outputs -> GTTransferUtils.addItemsToItemHandler(getOutputInventory(), false, outputs);
+        config.io.itemOutputSpace = items -> canVoidRecipeItemOutputs() ||
+                GTTransferUtils.addItemsToItemHandler(getOutputInventory(), true, items);
         // Without this, byproducts (chance outputs) would be
         // granted in full despite getItemOutputLimit()==1 -- config.io.itemTrim is only consulted by
         // RecipeOutputSpaceCheckOperator's pre-admission worst-case check, never by the actual roll
         // (StandardRecipeView#rollItems/StandardRecipeRun) unless wired here too. This wiring is what actually
         // activates the trim for this machine family, matching legacy's (`Recipe#trimRecipeOutputs`) intent.
-        config.io.itemTrim = this::getItemOutputLimit;
+        config.io.itemTrim = () -> getItemOutputLimit() < 0 ? Integer.MAX_VALUE : getItemOutputLimit();
         config.power.properties = () -> {
             RecipePropertySet properties = RecipePropertySet.empty();
             properties.add(new PowerSupplyProperty(GTValues.V[GTValues.LV], getBaseParallelLimit()));

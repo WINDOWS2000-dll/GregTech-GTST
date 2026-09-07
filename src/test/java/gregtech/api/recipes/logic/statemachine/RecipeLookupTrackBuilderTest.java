@@ -505,4 +505,28 @@ class RecipeLookupTrackBuilderTest {
 
         assertThat(PreparedRecipeQueue.count(data), is(1));
     }
+
+    @Test
+    void upTransformForOverclocksWithCostFactorOneDoesNotOverclockInsteadOfDividingByZero() {
+        // Same setup as the enabled case above (supply's total EU/t comfortably covers the recipe), but with
+        // costFactor misconfigured to 1.0 (the default is 4.0) -- Math.log(1.0) == 0 would otherwise turn
+        // RecipeOverclockOperator#upTransformOcAmount's division into +Infinity, producing a garbage ocAmount
+        // instead of failing safely. This must still admit the recipe, just with no overclocking applied.
+        RecipeMap<SimpleRecipeBuilder> map = newMap();
+        map.recipeBuilder().inputs(new ItemStack(Items.IRON_INGOT, 4)).outputs(new ItemStack(Items.GOLD_INGOT))
+                .duration(100).EUt(30).buildAndRegister();
+
+        ItemStackHandler input = new ItemStackHandler(1);
+        input.setStackInSlot(0, new ItemStack(Items.IRON_INGOT, 4));
+        RecipeLogicConfig config = newConfig(map, input, 8, 10);
+        config.overclock.upTransformForOverclocks = true;
+        config.overclock.costFactor = 1.0;
+
+        NBTTagCompound data = new NBTTagCompound();
+        tick(buildMachine(config), data);
+
+        assertThat(PreparedRecipeQueue.count(data), is(1));
+        NBTTagCompound entry = PreparedRecipeQueue.peekFirst(data);
+        assertThat(PreparedRecipeQueue.requiredEUt(entry), is(30L));
+    }
 }

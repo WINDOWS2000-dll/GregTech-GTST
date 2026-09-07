@@ -64,7 +64,10 @@ public class GTStateMachineBuilder {
     }
 
     public GTStateMachineBuilder setPointer(@Range(from = 0, to = Integer.MAX_VALUE) int pointer) {
-        if (pointer < constructing.operatorCount()) {
+        // pointer >= 0, not just pointer < operatorCount(): getPointer() uses -1 as its own "stack empty" sentinel,
+        // so silently accepting a negative pointer here would let it masquerade as that same sentinel later,
+        // corrupting whatever modifyLink/andThen... call follows instead of failing where the bad value originated.
+        if (pointer >= 0 && pointer < constructing.operatorCount()) {
             this.pointerStack.add(pointer);
         }
         return this;
