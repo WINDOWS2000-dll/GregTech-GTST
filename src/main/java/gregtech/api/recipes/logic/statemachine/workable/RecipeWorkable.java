@@ -165,7 +165,7 @@ public class RecipeWorkable extends MTETrait implements IWorkable, IControllable
             this.previousRecipe = recipe;
             if (existingEnricher != null) existingEnricher.enrich(recipe, entry);
         };
-        this.machine = RecipeLogicGraphBuilder.build(config);
+        this.machine = RecipeLogicGraphBuilder.build(config, metaTileEntity);
     }
 
     /**

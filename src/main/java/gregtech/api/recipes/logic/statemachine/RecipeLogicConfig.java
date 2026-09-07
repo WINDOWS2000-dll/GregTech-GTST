@@ -1,5 +1,8 @@
 package gregtech.api.recipes.logic.statemachine;
 
+import gregtech.api.recipes.logic.statemachine.experimental.ExperimentalConfigExtensions;
+import gregtech.api.recipes.logic.statemachine.experimental.ExperimentalRecipeLogicRegistry;
+
 import net.minecraft.nbt.NBTTagCompound;
 
 import org.jetbrains.annotations.NotNull;
@@ -47,6 +50,16 @@ public final class RecipeLogicConfig {
 
     /** Pure notification hooks. See {@link RecipeLogicCallbacks}. */
     public final RecipeLogicCallbacks callbacks = new RecipeLogicCallbacks();
+
+    /**
+     * Read-only view of whatever {@link ExperimentalRecipeLogicRegistry#putExtensionFactory} entries applied to
+     * this specific machine instance, resolved once during construction (see {@link RecipeLogicGraphBuilder#build
+     * build}'s {@code owner}-taking overload). Empty (every {@code getExtension} call returns {@code null}) unless
+     * an addon actually registered something and GTST's own experimental-extension gate is open for it &mdash; see
+     * {@link ExperimentalRecipeLogicRegistry}'s own JavaDoc, which this field is explicitly outside the normal
+     * compatibility contract of.
+     */
+    public final @NotNull ExperimentalConfigExtensions experimental = new ExperimentalConfigExtensions();
 
     public RecipeLogicConfig(@NotNull Supplier<RecipeLookup> lookup) {
         this.lookup = lookup;

@@ -387,6 +387,21 @@ public class ConfigHolder {
                 "item are enabled at all. Both are developer-only debugging tools with no gameplay effect.",
                 "Default: false" })
         public boolean enableStateMachineDebugTools = false;
+
+        @Config.Comment({ "Master switch for gregtech.api.recipes.logic.statemachine.experimental's addon " +
+                "extension registry. This is an explicitly unstable, unsupported API surface with no compatibility " +
+                "guarantee across versions -- see that package's own JavaDoc before enabling this. Both this switch " +
+                "AND listing a modid in experimentalAddonExtensionsAllowlist below are required for that modid's " +
+                "registrations to take effect; this alone does nothing.",
+                "Default: false" })
+        public boolean enableExperimentalAddonExtensions = false;
+
+        @Config.Comment({ "Which modids are allowed to register experimental addon extensions, once " +
+                "enableExperimentalAddonExtensions above is also true. Deliberately strict: an empty list permits " +
+                "nobody, even with the master switch on -- there is no \"allow everyone\" shortcut, since this " +
+                "governs access to an unstable API that can corrupt a machine's recipe logic graph if misused.",
+                "Default: empty (nobody permitted)" })
+        public String[] experimentalAddonExtensionsAllowlist = new String[0];
     }
 
     public static class ClientOptions {

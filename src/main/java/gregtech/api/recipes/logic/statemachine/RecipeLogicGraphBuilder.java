@@ -1,5 +1,7 @@
 package gregtech.api.recipes.logic.statemachine;
 
+import gregtech.api.metatileentity.MetaTileEntity;
+import gregtech.api.recipes.logic.statemachine.experimental.ExperimentalRecipeLogicRegistry;
 import gregtech.api.recipes.logic.statemachine.lookup.RecipeQueueAdmissionOperator;
 import gregtech.api.statemachine.GTStateMachine;
 import gregtech.api.statemachine.GTStateMachineBuilder;
@@ -43,29 +45,53 @@ public final class RecipeLogicGraphBuilder {
     private RecipeLogicGraphBuilder() {}
 
     /**
-     * @see #build(RecipeLogicConfig, RecipeQueueAdmissionOperator)
+     * @see #build(RecipeLogicConfig, MetaTileEntity)
      */
     @NotNull
     public static GTStateMachine build(@NotNull RecipeLogicConfig config) {
-        return build(config, new RecipeQueueAdmissionOperator(config));
+        return build(config, (MetaTileEntity) null);
     }
 
     /**
-     * @param admissionOperator satisfies {@link RecipeProgressTrackBuilder}'s admission contract; pass a custom one
-     *                          only if the standard {@link RecipeQueueAdmissionOperator} doesn't fit the machine's
-     *                          needs (see its JavaDoc).
+     * As {@link #build(RecipeLogicConfig)}, but additionally resolving GTST's experimental addon-extension registry
+     * (see {@link ExperimentalRecipeLogicRegistry}) against {@code owner}'s concrete class before returning: its
+     * matching {@code putExtensionFactory} entries populate {@code config.experimental}, and its matching
+     * {@code addPostProcessor} entries get a chance to edit the graph after the standard tracks are built. Pass
+     * {@code null} only for a machine that will never construct a real {@link RecipeLogicConfig#experimental} (e.g.
+     * a throwaway config used purely for testing) &mdash; every real machine (see {@code RecipeWorkable}'s
+     * constructor) always passes itself.
+     * <p>
+     * This is also where the registry's registration window closes: the first non-null {@code owner} passed here
+     * this session freezes it. See {@link ExperimentalRecipeLogicRegistry}'s own JavaDoc for why that's tied to
+     * this specific moment rather than any FML lifecycle event.
+     *
      * @return a machine with the search track rooted at {@link #SEARCH_ROOT} and the progress track rooted at
      *         {@link #PROGRESS_ROOT}. Drive it with {@link #tick}, or walk the two roots directly for a custom
      *         driving scheme.
      */
     @NotNull
+    public static GTStateMachine build(@NotNull RecipeLogicConfig config, @Nullable MetaTileEntity owner) {
+        return build(config, new RecipeQueueAdmissionOperator(config), owner);
+    }
+
+    /**
+     * As {@link #build(RecipeLogicConfig, MetaTileEntity)}, but with a custom {@code admissionOperator} for a
+     * machine whose needs the standard {@link RecipeQueueAdmissionOperator} doesn't fit (see its own JavaDoc).
+     * {@code owner} may be {@code null} on the same terms as the two-argument overload.
+     */
+    @NotNull
     public static GTStateMachine build(@NotNull RecipeLogicConfig config,
-                                       @NotNull RecipeQueueAdmissionOperator admissionOperator) {
+                                       @NotNull RecipeQueueAdmissionOperator admissionOperator,
+                                       @Nullable MetaTileEntity owner) {
         GTStateMachineBuilder builder = new GTStateMachineBuilder();
         builder.newOperator(GTStateMachineOperator.emptyOp(), false, "searchRoot"); // SEARCH_ROOT
         builder.newOperator(GTStateMachineOperator.emptyOp(), false, "progressRoot"); // PROGRESS_ROOT
         RecipeLookupTrackBuilder.build(builder, SEARCH_ROOT, config);
         RecipeProgressTrackBuilder.build(builder, PROGRESS_ROOT, config, admissionOperator);
+        if (owner != null) {
+            ExperimentalRecipeLogicRegistry.resolveExtensionsFor(owner, config.experimental);
+            builder = ExperimentalRecipeLogicRegistry.applyPostProcessorsFor(owner, builder);
+        }
         return builder.getConstructing();
     }
 
