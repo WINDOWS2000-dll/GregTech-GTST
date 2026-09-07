@@ -90,7 +90,8 @@ class PreparedRecipeQueueTest {
         NBTTagCompound entry = new NBTTagCompound();
         entry.setDouble(PreparedRecipeQueue.ENTRY_DURATION_KEY, 1);
         PreparedRecipeQueue.setItemsConsumed(entry, Collections.emptyList());
-        PreparedRecipeQueue.setFluidsConsumed(entry, Collections.singletonList(new FluidStack(FluidRegistry.WATER, 300)));
+        PreparedRecipeQueue.setFluidsConsumed(entry,
+                Collections.singletonList(new FluidStack(FluidRegistry.WATER, 300)));
         NBTTagCompound data = new NBTTagCompound();
         PreparedRecipeQueue.append(data, entry);
 
@@ -193,7 +194,7 @@ class PreparedRecipeQueueTest {
         private final List<FluidStack> fluidsConsumed;
 
         FakeRecipeRun(double duration, List<ItemStack> itemsOut, List<FluidStack> fluidsOut,
-                     List<ItemStack> itemsConsumed, List<FluidStack> fluidsConsumed) {
+                      List<ItemStack> itemsConsumed, List<FluidStack> fluidsConsumed) {
             this.duration = duration;
             this.itemsOut = itemsOut;
             this.fluidsOut = fluidsOut;

@@ -2,9 +2,8 @@ package gregtech.api.recipes.logic.statemachine.property.impl;
 
 import gregtech.api.recipes.logic.statemachine.property.RecipeSearchProperty;
 
-import org.jetbrains.annotations.Nullable;
-
 import com.github.bsideup.jabel.Desugar;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * The dimension ID a machine is currently in. Paired

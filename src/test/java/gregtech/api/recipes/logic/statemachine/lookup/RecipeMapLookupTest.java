@@ -51,8 +51,9 @@ class RecipeMapLookupTest {
     void findsARecipeMatchingAvailableItems() {
         RecipeLookup lookup = new RecipeMapLookup(newMap());
 
-        List<Recipe> found = collect(lookup.findRecipes(30, Collections.singletonList(new ItemStack(Items.IRON_INGOT, 4)),
-                Collections.emptyList()));
+        List<Recipe> found = collect(
+                lookup.findRecipes(30, Collections.singletonList(new ItemStack(Items.IRON_INGOT, 4)),
+                        Collections.emptyList()));
 
         assertThat(found.size(), is(1));
         assertThat(found.get(0).getGuaranteedItemOutputs().get(0).getItem(), is(Items.GOLD_INGOT));

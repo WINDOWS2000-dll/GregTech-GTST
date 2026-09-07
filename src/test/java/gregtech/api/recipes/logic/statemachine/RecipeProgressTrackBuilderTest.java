@@ -6,16 +6,13 @@ import gregtech.api.statemachine.GTStateMachine;
 import gregtech.api.statemachine.GTStateMachineBuilder;
 import gregtech.api.statemachine.GTStateMachineOperator;
 
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraftforge.fluids.FluidStack;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.is;

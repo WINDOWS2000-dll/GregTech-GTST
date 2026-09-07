@@ -20,9 +20,9 @@ import gregtech.api.util.GTUtility;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.items.ItemStackHandler;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import net.minecraftforge.items.ItemStackHandler;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -192,7 +192,8 @@ class RecipeLookupTrackBuilderTest {
 
         ItemStackHandler input = new ItemStackHandler(1);
         input.setStackInSlot(0, new ItemStack(Items.IRON_INGOT, 20)); // enough for 5x
-        RecipeLogicConfig config = newConfig(map, input, 30); // default amperage(64) comfortably exceeds the limit below
+        RecipeLogicConfig config = newConfig(map, input, 30); // default amperage(64) comfortably exceeds the limit
+                                                              // below
         config.parallel.parallelLimit = () -> 2; // capped below ingredient availability
 
         NBTTagCompound data = new NBTTagCompound();
@@ -210,7 +211,8 @@ class RecipeLookupTrackBuilderTest {
 
         ItemStackHandler input = new ItemStackHandler(1);
         input.setStackInSlot(0, new ItemStack(Items.IRON_INGOT, 20)); // enough for 5x by ingredients alone
-        RecipeLogicConfig config = newConfig(map, input, 30, 2); // amperage(2) caps parallel below ingredient availability
+        RecipeLogicConfig config = newConfig(map, input, 30, 2); // amperage(2) caps parallel below ingredient
+                                                                 // availability
         config.parallel.parallelLimit = () -> 10;
 
         NBTTagCompound data = new NBTTagCompound();
@@ -328,11 +330,12 @@ class RecipeLookupTrackBuilderTest {
         ItemStackHandler input = new ItemStackHandler(1);
         input.setStackInSlot(0, new ItemStack(Items.IRON_INGOT, 4));
         RecipeLogicConfig config = newConfig(map, input, 30);
-        config.overclock.overclockFactory = (costFactor, speedFactor, canUpTransform, durationDiscount) ->
-                (recipeData, transientData) -> {
-                    transientData.put(RecipeOverclockOperator.RESULT_KEY, new OverclockOutcome(0, 999.0, 1, 1));
-                    recipeData.setBoolean(RecipeOverclockOperator.SUCCESS_KEY, true);
-                };
+        config.overclock.overclockFactory = (costFactor, speedFactor, canUpTransform,
+                                             durationDiscount) -> (recipeData, transientData) -> {
+                                                 transientData.put(RecipeOverclockOperator.RESULT_KEY,
+                                                         new OverclockOutcome(0, 999.0, 1, 1));
+                                                 recipeData.setBoolean(RecipeOverclockOperator.SUCCESS_KEY, true);
+                                             };
 
         NBTTagCompound data = new NBTTagCompound();
         tick(buildMachine(config), data);

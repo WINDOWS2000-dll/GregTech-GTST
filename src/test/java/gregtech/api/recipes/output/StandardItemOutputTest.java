@@ -94,14 +94,16 @@ class StandardItemOutputTest {
     void getCompleteOutputsIgnoresChanceAndAssumesEverySuccess() {
         RollableOutputList<ItemStack> outputs = new RollableOutputList<>(ItemStack::getCount, Collections.emptyList(),
                 Collections.singletonList(new RollInformation<>(new ItemStack(Items.DIAMOND, 2), 1, 0)),
-                (maxYield, rollValue, rollBoost, boostStrength, parallel) -> new long[maxYield.length], // never succeeds
+                (maxYield, rollValue, rollBoost, boostStrength, parallel) -> new long[maxYield.length], // never
+                                                                                                        // succeeds
                 ChancedOutputLogic.OR);
         StandardItemOutput provider = new StandardItemOutput(outputs);
 
         List<ItemStack> complete = provider.getCompleteOutputs(2, Integer.MAX_VALUE);
 
         assertThat(complete.size(), is(1));
-        assertThat(complete.get(0).getCount(), is(4)); // 2 * parallel(2), regardless of the never-succeeding interpreter
+        assertThat(complete.get(0).getCount(), is(4)); // 2 * parallel(2), regardless of the never-succeeding
+                                                       // interpreter
     }
 
     @Test

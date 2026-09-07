@@ -10,7 +10,8 @@ import java.util.Random;
  * Interprets roll data as a chance, ranging from 0 to 10 000, of getting the full max yield. Each entry (and each
  * of the {@code parallel} independent attempts per entry) is rolled independently of the others.
  * <p>
- * This is the direct successor to GregTech's pre-existing {@link gregtech.api.recipes.chance.output.ChancedOutputLogic#OR}
+ * This is the direct successor to GregTech's pre-existing
+ * {@link gregtech.api.recipes.chance.output.ChancedOutputLogic#OR}
  * (rolled per-entry independence) combined with {@link gregtech.api.recipes.chance.boost.ChanceBoostFunction#OVERCLOCK}
  * (linear chance boost per overclock tier) &mdash; the same statistical behavior, expressed as a
  * {@link RollInterpreter} instead.

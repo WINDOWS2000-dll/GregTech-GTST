@@ -177,7 +177,8 @@ class RecipeWorkableTest {
             assertTrue(workable.reportedActive, "tick " + i + ": debounced active state must never blip false " +
                     "while a 2-tick recipe keeps immediately replacing itself");
         }
-        assertTrue(delivered.size() > 1, "sanity check: multiple recipes must actually have completed during this test");
+        assertTrue(delivered.size() > 1,
+                "sanity check: multiple recipes must actually have completed during this test");
     }
 
     @Test
@@ -259,7 +260,9 @@ class RecipeWorkableTest {
                 "receiveCustomData(WORKING_ENABLED_CHANGED, false) should flip isWorkingEnabled() too");
     }
 
-    /** As above, but for the {@link RecipeWorkable#writeInitialSyncData}/{@link RecipeWorkable#receiveInitialSyncData} */
+    /**
+     * As above, but for the {@link RecipeWorkable#writeInitialSyncData}/{@link RecipeWorkable#receiveInitialSyncData}
+     */
     @Test
     void initialSyncCarriesActiveAndWorkingEnabledToARemoteWorkable() {
         RecipeMap<SimpleRecipeBuilder> map = newMap();

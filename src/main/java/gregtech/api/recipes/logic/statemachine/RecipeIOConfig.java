@@ -58,7 +58,9 @@ public final class RecipeIOConfig {
     /** As {@link #notifiedItemInputs}, but for fluids. */
     public Supplier<List<IFluidHandler>> notifiedFluidInputs = Collections::emptyList;
 
-    /** Receives finished-recipe item outputs. Defaults to discarding them, which is almost never what you actually want. */
+    /**
+     * Receives finished-recipe item outputs. Defaults to discarding them, which is almost never what you actually want.
+     */
     public Consumer<List<ItemStack>> itemOutput = outputs -> {};
 
     /** Caps how many distinct item output slots a single recipe run may claim. Defaults to unlimited. */

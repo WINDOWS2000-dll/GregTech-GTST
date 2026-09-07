@@ -32,9 +32,9 @@ public final class StandardFluidOutput implements FluidOutputProvider {
 
     @Override
     public @NotNull List<FluidStack> computeOutputsWithBoost(@UnmodifiableView @NotNull List<ItemStack> inputItems,
-                                                              @UnmodifiableView @NotNull List<FluidStack> inputFluids,
-                                                              @NotNull RecipePropertySet properties,
-                                                              int boostStrength, int parallel, int trimLimit) {
+                                                             @UnmodifiableView @NotNull List<FluidStack> inputFluids,
+                                                             @NotNull RecipePropertySet properties,
+                                                             int boostStrength, int parallel, int trimLimit) {
         List<FluidStack> result = new ObjectArrayList<>(Math.min(trimLimit, outputs.size()));
         long[] roll = outputs.comprehensiveRoll(boostStrength, trimLimit, parallel);
         for (int i = 0; i < roll.length; i++) {

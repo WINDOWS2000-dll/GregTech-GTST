@@ -77,5 +77,4 @@ class RecipeWorkableSimpleMachineMetaTileEntityTest {
         host.setAutoOutputFluids(true);
         assertTrue(host.isAutoOutputFluids());
     }
-
 }

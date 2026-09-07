@@ -213,7 +213,6 @@ class MetaTileEntityProcessingArrayTest {
                 host.getWorkable().getConfig().parallel.parallelLimit.getAsInt(), is(5));
     }
 
-
     @Test
     void committedParallelNeverExceedsThisArraysOwnRealEnergyContainerAmperage() {
         RecipeMap<SimpleRecipeBuilder> map = new RecipeMapBuilder<>("processing_array_test_" + testId,

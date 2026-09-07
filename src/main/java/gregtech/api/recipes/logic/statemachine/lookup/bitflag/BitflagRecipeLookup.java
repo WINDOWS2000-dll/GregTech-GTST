@@ -72,7 +72,9 @@ public final class BitflagRecipeLookup implements RecipeLookup {
         this.recipeMap = recipeMap;
     }
 
-    /** Marks the cached indices stale, forcing a rebuild on the next search. See {@link RecipeMap#getBitflagLookup()}. */
+    /**
+     * Marks the cached indices stale, forcing a rebuild on the next search. See {@link RecipeMap#getBitflagLookup()}.
+     */
     public void invalidate() {
         dirty = true;
     }
@@ -165,10 +167,12 @@ public final class BitflagRecipeLookup implements RecipeLookup {
         }
     }
 
-    /** Generic helper so {@link #diagnoseNoMatch} can describe one {@code RecipeNumericFilter<?>} despite the wildcard. */
+    /**
+     * Generic helper so {@link #diagnoseNoMatch} can describe one {@code RecipeNumericFilter<?>} despite the wildcard.
+     */
     private static <T> void describeNumericFilter(@NotNull StringBuilder sb, @NotNull RecipeNumericFilter<T> filter,
-                                                   @NotNull RecipeThresholdIndex index,
-                                                   @NotNull RecipePropertySet properties, @NotNull BitSet excluded) {
+                                                  @NotNull RecipeThresholdIndex index,
+                                                  @NotNull RecipePropertySet properties, @NotNull BitSet excluded) {
         Long query = filter.extractQuery(properties);
         String name = filter.recipeProperty().getKey();
         if (query == null) {
@@ -182,8 +186,8 @@ public final class BitflagRecipeLookup implements RecipeLookup {
 
     /** As {@link #describeNumericFilter}, but for a {@link RecipePredicateFilter}/{@link RecipeCategoryIndex}. */
     private static <T> void describeCategoryFilter(@NotNull StringBuilder sb, @NotNull RecipePredicateFilter<T> filter,
-                                                    @NotNull RecipeCategoryIndex<?> index,
-                                                    @NotNull RecipePropertySet properties, @NotNull BitSet excluded) {
+                                                   @NotNull RecipeCategoryIndex<?> index,
+                                                   @NotNull RecipePropertySet properties, @NotNull BitSet excluded) {
         Predicate<T> query = filter.extractQuery(properties);
         String name = filter.recipeProperty().getKey();
         if (query == null) {
@@ -269,8 +273,8 @@ public final class BitflagRecipeLookup implements RecipeLookup {
      * {@code T}.
      */
     private static <T> @NotNull BitSet orExcludedFromCategoryIndex(@NotNull RecipePredicateFilter<T> filter,
-                                                                    @NotNull RecipeCategoryIndex<?> index,
-                                                                    @NotNull RecipePropertySet properties) {
+                                                                   @NotNull RecipeCategoryIndex<?> index,
+                                                                   @NotNull RecipePropertySet properties) {
         Predicate<T> query = filter.extractQuery(properties);
         if (query == null) return new BitSet();
         @SuppressWarnings("unchecked")
@@ -285,5 +289,5 @@ public final class BitflagRecipeLookup implements RecipeLookup {
     private record GenericEntry(int recipeIndex, long threshold) implements RecipeThresholdIndex.Entry {}
 
     @Desugar
-    private record GenericCategoryEntry<T>(int recipeIndex, T value) implements RecipeCategoryIndex.Entry<T> {}
+    private record GenericCategoryEntry<T> (int recipeIndex, T value) implements RecipeCategoryIndex.Entry<T> {}
 }

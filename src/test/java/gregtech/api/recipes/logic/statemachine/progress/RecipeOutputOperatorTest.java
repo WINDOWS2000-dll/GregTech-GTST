@@ -6,8 +6,8 @@ import gregtech.api.recipes.logic.statemachine.ActiveRecipeList;
 import gregtech.api.recipes.logic.statemachine.RecipeFinalizer;
 import gregtech.api.recipes.logic.statemachine.RecipeLogicConfig;
 
-import net.minecraft.item.ItemStack;
 import net.minecraft.init.Items;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;

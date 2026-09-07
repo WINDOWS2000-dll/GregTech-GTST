@@ -5,9 +5,8 @@ import gregtech.api.recipes.logic.statemachine.property.RecipeSearchProperty;
 
 import net.minecraft.world.biome.Biome;
 
-import org.jetbrains.annotations.Nullable;
-
 import com.github.bsideup.jabel.Desugar;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * The {@link Biome} a machine is currently in. Paired with

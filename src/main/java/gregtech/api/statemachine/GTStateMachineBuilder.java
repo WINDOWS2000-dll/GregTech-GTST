@@ -94,7 +94,7 @@ public class GTStateMachineBuilder {
     }
 
     public GTStateMachineBuilder newOperatorTransient(@NotNull GTStateMachineOperator operator, boolean async,
-                                                       @NotNull String debugName) {
+                                                      @NotNull String debugName) {
         return setPointer(constructing.registerOperatorTransient(operator, async, debugName));
     }
 
@@ -115,7 +115,7 @@ public class GTStateMachineBuilder {
     }
 
     public GTStateMachineBuilder andThenDefaultTransient(@NotNull GTStateMachineOperator operator, boolean async,
-                                                          @NotNull String debugName) {
+                                                         @NotNull String debugName) {
         int id = constructing.registerOperatorTransient(operator, async, debugName);
         constructing.modifyLink(getPointer(), l -> l.elseLink(id));
         return setPointer(id);

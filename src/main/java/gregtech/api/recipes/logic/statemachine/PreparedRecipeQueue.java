@@ -169,7 +169,7 @@ public final class PreparedRecipeQueue {
      */
     @NotNull
     public static List<ItemStack> subtractReservedItems(@NotNull List<ItemStack> realItems,
-                                                         @NotNull NBTTagCompound data) {
+                                                        @NotNull NBTTagCompound data) {
         return subtractReservedItems(realItems, data, 0);
     }
 
@@ -183,7 +183,7 @@ public final class PreparedRecipeQueue {
      */
     @NotNull
     public static List<ItemStack> subtractReservedItems(@NotNull List<ItemStack> realItems,
-                                                         @NotNull NBTTagCompound data, int distinctGroupIndex) {
+                                                        @NotNull NBTTagCompound data, int distinctGroupIndex) {
         List<ItemStack> working = new ObjectArrayList<>(realItems.size());
         for (ItemStack stack : realItems) working.add(stack.copy());
 
@@ -217,7 +217,7 @@ public final class PreparedRecipeQueue {
      */
     @NotNull
     public static List<FluidStack> subtractReservedFluids(@NotNull List<FluidStack> realFluids,
-                                                           @NotNull NBTTagCompound data) {
+                                                          @NotNull NBTTagCompound data) {
         return subtractReservedFluids(realFluids, data, 0);
     }
 
@@ -229,7 +229,7 @@ public final class PreparedRecipeQueue {
      */
     @NotNull
     public static List<FluidStack> subtractReservedFluids(@NotNull List<FluidStack> realFluids,
-                                                           @NotNull NBTTagCompound data, int distinctGroupIndex) {
+                                                          @NotNull NBTTagCompound data, int distinctGroupIndex) {
         List<FluidStack> working = new ObjectArrayList<>(realFluids.size());
         for (FluidStack stack : realFluids) working.add(stack == null ? null : stack.copy());
 

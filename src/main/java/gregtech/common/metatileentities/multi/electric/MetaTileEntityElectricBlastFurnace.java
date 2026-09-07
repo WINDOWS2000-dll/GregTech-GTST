@@ -79,7 +79,8 @@ import static gregtech.api.util.RelativeDirection.*;
  * <p>
  * <b>{@link #blastFurnaceTemperature} vs. {@code createConfig()}'s construction-order trap:</b> exactly the same
  * pitfall {@link MetaTileEntityDistillationTower}'s JavaDoc documents for its own {@code handler} field, and Multi
- * Smelter's {@code heatingCoilLevel}/{@code heatingCoilDiscount} sidestep the same way: {@link #blastFurnaceTemperature}
+ * Smelter's {@code heatingCoilLevel}/{@code heatingCoilDiscount} sidestep the same way:
+ * {@link #blastFurnaceTemperature}
  * is set in {@link #formStructure}, long after {@code createConfig()} (called from the constructor) has already run,
  * so {@code config.power.properties} (the only place this class threads the current temperature through --
  * {@link RecipeCoilOverclockOperator} reads it back out from there, not from a separate supplier; see that class's
@@ -113,8 +114,8 @@ public class MetaTileEntityElectricBlastFurnace extends RecipeWorkableMultiblock
         // Ignores overclockFactory's own four scalar parameters entirely -- see RecipeCoilOverclockOperator's
         // JavaDoc for why this factory closure needs config directly instead (it reads temperature back out of
         // config.power.properties, set just above, rather than needing a separate supplier).
-        config.overclock.overclockFactory = (costFactor, speedFactor, canUpTransform, durationDiscount) ->
-                new RecipeCoilOverclockOperator(config);
+        config.overclock.overclockFactory = (costFactor, speedFactor, canUpTransform,
+                                             durationDiscount) -> new RecipeCoilOverclockOperator(config);
         // Idempotent: registerFilter adds to a Set keyed by filter identity, and RecipeMaps.BLAST_RECIPES's
         // BitflagRecipeLookup is shared by every Electric Blast Furnace instance (see RecipeMap#getBitflagLookup()).
         RecipeMaps.BLAST_RECIPES.getBitflagLookup().registerFilter(CoilTemperatureFilter.INSTANCE);

@@ -128,7 +128,10 @@ public final class RollableOutputList<T> extends AbstractList<T> {
         return correlation.applyCorrelation(interpreted);
     }
 
-    /** As {@link #roll(int, int, int)}, but rolling against an explicitly-supplied interpreter instead of this list's own. */
+    /**
+     * As {@link #roll(int, int, int)}, but rolling against an explicitly-supplied interpreter instead of this list's
+     * own.
+     */
     public long @NotNull [] roll(@NotNull RollInterpreter interpreterOverride, int boostStrength, int trimLimit,
                                  int parallel) {
         long[] interpreted = interpreterOverride.interpretAndRoll(maxYields(trimLimit), rollValues(trimLimit),

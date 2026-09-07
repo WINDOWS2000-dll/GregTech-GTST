@@ -92,12 +92,13 @@ public final class RecipeParallelOperator implements GTStateMachineTransientOper
     }
 
     /**
-     * Package-private (not {@code private}), so a custom {@link gregtech.api.recipes.logic.statemachine.ParallelLimitFactory}
+     * Package-private (not {@code private}), so a custom
+     * {@link gregtech.api.recipes.logic.statemachine.ParallelLimitFactory}
      * operator in this same package (e.g. Large Turbine's {@code TurbineParallelOperator}) can reuse this
      * ingredient-availability check instead of duplicating it.
      */
     static int maxIngredientRatio(@NotNull Recipe recipe, @NotNull List<ItemStack> items,
-                                          @NotNull List<FluidStack> fluids) {
+                                  @NotNull List<FluidStack> fluids) {
         int ratio = Integer.MAX_VALUE;
         for (GTRecipeInput input : recipe.getInputs()) {
             if (input.isNonConsumable() || input.getAmount() <= 0) continue;

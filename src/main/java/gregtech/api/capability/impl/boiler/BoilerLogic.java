@@ -7,7 +7,6 @@ import gregtech.api.capability.impl.CommonFluidFilters;
 import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeMaps;
 import gregtech.api.unification.material.Materials;
-import gregtech.api.util.GTUtility;
 import gregtech.common.ConfigHolder;
 import gregtech.common.metatileentities.multi.MetaTileEntityLargeBoiler;
 

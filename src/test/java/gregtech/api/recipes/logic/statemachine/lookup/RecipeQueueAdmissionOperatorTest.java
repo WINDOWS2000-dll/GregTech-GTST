@@ -49,7 +49,8 @@ class RecipeQueueAdmissionOperatorTest {
 
         NBTTagCompound data = new NBTTagCompound();
         PreparedRecipeQueue.append(data,
-                PreparedRecipeQueue.newEntry(fakeRun(new ItemStack(Items.IRON_INGOT, 4), new ItemStack(Items.GOLD_INGOT))));
+                PreparedRecipeQueue
+                        .newEntry(fakeRun(new ItemStack(Items.IRON_INGOT, 4), new ItemStack(Items.GOLD_INGOT))));
 
         new RecipeQueueAdmissionOperator(config).operate(data);
 
@@ -74,7 +75,8 @@ class RecipeQueueAdmissionOperatorTest {
 
         NBTTagCompound data = new NBTTagCompound();
         PreparedRecipeQueue.append(data,
-                PreparedRecipeQueue.newEntry(fakeRun(new ItemStack(Items.IRON_INGOT, 4), new ItemStack(Items.GOLD_INGOT))));
+                PreparedRecipeQueue
+                        .newEntry(fakeRun(new ItemStack(Items.IRON_INGOT, 4), new ItemStack(Items.GOLD_INGOT))));
 
         new RecipeQueueAdmissionOperator(config).operate(data);
 
@@ -93,7 +95,8 @@ class RecipeQueueAdmissionOperatorTest {
 
         NBTTagCompound data = new NBTTagCompound();
         PreparedRecipeQueue.append(data,
-                PreparedRecipeQueue.newEntry(fakeRun(new ItemStack(Items.IRON_INGOT, 4), new ItemStack(Items.GOLD_INGOT))));
+                PreparedRecipeQueue
+                        .newEntry(fakeRun(new ItemStack(Items.IRON_INGOT, 4), new ItemStack(Items.GOLD_INGOT))));
 
         new RecipeQueueAdmissionOperator(config).operate(data);
 
@@ -109,7 +112,8 @@ class RecipeQueueAdmissionOperatorTest {
 
         NBTTagCompound data = new NBTTagCompound();
         PreparedRecipeQueue.append(data,
-                PreparedRecipeQueue.newEntry(fakeRun(new ItemStack(Items.IRON_INGOT, 4), new ItemStack(Items.GOLD_INGOT))));
+                PreparedRecipeQueue
+                        .newEntry(fakeRun(new ItemStack(Items.IRON_INGOT, 4), new ItemStack(Items.GOLD_INGOT))));
 
         new RecipeQueueAdmissionOperator(config).operate(data);
 
@@ -127,9 +131,11 @@ class RecipeQueueAdmissionOperatorTest {
 
         NBTTagCompound data = new NBTTagCompound();
         PreparedRecipeQueue.append(data,
-                PreparedRecipeQueue.newEntry(fakeRun(new ItemStack(Items.IRON_INGOT, 4), new ItemStack(Items.GOLD_INGOT))));
+                PreparedRecipeQueue
+                        .newEntry(fakeRun(new ItemStack(Items.IRON_INGOT, 4), new ItemStack(Items.GOLD_INGOT))));
         PreparedRecipeQueue.append(data,
-                PreparedRecipeQueue.newEntry(fakeRun(new ItemStack(Items.IRON_INGOT, 2), new ItemStack(Items.DIAMOND))));
+                PreparedRecipeQueue
+                        .newEntry(fakeRun(new ItemStack(Items.IRON_INGOT, 2), new ItemStack(Items.DIAMOND))));
 
         new RecipeQueueAdmissionOperator(config).operate(data);
 
@@ -145,9 +151,11 @@ class RecipeQueueAdmissionOperatorTest {
 
         NBTTagCompound data = new NBTTagCompound();
         PreparedRecipeQueue.append(data,
-                PreparedRecipeQueue.newEntry(fakeRun(new ItemStack(Items.IRON_INGOT, 4), new ItemStack(Items.GOLD_INGOT))));
+                PreparedRecipeQueue
+                        .newEntry(fakeRun(new ItemStack(Items.IRON_INGOT, 4), new ItemStack(Items.GOLD_INGOT))));
         PreparedRecipeQueue.append(data,
-                PreparedRecipeQueue.newEntry(fakeRun(new ItemStack(Items.IRON_INGOT, 1), new ItemStack(Items.DIAMOND))));
+                PreparedRecipeQueue
+                        .newEntry(fakeRun(new ItemStack(Items.IRON_INGOT, 1), new ItemStack(Items.DIAMOND))));
 
         new RecipeQueueAdmissionOperator(config).operate(data);
 
@@ -166,9 +174,11 @@ class RecipeQueueAdmissionOperatorTest {
 
         NBTTagCompound data = new NBTTagCompound();
         PreparedRecipeQueue.append(data,
-                PreparedRecipeQueue.newEntry(fakeRun(new ItemStack(Items.IRON_INGOT, 4), new ItemStack(Items.GOLD_INGOT))));
+                PreparedRecipeQueue
+                        .newEntry(fakeRun(new ItemStack(Items.IRON_INGOT, 4), new ItemStack(Items.GOLD_INGOT))));
         PreparedRecipeQueue.append(data,
-                PreparedRecipeQueue.newEntry(fakeRun(new ItemStack(Items.IRON_INGOT, 2), new ItemStack(Items.DIAMOND))));
+                PreparedRecipeQueue
+                        .newEntry(fakeRun(new ItemStack(Items.IRON_INGOT, 2), new ItemStack(Items.DIAMOND))));
 
         new RecipeQueueAdmissionOperator(config).operate(data);
 
@@ -186,7 +196,7 @@ class RecipeQueueAdmissionOperatorTest {
         private final List<FluidStack> fluidsConsumed;
 
         FakeRecipeRun(double duration, List<ItemStack> itemsOut, List<FluidStack> fluidsOut,
-                     List<ItemStack> itemsConsumed, List<FluidStack> fluidsConsumed) {
+                      List<ItemStack> itemsConsumed, List<FluidStack> fluidsConsumed) {
             this.duration = duration;
             this.itemsOut = itemsOut;
             this.fluidsOut = fluidsOut;

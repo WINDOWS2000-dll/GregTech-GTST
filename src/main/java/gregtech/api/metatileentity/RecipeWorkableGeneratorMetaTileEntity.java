@@ -59,7 +59,7 @@ import java.util.function.Function;
  * {@link gregtech.api.recipes.Recipe#isGenerating()} to add energy into the container instead of draining it.
  */
 public class RecipeWorkableGeneratorMetaTileEntity extends RecipeWorkableTieredMetaTileEntity
-                                                    implements IActiveOutputSide {
+                                                   implements IActiveOutputSide {
 
     public final boolean handlesRecipeOutputs;
 

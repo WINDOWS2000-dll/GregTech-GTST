@@ -62,7 +62,8 @@ public class DriverAbstractRecipeLogic extends DriverSidedTileEntity {
     }
 
     public final static class EnvironmentAbstractRecipeLogic
-                                                             extends EnvironmentMetaTileEntity<IRecipeLogicInfoProvider> {
+                                                             extends
+                                                             EnvironmentMetaTileEntity<IRecipeLogicInfoProvider> {
 
         public EnvironmentAbstractRecipeLogic(IGregTechTileEntity holder, IRecipeLogicInfoProvider capability) {
             super(holder, capability, "gt_recipeLogic");

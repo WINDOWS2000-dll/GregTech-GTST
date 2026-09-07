@@ -4,9 +4,8 @@ import gregtech.api.metatileentity.multiblock.CleanroomType;
 import gregtech.api.recipes.logic.statemachine.property.RecipePropertySet;
 import gregtech.api.recipes.logic.statemachine.property.RecipeSearchProperty;
 
-import org.jetbrains.annotations.Nullable;
-
 import com.github.bsideup.jabel.Desugar;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Predicate;
 
@@ -23,7 +22,9 @@ import java.util.function.Predicate;
 @Desugar
 public record CleanroomFulfillmentProperty(Predicate<CleanroomType> fulfillment) implements RecipeSearchProperty {
 
-    /** A sentinel for {@link RecipePropertySet} type-lookups; {@link #fulfillment()} is never read off of this instance. */
+    /**
+     * A sentinel for {@link RecipePropertySet} type-lookups; {@link #fulfillment()} is never read off of this instance.
+     */
     public static final CleanroomFulfillmentProperty EMPTY = new CleanroomFulfillmentProperty(type -> false);
 
     @Override

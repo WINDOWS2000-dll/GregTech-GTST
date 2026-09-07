@@ -1,8 +1,7 @@
 package gregtech.api.recipes.ingredients.match;
 
-import org.jetbrains.annotations.Range;
-
 import com.github.bsideup.jabel.Desugar;
+import org.jetbrains.annotations.Range;
 
 import java.util.function.Predicate;
 
@@ -27,7 +26,7 @@ public interface Matcher<T> {
     }
 
     @Desugar
-    record SimpleMatcher<T>(Predicate<T> predicate, @Range(from = 1, to = Long.MAX_VALUE) long count)
+    record SimpleMatcher<T> (Predicate<T> predicate, @Range(from = 1, to = Long.MAX_VALUE) long count)
             implements Matcher<T> {
 
         @Override

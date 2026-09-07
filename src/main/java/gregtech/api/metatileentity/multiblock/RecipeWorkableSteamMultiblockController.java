@@ -93,7 +93,7 @@ import org.jetbrains.annotations.NotNull;
  * reuses the same fix: {@link #drainSteam}'s own pass/fail result feeds {@link #lastDrainFailed} directly.
  */
 public abstract class RecipeWorkableSteamMultiblockController extends MultiblockWithDisplayBase
-                                                               implements IControllable, IVentable {
+                                                              implements IControllable, IVentable {
 
     protected static final double CONVERSION_RATE = ConfigHolder.machines.multiblockSteamToEU;
 

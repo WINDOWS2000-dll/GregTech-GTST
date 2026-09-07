@@ -3,9 +3,8 @@ package gregtech.api.recipes.logic.statemachine.property.impl;
 import gregtech.api.recipes.logic.statemachine.property.RecipePropertySet;
 import gregtech.api.recipes.logic.statemachine.property.RecipeSearchProperty;
 
-import org.jetbrains.annotations.Nullable;
-
 import com.github.bsideup.jabel.Desugar;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * How much power a machine can currently accept on its output side: up to {@link #amperage()} amps at

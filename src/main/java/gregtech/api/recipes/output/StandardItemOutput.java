@@ -38,9 +38,9 @@ public final class StandardItemOutput implements ItemOutputProvider {
 
     @Override
     public @NotNull List<ItemStack> computeOutputsWithBoost(@UnmodifiableView @NotNull List<ItemStack> inputItems,
-                                                             @UnmodifiableView @NotNull List<FluidStack> inputFluids,
-                                                             @NotNull RecipePropertySet properties, int boostStrength,
-                                                             int parallel, int trimLimit) {
+                                                            @UnmodifiableView @NotNull List<FluidStack> inputFluids,
+                                                            @NotNull RecipePropertySet properties, int boostStrength,
+                                                            int parallel, int trimLimit) {
         List<ItemStack> result = new ObjectArrayList<>(Math.min(trimLimit, outputs.size()));
         long[] roll = outputs.comprehensiveRoll(boostStrength, trimLimit, parallel);
         for (int i = 0; i < roll.length; i++) {

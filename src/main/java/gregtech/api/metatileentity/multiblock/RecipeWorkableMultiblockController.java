@@ -90,7 +90,8 @@ import java.util.List;
  * directly (as legacy {@code RecipeMapMultiblockController} did), bridging it to {@code config.io.distinctInputGroups}
  * (the StateMachine engine's formalized successor to legacy's {@code MultiblockRecipeLogic#trySearchNewRecipeDistinct},
  * see {@link DistinctInputGroup}'s JavaDoc) via {@link #buildDistinctInputGroups()}. {@link #canBeDistinct()}
- * defaults to {@code false} (matching legacy {@code RecipeMapMultiblockController}'s own default); a subclass whose recipe
+ * defaults to {@code false} (matching legacy {@code RecipeMapMultiblockController}'s own default); a subclass whose
+ * recipe
  * map benefits from per-bus matching (Implosion Compressor, Pyrolyse Oven, ...) overrides it to {@code true}, which
  * is all that's needed to light up the GUI's distinct-bus toggle button ({@code MultiblockUIFactory} checks the
  * interface, not the concrete class) and the search-time behavior alike. Unlike legacy's {@code setDistinct}, this
@@ -111,9 +112,9 @@ import java.util.List;
  * since this is a field replacement, not a chained addition.
  */
 public abstract class RecipeWorkableMultiblockController extends MultiblockWithDisplayBase
-                                                          implements IDataInfoProvider, ICleanroomReceiver,
-                                                          IControllable, IDistinctBusController,
-                                                          IMultiblockRecipeLogicInfoProvider {
+                                                         implements IDataInfoProvider, ICleanroomReceiver,
+                                                         IControllable, IDistinctBusController,
+                                                         IMultiblockRecipeLogicInfoProvider {
 
     protected final @NotNull RecipeMap<?> recipeMap;
     protected final @NotNull RecipeWorkable workable;

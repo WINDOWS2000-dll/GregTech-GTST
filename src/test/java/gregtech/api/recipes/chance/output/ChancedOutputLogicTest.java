@@ -105,24 +105,28 @@ public class ChancedOutputLogicTest {
         MatcherAssert.assertThat(ChancedOutputLogic.AND.applyCorrelation(allSucceeded), CoreMatchers.is(allSucceeded));
 
         long[] oneFailed = { 5, 0, 7 };
-        MatcherAssert.assertThat(ChancedOutputLogic.AND.applyCorrelation(oneFailed), CoreMatchers.is(new long[] { 0, 0, 0 }));
+        MatcherAssert.assertThat(ChancedOutputLogic.AND.applyCorrelation(oneFailed),
+                CoreMatchers.is(new long[] { 0, 0, 0 }));
     }
 
     @Test
     public void testXORCorrelationKeepsOnlyTheFirstSuccessfulYield() {
         long[] yields = { 0, 5, 7 };
-        MatcherAssert.assertThat(ChancedOutputLogic.XOR.applyCorrelation(yields), CoreMatchers.is(new long[] { 0, 5, 0 }));
+        MatcherAssert.assertThat(ChancedOutputLogic.XOR.applyCorrelation(yields),
+                CoreMatchers.is(new long[] { 0, 5, 0 }));
     }
 
     @Test
     public void testXORCorrelationYieldsNothingWhenAllFailed() {
         long[] yields = { 0, 0, 0 };
-        MatcherAssert.assertThat(ChancedOutputLogic.XOR.applyCorrelation(yields), CoreMatchers.is(new long[] { 0, 0, 0 }));
+        MatcherAssert.assertThat(ChancedOutputLogic.XOR.applyCorrelation(yields),
+                CoreMatchers.is(new long[] { 0, 0, 0 }));
     }
 
     @Test
     public void testNONECorrelationAlwaysZeroesEverything() {
         long[] yields = { 5, 3, 7 };
-        MatcherAssert.assertThat(ChancedOutputLogic.NONE.applyCorrelation(yields), CoreMatchers.is(new long[] { 0, 0, 0 }));
+        MatcherAssert.assertThat(ChancedOutputLogic.NONE.applyCorrelation(yields),
+                CoreMatchers.is(new long[] { 0, 0, 0 }));
     }
 }

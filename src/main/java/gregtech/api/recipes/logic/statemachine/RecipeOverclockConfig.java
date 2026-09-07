@@ -64,7 +64,9 @@ public final class RecipeOverclockConfig {
      */
     public @Nullable DoubleSupplier durationBonusPreOverclock;
 
-    /** If non-null, an additional multiplier applied to a recipe's required voltage before overclocking is calculated. */
+    /**
+     * If non-null, an additional multiplier applied to a recipe's required voltage before overclocking is calculated.
+     */
     public @Nullable DoubleSupplier voltageDiscount;
 
     /**

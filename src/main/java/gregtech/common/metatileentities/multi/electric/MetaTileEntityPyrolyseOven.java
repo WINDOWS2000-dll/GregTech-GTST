@@ -45,7 +45,8 @@ public class MetaTileEntityPyrolyseOven extends RecipeWorkableMultiblockControll
 
     /**
      * Replaces legacy's {@code PyrolyseOvenWorkableHandler}
-     * ({@code modifyOverclockPost}, an inner-class-spam case this design avoids) with {@link RecipeLogicConfig#overclock}'s
+     * ({@code modifyOverclockPost}, an inner-class-spam case this design avoids) with
+     * {@link RecipeLogicConfig#overclock}'s
      * {@code durationDiscount} seam (applied post-overclock, exactly where legacy's hook ran), reading the same
      * verbatim formula: 75% speed on cupronickel ({@code coilTier == 0}), each coil tier above kanthal
      * ({@code coilTier >= 1}) 50% faster than the last.

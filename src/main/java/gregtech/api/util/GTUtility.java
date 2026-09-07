@@ -725,7 +725,7 @@ public class GTUtility {
      * should use this overload directly instead of forcing a redundant, potentially-unreliable re-resolution).
      */
     public static boolean isMachineValidForMachineHatch(@NotNull MetaTileEntity machine,
-                                                         String[] recipeMapBlacklist) {
+                                                        String[] recipeMapBlacklist) {
         boolean isWorkableTiered = machine instanceof RecipeWorkableTieredMetaTileEntity &&
                 !(machine instanceof RecipeWorkableGeneratorMetaTileEntity);
         if (isWorkableTiered) {

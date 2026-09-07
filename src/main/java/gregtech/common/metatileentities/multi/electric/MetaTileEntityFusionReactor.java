@@ -23,8 +23,8 @@ import gregtech.api.recipes.RecipeMaps;
 import gregtech.api.recipes.logic.OverclockingLogic;
 import gregtech.api.recipes.logic.RecipeRun;
 import gregtech.api.recipes.logic.statemachine.ActiveRecipeList;
-import gregtech.api.recipes.logic.statemachine.RecipeLogicConfig;
 import gregtech.api.recipes.logic.statemachine.RecipeLogicCallbacks;
+import gregtech.api.recipes.logic.statemachine.RecipeLogicConfig;
 import gregtech.api.recipes.logic.statemachine.RecipeLogicHooks;
 import gregtech.api.recipes.logic.statemachine.lookup.RecipeFusionOverclockOperator;
 import gregtech.api.recipes.logic.statemachine.lookup.bitflag.FusionStartEnergyFilter;
@@ -132,7 +132,8 @@ public class MetaTileEntityFusionReactor extends RecipeWorkableMultiblockControl
 
     /**
      * Whether {@link #onRecipeCompleted} fired during the search track's most recent
-     * {@code updateFormedValid()} call. Needed, or the ring never lights up: {@code RecipeWorkableMultiblockController}'s {@code shouldStartRecipeLookup} gate checks
+     * {@code updateFormedValid()} call. Needed, or the ring never lights up:
+     * {@code RecipeWorkableMultiblockController}'s {@code shouldStartRecipeLookup} gate checks
      * {@code getCommittedParallel()} <i>before</i> that tick's completion has run (search walks before progress,
      * see {@code RecipeLogicGraphBuilder#tick}), so a just-completed recipe always leaves exactly one tick where
      * {@link #workable}{@code .isActive()} reads {@code false} before the next candidate is admitted &mdash; unlike
@@ -191,8 +192,8 @@ public class MetaTileEntityFusionReactor extends RecipeWorkableMultiblockControl
         config.overclock.costFactor = OverclockingLogic.PERFECT_HALF_VOLTAGE_FACTOR;
         // Ignores overclockFactory's own four scalar parameters entirely -- see RecipeFusionOverclockOperator's
         // JavaDoc for why this factory closure needs config/tier directly instead.
-        config.overclock.overclockFactory = (costFactor, speedFactor, canUpTransform, durationDiscount) ->
-                new RecipeFusionOverclockOperator(config, () -> tier);
+        config.overclock.overclockFactory = (costFactor, speedFactor, canUpTransform,
+                                             durationDiscount) -> new RecipeFusionOverclockOperator(config, () -> tier);
         config.hooks.finalCheck = this::chargeHeatForStart;
         config.callbacks.onRecipeCompleted = this::onRecipeCompleted;
         // Idempotent: registerFilter adds to a Set keyed by filter identity, and RecipeMaps.FUSION_RECIPES's

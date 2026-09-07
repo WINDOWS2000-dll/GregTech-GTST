@@ -42,7 +42,6 @@ import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import net.minecraftforge.items.IItemHandlerModifiable;
 
 import com.cleanroommc.modularui.api.drawable.IKey;
 import org.jetbrains.annotations.NotNull;
@@ -323,7 +322,8 @@ public class MetaTileEntityResearchStation extends RecipeWorkableMultiblockContr
     protected void configureWarningText(MultiblockUIBuilder builder) {
         builder.addLowPowerLine(insufficientEnergy())
                 .addLowComputationLine(workable.isActive() &&
-                        !workable.getActiveRecipeCustomBoolean(0, ComputationRecipeHooks.ENTRY_HAS_ENOUGH_COMPUTATION_KEY));
+                        !workable.getActiveRecipeCustomBoolean(0,
+                                ComputationRecipeHooks.ENTRY_HAS_ENOUGH_COMPUTATION_KEY));
         super.configureWarningText(builder);
     }
 }

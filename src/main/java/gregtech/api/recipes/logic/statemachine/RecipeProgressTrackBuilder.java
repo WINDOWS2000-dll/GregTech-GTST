@@ -7,8 +7,6 @@ import gregtech.api.recipes.logic.statemachine.progress.RecipeStallOperator;
 import gregtech.api.statemachine.GTStateMachineBuilder;
 import gregtech.api.statemachine.GTStateMachineOperator;
 
-import net.minecraft.nbt.NBTTagCompound;
-
 import com.github.bsideup.jabel.Desugar;
 import org.jetbrains.annotations.NotNull;
 
@@ -111,9 +109,9 @@ public final class RecipeProgressTrackBuilder {
      * does not leave the builder positioned anywhere meaningful for further chaining.
      */
     private static void buildProgressStallAndCompletion(@NotNull GTStateMachineBuilder builder, int fromOp,
-                                                         @NotNull RecipeLogicConfig config,
-                                                         @NotNull LoopAnchors anchors,
-                                                         @NotNull GTStateMachineOperator outputOperator) {
+                                                        @NotNull RecipeLogicConfig config,
+                                                        @NotNull LoopAnchors anchors,
+                                                        @NotNull GTStateMachineOperator outputOperator) {
         builder.setPointer(fromOp).andThenDefault(
                 d -> d.setBoolean(RECIPE_CHECK_KEY, d.getBoolean(TICK_CHECK_KEY) &&
                         config.hooks.perTickRecipeCheck.test(ActiveRecipeList.selected(d))),

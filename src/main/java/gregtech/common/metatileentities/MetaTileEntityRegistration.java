@@ -3,7 +3,6 @@ package gregtech.common.metatileentities;
 import gregtech.api.GTValues;
 import gregtech.api.GregTechAPI;
 import gregtech.api.capability.FeCompat;
-import gregtech.api.metatileentity.RecipeWorkableGeneratorMetaTileEntity;
 import gregtech.api.metatileentity.RecipeWorkableSimpleMachineMetaTileEntity;
 import gregtech.api.metatileentity.RecipeWorkableSimpleMachineMetaTileEntityResizable;
 import gregtech.api.recipes.RecipeMaps;

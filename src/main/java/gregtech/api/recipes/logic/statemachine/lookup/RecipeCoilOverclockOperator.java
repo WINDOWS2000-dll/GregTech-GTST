@@ -51,7 +51,8 @@ import java.util.function.Predicate;
  * took a constructor-injected {@code IntSupplier} instead (mirroring how Multi Smelter's {@code createConfig()}
  * reads {@code heatingCoilLevel}/{@code heatingCoilDiscount} directly), which worked but left the same value
  * reachable through two independent paths -- {@code config.power.properties} (already populated with
- * {@link TemperatureCapacityProperty} for {@link gregtech.api.recipes.logic.statemachine.lookup.bitflag.CoilTemperatureFilter}'s
+ * {@link TemperatureCapacityProperty} for
+ * {@link gregtech.api.recipes.logic.statemachine.lookup.bitflag.CoilTemperatureFilter}'s
  * benefit) and this operator's own supplier. Consolidating onto the property bag removes that redundancy and matches
  * {@code RecipeOverclockOperator#availableEUt} and this class's own {@link #availableEUt}, which already read
  * everything else through the same channel.
@@ -141,8 +142,10 @@ public final class RecipeCoilOverclockOperator implements GTStateMachineTransien
         data.setBoolean(SUCCESS_KEY, true);
     }
 
-    /** As {@code RecipeOverclockOperator#availableEUt}, verbatim (duplicated: that method is a private instance
-     *  helper reading the same config fields, not worth cross-instance sharing for three lines). */
+    /**
+     * As {@code RecipeOverclockOperator#availableEUt}, verbatim (duplicated: that method is a private instance
+     * helper reading the same config fields, not worth cross-instance sharing for three lines).
+     */
     private long availableEUt(@NotNull RecipeView view) {
         if (config.power.properties == null) return 0;
         RecipePropertySet set = config.power.properties.get();

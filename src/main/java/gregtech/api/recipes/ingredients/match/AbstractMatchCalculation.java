@@ -1,11 +1,10 @@
 package gregtech.api.recipes.ingredients.match;
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectAVLTreeMap;
 import org.jetbrains.annotations.MustBeInvokedByOverriders;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Range;
-
-import it.unimi.dsi.fastutil.ints.Int2ObjectAVLTreeMap;
 
 import java.util.Collections;
 import java.util.List;

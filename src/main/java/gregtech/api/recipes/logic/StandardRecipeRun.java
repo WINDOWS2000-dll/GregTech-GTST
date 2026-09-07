@@ -31,17 +31,17 @@ public final class StandardRecipeRun implements RecipeRun {
     private final boolean generating;
 
     /**
-     * @param view            the matched recipe view this run was overclocked from.
-     * @param properties      the power properties to roll chance-based outputs against.
-     * @param recipeTier      the recipe's own tier, for chance/yield boosting on outputs.
-     * @param machineTier     the tier the recipe is actually running at, for chance/yield boosting on outputs.
-     * @param overclocks      the number of overclocks applied, for {@link #getOverclocks()}.
-     * @param duration        the post-overclock duration, for {@link #getDuration()}.
-     * @param requiredVoltage the post-overclock required voltage (per-unit; unaffected by parallel).
+     * @param view             the matched recipe view this run was overclocked from.
+     * @param properties       the power properties to roll chance-based outputs against.
+     * @param recipeTier       the recipe's own tier, for chance/yield boosting on outputs.
+     * @param machineTier      the tier the recipe is actually running at, for chance/yield boosting on outputs.
+     * @param overclocks       the number of overclocks applied, for {@link #getOverclocks()}.
+     * @param duration         the post-overclock duration, for {@link #getDuration()}.
+     * @param requiredVoltage  the post-overclock required voltage (per-unit; unaffected by parallel).
      * @param requiredAmperage the required amperage (already scaled by parallel; unaffected by overclocking). See
-     *                        {@link RecipeView#getActualAmperage()}.
-     * @param itemTrimLimit   the most distinct item outputs to keep; see {@link RecipeView#rollItems}.
-     * @param fluidTrimLimit  the most distinct fluid outputs to keep; see {@link RecipeView#rollFluids}.
+     *                         {@link RecipeView#getActualAmperage()}.
+     * @param itemTrimLimit    the most distinct item outputs to keep; see {@link RecipeView#rollItems}.
+     * @param fluidTrimLimit   the most distinct fluid outputs to keep; see {@link RecipeView#rollFluids}.
      */
     public StandardRecipeRun(@NotNull RecipeView view, @NotNull RecipePropertySet properties, int recipeTier,
                              int machineTier, @Range(from = 0, to = Integer.MAX_VALUE) int overclocks, double duration,

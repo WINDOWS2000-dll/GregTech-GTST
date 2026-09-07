@@ -60,7 +60,7 @@ import org.jetbrains.annotations.Range;
  * client that starts observing this machine mid-recipe (e.g. relogging, chunk reload) rather than at a transition.
  */
 public class RecipeWorkable extends MTETrait implements IWorkable, IControllable, IHasRecipeMap,
-                                                        IRecipeLogicInfoProvider {
+                            IRecipeLogicInfoProvider {
 
     // Package-private (not private) so RecipeWorkableTest, in the same package, can drive receiveCustomData directly.
     static final int ACTIVE_CHANGED = 0;
@@ -82,7 +82,9 @@ public class RecipeWorkable extends MTETrait implements IWorkable, IControllable
 
     /** Client-side cache of {@link #isActive()}'s last value pushed from the server; see this class's JavaDoc. */
     protected boolean clientActive = false;
-    /** Client-side cache of {@link #isWorkingEnabled()}'s last value pushed from the server; see this class's JavaDoc. */
+    /**
+     * Client-side cache of {@link #isWorkingEnabled()}'s last value pushed from the server; see this class's JavaDoc.
+     */
     protected boolean clientWorkingEnabled = true;
 
     /**
@@ -93,7 +95,10 @@ public class RecipeWorkable extends MTETrait implements IWorkable, IControllable
      * directly.
      */
     boolean reportedActive = false;
-    /** Consecutive ticks {@link #isActive()} has been {@code false} since it was last reported active; see {@link #update()}. */
+    /**
+     * Consecutive ticks {@link #isActive()} has been {@code false} since it was last reported active; see
+     * {@link #update()}.
+     */
     private int inactiveStreak = 0;
 
     /**
@@ -154,7 +159,8 @@ public class RecipeWorkable extends MTETrait implements IWorkable, IControllable
     /**
      * <b>Front-overlay flicker on very-short-duration recipes:</b> once an aggressively overclocked recipe's
      * post-overclock duration drops to just 2 ticks (e.g. on a Multi Smelter), the front overlay would flicker
-     * on/off every tick without the debouncing below. {@link RecipeLogicGraphBuilder#tick} walks the search track before the progress track (see
+     * on/off every tick without the debouncing below. {@link RecipeLogicGraphBuilder#tick} walks the search track
+     * before the progress track (see
      * its own JavaDoc): {@link gregtech.api.recipes.logic.statemachine.RecipeLogicHooks#shouldStartRecipeLookup}
      * gates a new search on nothing currently being active, so it only sees "still active" while the previous
      * recipe hasn't finished <i>yet</i> (completion
@@ -309,18 +315,22 @@ public class RecipeWorkable extends MTETrait implements IWorkable, IControllable
      *         for any machine whose {@code parallelLimit} can exceed 1: a single entry can already represent many
      *         parallel copies once {@code RecipeParallelOperator} has multiplied a candidate up, so counting
      *         entries drastically undercounts how much of the budget is actually spent.
-     * <p>
-     * <b>Important for any {@code parallelLimit > 1} machine:</b> {@code consumedParallelSupplier}/
-     * {@code shouldStartRecipeLookup} must be wired to this method, not {@link #getActiveRecipeCount()}. For a
-     * {@code parallelLimit = 1} machine the two coincidentally agree (at most one entry ever
-     * exists, so "entry count" and "parallel committed" are the same number), which can mask the mistake until a
-     * higher-parallel-limit machine is wired the same way. For {@code parallelLimit = 32} it does not: with 2 entries
-     * already active (say, 30 and 29 parallel copies each), entry count (2) is nowhere near the limit (32), so
-     * {@code shouldStartRecipeLookup} would keep authorizing a brand new search every subsequent tick, and each such
-     * search's own {@code RecipeParallelOperator} budget check (also reading entry count) would keep seeing "only 2
-     * used out of 32" and admit yet another near-maximum-parallel entry &mdash; dozens of
-     * simultaneously active entries and a demanded EU/t climbing into the millions, never actually progressing
-     * because the energy supply could never keep up.
+     *         <p>
+     *         <b>Important for any {@code parallelLimit > 1} machine:</b> {@code consumedParallelSupplier}/
+     *         {@code shouldStartRecipeLookup} must be wired to this method, not {@link #getActiveRecipeCount()}. For a
+     *         {@code parallelLimit = 1} machine the two coincidentally agree (at most one entry ever
+     *         exists, so "entry count" and "parallel committed" are the same number), which can mask the mistake until
+     *         a
+     *         higher-parallel-limit machine is wired the same way. For {@code parallelLimit = 32} it does not: with 2
+     *         entries
+     *         already active (say, 30 and 29 parallel copies each), entry count (2) is nowhere near the limit (32), so
+     *         {@code shouldStartRecipeLookup} would keep authorizing a brand new search every subsequent tick, and each
+     *         such
+     *         search's own {@code RecipeParallelOperator} budget check (also reading entry count) would keep seeing
+     *         "only 2
+     *         used out of 32" and admit yet another near-maximum-parallel entry &mdash; dozens of
+     *         simultaneously active entries and a demanded EU/t climbing into the millions, never actually progressing
+     *         because the energy supply could never keep up.
      */
     public int getCommittedParallel() {
         int total = 0;
@@ -439,8 +449,10 @@ public class RecipeWorkable extends MTETrait implements IWorkable, IControllable
         return isActive() && isWorkingEnabled();
     }
 
-    /** As {@link IRecipeLogicInfoProvider#getInfoProviderEUt()}; describes only the first active recipe, like
-     *  {@link #getProgress()}/{@link #getMaxProgress()} -- see this class's own JavaDoc for why. */
+    /**
+     * As {@link IRecipeLogicInfoProvider#getInfoProviderEUt()}; describes only the first active recipe, like
+     * {@link #getProgress()}/{@link #getMaxProgress()} -- see this class's own JavaDoc for why.
+     */
     @Override
     public long getInfoProviderEUt() {
         return getActiveRecipeCount() == 0 ? 0 : getRequiredEUt(0);

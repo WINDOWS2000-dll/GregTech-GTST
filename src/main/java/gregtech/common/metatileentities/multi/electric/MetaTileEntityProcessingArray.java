@@ -99,7 +99,8 @@ import java.util.List;
  * verbatim from legacy regardless, purely so that instance's own {@code getCleanroom()} stays consistent for
  * whatever else might query it directly -- the recipe search itself does not depend on it.
  */
-public class MetaTileEntityProcessingArray extends RecipeWorkableMultiblockController implements IMachineHatchMultiblock {
+public class MetaTileEntityProcessingArray extends RecipeWorkableMultiblockController
+                                           implements IMachineHatchMultiblock {
 
     private static final ICleanroomProvider DUMMY_CLEANROOM = DummyCleanroom.createForAllTypes();
 

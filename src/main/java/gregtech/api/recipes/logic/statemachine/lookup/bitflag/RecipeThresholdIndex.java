@@ -37,10 +37,16 @@ public final class RecipeThresholdIndex {
 
     private final Comparison comparison;
 
-    /** Ascending distinct threshold values, in the "AT_MOST" orientation (negated already if {@link #comparison} is AT_LEAST). */
+    /**
+     * Ascending distinct threshold values, in the "AT_MOST" orientation (negated already if {@link #comparison} is
+     * AT_LEAST).
+     */
     private final long[] values;
 
-    /** {@code suffixExcluded[k]} = every recipe whose (possibly negated) threshold is {@code > values[k - 1]}, i.e. {@code >= values[k]}. */
+    /**
+     * {@code suffixExcluded[k]} = every recipe whose (possibly negated) threshold is {@code > values[k - 1]}, i.e.
+     * {@code >= values[k]}.
+     */
     private final BitSet[] suffixExcluded;
 
     private RecipeThresholdIndex(Comparison comparison, long[] values, BitSet[] suffixExcluded) {

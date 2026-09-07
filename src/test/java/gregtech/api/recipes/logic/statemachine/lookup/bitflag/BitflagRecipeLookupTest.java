@@ -107,7 +107,10 @@ class BitflagRecipeLookupTest {
                 .itemInputs(3).itemOutputs(3).build();
     }
 
-    /** Registers {@code builder}'s recipe into {@code map} and returns it, since {@code buildAndRegister()} itself returns {@code void}. */
+    /**
+     * Registers {@code builder}'s recipe into {@code map} and returns it, since {@code buildAndRegister()} itself
+     * returns {@code void}.
+     */
     private static Recipe register(RecipeMap<SimpleRecipeBuilder> map, SimpleRecipeBuilder builder) {
         ValidationResult<Recipe> result = builder.build();
         map.addRecipe(result);
@@ -279,7 +282,8 @@ class BitflagRecipeLookupTest {
                 .outputs(new ItemStack(Items.GOLD_INGOT)).duration(1).EUt(30));
 
         BitflagRecipeLookup lookup = map.getBitflagLookup();
-        lookup.registerFilter(testPredicateFilter(value -> false)); // would exclude any recipe, if it declared the property
+        lookup.registerFilter(testPredicateFilter(value -> false)); // would exclude any recipe, if it declared the
+                                                                    // property
 
         Iterator<Recipe> found = lookup.findRecipes(30, RecipePropertySet.empty(),
                 Collections.singletonList(new ItemStack(Items.IRON_INGOT, 1)), Collections.emptyList());

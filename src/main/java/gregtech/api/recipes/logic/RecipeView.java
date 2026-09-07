@@ -67,9 +67,9 @@ public interface RecipeView {
      * {@code gregtech.api.recipes.output.ItemOutputProvider}). Already scaled by {@link #getParallel()}.
      *
      * @param itemTrimLimit the most distinct item outputs to keep (see
-     *                       {@code gregtech.api.recipes.output.ItemOutputProvider#trim}); guaranteed outputs are
-     *                       kept first, with chanced ones only filling whatever slots (and chance rolls) are left
-     *                       over. Pass {@link Integer#MAX_VALUE} for no trimming.
+     *                      {@code gregtech.api.recipes.output.ItemOutputProvider#trim}); guaranteed outputs are
+     *                      kept first, with chanced ones only filling whatever slots (and chance rolls) are left
+     *                      over. Pass {@link Integer#MAX_VALUE} for no trimming.
      */
     @NotNull
     List<ItemStack> rollItems(@NotNull RecipePropertySet properties, int recipeTier, int machineTier,

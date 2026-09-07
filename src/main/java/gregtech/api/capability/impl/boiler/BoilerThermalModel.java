@@ -172,7 +172,7 @@ public final class BoilerThermalModel {
      *
      * @param availableWater the maximum water (mB) the caller is able to supply this tick.
      * @param burnEfficiency a multiplier (0.0-1.0) applied to fuel-derived heat generation, e.g. for maintenance
-     *                      penalties. Pass 1.0 for no penalty.
+     *                       penalties. Pass 1.0 for no penalty.
      * @return the result of this tick: steam produced, water consumed, resulting temperature, and whether the
      *         boiler exploded.
      */

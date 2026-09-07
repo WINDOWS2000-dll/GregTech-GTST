@@ -372,7 +372,8 @@ public class MetaTileEntityAssemblyLine extends RecipeWorkableMultiblockControll
      * instance too, specifically so a programmed circuit item dropped into a fluid hatch is visible to the
      * combined-pool item search (see {@code MetaTileEntityFluidHatch#getAbilities()}/{@code #getPatternAbilities()}'s
      * own JavaDoc). Interleaved among the real Import Item Bus positions (structure aisles place a fluid-input
-     * position on both sides of every item-bus position: {@code "FIF"}), that would make {@code itemInputInventory.get(i)}
+     * position on both sides of every item-bus position: {@code "FIF"}), that would make
+     * {@code itemInputInventory.get(i)}
      * almost never actually mean "the i-th physical bus" -- it would mean "the i-th IMPORT_ITEMS-capable part in
      * pattern order, buses and empty fluid-hatch ghost slots alike", silently misaligning (and, for any recipe
      * with more than a couple of ordered inputs, outright rejecting) every candidate. This is a latent bug in
@@ -434,7 +435,7 @@ public class MetaTileEntityAssemblyLine extends RecipeWorkableMultiblockControll
     private <T> List<T> getOrderedAbilities(@NotNull MultiblockAbility<T> ability) {
         List<T> result = new ArrayList<>();
         for (IMultiblockPart part : getMultiblockParts()) {
-            if (part instanceof IMultiblockAbilityPart<?> abilityPart &&
+            if (part instanceof IMultiblockAbilityPart<?>abilityPart &&
                     abilityPart.getPatternAbilities().contains(ability)) {
                 AbilityInstances instances = new AbilityInstances(ability);
                 ((IMultiblockAbilityPart<Object>) abilityPart).registerAbilities(instances);

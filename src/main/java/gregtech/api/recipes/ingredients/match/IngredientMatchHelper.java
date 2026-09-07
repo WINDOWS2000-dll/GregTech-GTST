@@ -54,14 +54,14 @@ public final class IngredientMatchHelper {
     /** @see #match(List, List, Counter) */
     @NotNull
     public static MatchCalculation<ItemStack> matchItems(@NotNull List<? extends Matcher<ItemStack>> matchers,
-                                                          @NotNull List<@Nullable ItemStack> matchables) {
+                                                         @NotNull List<@Nullable ItemStack> matchables) {
         return match(matchers, matchables, ITEM_COUNTER);
     }
 
     /** @see #match(List, List, Counter) */
     @NotNull
     public static MatchCalculation<FluidStack> matchFluids(@NotNull List<? extends Matcher<FluidStack>> matchers,
-                                                            @NotNull List<@Nullable FluidStack> matchables) {
+                                                           @NotNull List<@Nullable FluidStack> matchables) {
         return match(matchers, matchables, FLUID_COUNTER);
     }
 
@@ -78,8 +78,8 @@ public final class IngredientMatchHelper {
      */
     @NotNull
     public static <T, H extends T> MatchCalculation<H> match(@NotNull List<? extends Matcher<T>> matchers,
-                                                              @NotNull List<@Nullable H> matchables,
-                                                              @NotNull Counter<H> counter) {
+                                                             @NotNull List<@Nullable H> matchables,
+                                                             @NotNull Counter<H> counter) {
         if (matchers.isEmpty()) return EmptyMatchCalculation.get();
 
         Object source = new Object();

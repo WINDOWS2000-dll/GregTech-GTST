@@ -63,14 +63,14 @@ public final class RecipeFusionOverclockOperator implements GTStateMachineTransi
 
     /**
      * @param reactorTier supplies this reactor's own MK tier (e.g. {@code GTValues.LuV}), read lazily rather than
-     *                     taken as a plain {@code int} &mdash; {@code createConfig()} (and therefore this factory
-     *                     call) runs synchronously from inside the host's own constructor, via
-     *                     {@code RecipeWorkableMultiblockController}'s {@code super(...)} call, which happens
-     *                     <i>before</i> the host subclass's own field-assignment statements (like
-     *                     {@code this.tier = tier;}) run. A plain {@code int} captured at that point would silently
-     *                     read Java's default {@code 0} instead of the real tier. Deferring the read to
-     *                     {@link #operate} (which only ever runs on a later tick, long after construction has
-     *                     finished) sidesteps the trap.
+     *                    taken as a plain {@code int} &mdash; {@code createConfig()} (and therefore this factory
+     *                    call) runs synchronously from inside the host's own constructor, via
+     *                    {@code RecipeWorkableMultiblockController}'s {@code super(...)} call, which happens
+     *                    <i>before</i> the host subclass's own field-assignment statements (like
+     *                    {@code this.tier = tier;}) run. A plain {@code int} captured at that point would silently
+     *                    read Java's default {@code 0} instead of the real tier. Deferring the read to
+     *                    {@link #operate} (which only ever runs on a later tick, long after construction has
+     *                    finished) sidesteps the trap.
      */
     public RecipeFusionOverclockOperator(@NotNull RecipeLogicConfig config, @NotNull IntSupplier reactorTier) {
         this.config = config;
@@ -144,8 +144,10 @@ public final class RecipeFusionOverclockOperator implements GTStateMachineTransi
         data.setBoolean(SUCCESS_KEY, true);
     }
 
-    /** As {@code RecipeOverclockOperator#availableEUt}, verbatim (duplicated: that method is a private instance
-     *  helper reading the same config fields, not worth cross-instance sharing for three lines). */
+    /**
+     * As {@code RecipeOverclockOperator#availableEUt}, verbatim (duplicated: that method is a private instance
+     * helper reading the same config fields, not worth cross-instance sharing for three lines).
+     */
     private long availableEUt(@NotNull RecipeView view) {
         if (config.power.properties == null) return 0;
         RecipePropertySet set = config.power.properties.get();

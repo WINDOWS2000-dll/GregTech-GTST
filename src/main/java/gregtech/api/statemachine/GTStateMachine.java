@@ -232,7 +232,7 @@ public final class GTStateMachine {
      */
     @NotNull
     public CompletableFuture<GTSMWalkCompletionData> dispatchAsync(int operatorID, @NotNull NBTTagCompound data,
-                                                                    @NotNull Map<String, Object> transientData) {
+                                                                   @NotNull Map<String, Object> transientData) {
         return dispatchAsync(operatorID, data, transientData, 100);
     }
 
@@ -250,8 +250,8 @@ public final class GTStateMachine {
      */
     @NotNull
     public CompletableFuture<GTSMWalkCompletionData> dispatchAsync(int operatorID, @NotNull NBTTagCompound data,
-                                                                    @NotNull Map<String, Object> transientData,
-                                                                    int stepLimit) {
+                                                                   @NotNull Map<String, Object> transientData,
+                                                                   int stepLimit) {
         if (!isAsyncCompatible(operatorID)) {
             return CompletableFuture
                     .completedFuture(new GTSMWalkCompletionData(operatorID, data, transientData, -2, null));

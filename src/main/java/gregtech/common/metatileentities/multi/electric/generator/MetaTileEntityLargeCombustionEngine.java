@@ -107,7 +107,7 @@ import java.util.function.UnaryOperator;
  * design decision (2026-09-04), for consistency across every generator in the mod.
  */
 public class MetaTileEntityLargeCombustionEngine extends RecipeWorkableMultiblockController
-                                                  implements ProgressBarMultiblock {
+                                                 implements ProgressBarMultiblock {
 
     private static final FluidStack OXYGEN_STACK = Materials.Oxygen.getFluid(20);
     private static final FluidStack LIQUID_OXYGEN_STACK = Materials.Oxygen.getFluid(FluidStorageKeys.LIQUID, 80);
@@ -116,7 +116,9 @@ public class MetaTileEntityLargeCombustionEngine extends RecipeWorkableMultibloc
     private final int tier;
     private final boolean isExtreme;
     private boolean boostAllowed;
-    /** Display-only cache of {@link #isOxygenPresent()}'s last result, refreshed every {@link #drainRecipeEnergy} tick. */
+    /**
+     * Display-only cache of {@link #isOxygenPresent()}'s last result, refreshed every {@link #drainRecipeEnergy} tick.
+     */
     private boolean isOxygenBoosted = false;
     private long totalContinuousRunningTime;
 

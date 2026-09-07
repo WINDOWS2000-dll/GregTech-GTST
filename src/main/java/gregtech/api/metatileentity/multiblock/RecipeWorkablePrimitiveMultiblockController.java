@@ -81,7 +81,7 @@ import java.util.List;
  * override the method to return {@code 1}; that pattern must never be copied onto a machine that doesn't.
  */
 public abstract class RecipeWorkablePrimitiveMultiblockController extends MultiblockWithDisplayBase
-                                                                   implements IControllable {
+                                                                  implements IControllable {
 
     protected final @NotNull RecipeMap<?> recipeMap;
     protected final @NotNull RecipeWorkable workable;

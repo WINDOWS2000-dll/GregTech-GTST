@@ -24,8 +24,8 @@ import java.util.function.Function;
 public class RecipeWorkableSingleTurbineMetaTileEntity extends RecipeWorkableGeneratorMetaTileEntity {
 
     public RecipeWorkableSingleTurbineMetaTileEntity(ResourceLocation metaTileEntityId, RecipeMap<?> recipeMap,
-                                                      ICubeRenderer renderer, int tier,
-                                                      Function<Integer, Integer> tankScalingFunction) {
+                                                     ICubeRenderer renderer, int tier,
+                                                     Function<Integer, Integer> tankScalingFunction) {
         super(metaTileEntityId, recipeMap, renderer, tier, tankScalingFunction);
     }
 

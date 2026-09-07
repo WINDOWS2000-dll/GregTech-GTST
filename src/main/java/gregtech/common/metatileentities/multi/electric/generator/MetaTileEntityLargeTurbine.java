@@ -132,12 +132,16 @@ import java.util.function.UnaryOperator;
 public class MetaTileEntityLargeTurbine extends RecipeWorkableMultiblockController
                                         implements ITieredMetaTileEntity, ProgressBarMultiblock {
 
-    /** Frozen at admission time (mirrors legacy's own {@code recipeEUt} being frozen at {@code setupRecipe}); the
-     *  EU/t this specific entry delivers every tick for the whole of its own natural-duration window. */
+    /**
+     * Frozen at admission time (mirrors legacy's own {@code recipeEUt} being frozen at {@code setupRecipe}); the
+     * EU/t this specific entry delivers every tick for the whole of its own natural-duration window.
+     */
     private static final String ENTRY_DELIVERY_VOLTAGE_KEY = "TurbineDeliveryVoltage";
-    /** The net one-time change to apply to {@link #bankedEU} the instant this entry is admitted: the raw credit
-     *  this batch is worth, minus one target's worth (matching legacy's single {@code excessVoltage += credit -
-     *  target} update, applied once per admission regardless of how many ticks the resulting window lasts). */
+    /**
+     * The net one-time change to apply to {@link #bankedEU} the instant this entry is admitted: the raw credit
+     * this batch is worth, minus one target's worth (matching legacy's single {@code excessVoltage += credit -
+     *  target} update, applied once per admission regardless of how many ticks the resulting window lasts).
+     */
     private static final String ENTRY_BANK_DELTA_KEY = "TurbineBankDelta";
     private static final int MIN_DURABILITY_TO_WARN = 10;
     private static final String NBT_BANKED_EU = "BankedEU";
@@ -152,27 +156,37 @@ public class MetaTileEntityLargeTurbine extends RecipeWorkableMultiblockControll
     public final ICubeRenderer frontOverlay;
 
     public net.minecraftforge.fluids.capability.IFluidHandler exportFluidHandler;
-    /** Resolved once at {@link #formStructure}; the ability part itself doesn't change until the next re-formation
-     *  (its current rotor state is always queried fresh through it). */
+    /**
+     * Resolved once at {@link #formStructure}; the ability part itself doesn't change until the next re-formation
+     * (its current rotor state is always queried fresh through it).
+     */
     @Nullable
     private IRotorHolder cachedRotorHolder;
     /** Banked EU (legacy's {@code excessVoltage}): see this class's own JavaDoc for the admission/delivery split. */
     private long bankedEU;
-    /** What was actually delivered to {@link #getEnergyContainer()} this tick, after {@link #getSpeedRampFactor()}
-     *  scaling (server-authoritative; {@code 0} if neither an active entry's window nor {@link #runIdleBankDraw()}
-     *  delivered anything, e.g. genuine fuel starvation, or while still ramping up from a full stop) -- drives
-     *  {@link #configureDisplayText}'s real-time production line. Deliberately <i>not</i> what
-     *  {@link #isGeneratingPower()} uses -- see that method's own JavaDoc for why a ramp-caused {@code 0} here must
-     *  not look like "not generating". */
+    /**
+     * What was actually delivered to {@link #getEnergyContainer()} this tick, after {@link #getSpeedRampFactor()}
+     * scaling (server-authoritative; {@code 0} if neither an active entry's window nor {@link #runIdleBankDraw()}
+     * delivered anything, e.g. genuine fuel starvation, or while still ramping up from a full stop) -- drives
+     * {@link #configureDisplayText}'s real-time production line. Deliberately <i>not</i> what
+     * {@link #isGeneratingPower()} uses -- see that method's own JavaDoc for why a ramp-caused {@code 0} here must
+     * not look like "not generating".
+     */
     private long lastDeliveredEUt = 0;
-    /** Whether a genuine fuel-funded delivery opportunity existed this tick, independent of how much
-     *  {@link #getSpeedRampFactor()} scaled the actual wattage down -- see {@link #isGeneratingPower()}. */
+    /**
+     * Whether a genuine fuel-funded delivery opportunity existed this tick, independent of how much
+     * {@link #getSpeedRampFactor()} scaled the actual wattage down -- see {@link #isGeneratingPower()}.
+     */
     private boolean generatingThisTick = false;
-    /** Server-side record of what {@link #isGeneratingPower()} was last pushed to the client as; see that
-     *  method's own JavaDoc for why a dedicated sync is needed here. */
+    /**
+     * Server-side record of what {@link #isGeneratingPower()} was last pushed to the client as; see that
+     * method's own JavaDoc for why a dedicated sync is needed here.
+     */
     private boolean lastGeneratingPowerSynced = false;
-    /** Client-side cache of {@link #isGeneratingPower()}'s last value pushed from the server; see that method's
-     *  own JavaDoc. */
+    /**
+     * Client-side cache of {@link #isGeneratingPower()}'s last value pushed from the server; see that method's
+     * own JavaDoc.
+     */
     private boolean clientGeneratingPower = false;
 
     public MetaTileEntityLargeTurbine(ResourceLocation metaTileEntityId, RecipeMap<?> recipeMap, int tier,
@@ -318,32 +332,37 @@ public class MetaTileEntityLargeTurbine extends RecipeWorkableMultiblockControll
      *         Used in place of {@code workable.isActive()} everywhere below -- the Tricorder's own raw
      *         {@code recipeWorkable.isActive()} debug line is deliberately left alone, since exposing the raw
      *         engine-internal value there is its whole purpose.
-     * <p>
-     * <b>Deliberately {@link #generatingThisTick}, not {@link #lastDeliveredEUt} {@code > 0}:</b>
-     * {@code lastDeliveredEUt > 0} is more accurate than a pure capacity check for fuel starvation, since it also
-     * correctly reads {@code false} when an admission-based signal would report {@code true} despite nothing
-     * actually being delivered. But {@link #getSpeedRampFactor()} legitimately delivers {@code 0} W for a long
-     * stretch right after a cold start (quadratic ramp from a full stop), and {@code MetaTileEntityRotorHolder
+     *         <p>
+     *         <b>Deliberately {@link #generatingThisTick}, not {@link #lastDeliveredEUt} {@code > 0}:</b>
+     *         {@code lastDeliveredEUt > 0} is more accurate than a pure capacity check for fuel starvation, since it
+     *         also
+     *         correctly reads {@code false} when an admission-based signal would report {@code true} despite nothing
+     *         actually being delivered. But {@link #getSpeedRampFactor()} legitimately delivers {@code 0} W for a long
+     *         stretch right after a cold start (quadratic ramp from a full stop), and {@code MetaTileEntityRotorHolder
      * #update()} only ever increments the rotor speed that ramp reads while {@link #isActive()} is {@code true} --
-     * so {@code lastDeliveredEUt > 0} would create a startup deadlock (never generating because speed is 0, speed
-     * never rising because never generating). {@link #generatingThisTick} is set {@code true} by both delivery
-     * paths as soon as a genuine opportunity exists, strictly <i>before</i> the ramp factor is applied, breaking
-     * that cycle while still staying accurate for fuel starvation (both paths also set it {@code false} when
-     * nothing was actually deliverable).
-     * <p>
-     * <b>Client sync matters here too, or the working sound and front
-     * overlay never activate even though the GUI status line (which reads this same method) correctly
-     * shows "working".</b> {@code configureDisplayText} runs server-side (its output is pushed to the client as
-     * pre-built text), so it's unaffected; but {@code MetaTileEntity#updateSound()} and
-     * {@link RecipeWorkableMultiblockController#isOverlayActive()} (which this class overrides) are both called
-     * directly on the <i>client</i>, where this method's raw field reads ({@link #generatingThisTick}, etc.) are
-     * not guaranteed to reflect the server's authoritative state (the same class of bug {@code RecipeWorkable}'s
-     * own JavaDoc documents for {@code isActive()}/{@code isWorkingEnabled()}). This method branches on
-     * {@link World#isRemote}, returning
-     * {@link #clientGeneratingPower} (a cache kept current by an explicit
-     * {@link GregtechDataCodes#LARGE_TURBINE_GENERATING_POWER_CHANGED} push, including the
-     * {@code scheduleRenderUpdate()} call {@code RecipeWorkable}'s own sync needs for the same reason) on the
-     * client, and only computing the real condition on the server.
+     *         so {@code lastDeliveredEUt > 0} would create a startup deadlock (never generating because speed is 0,
+     *         speed
+     *         never rising because never generating). {@link #generatingThisTick} is set {@code true} by both delivery
+     *         paths as soon as a genuine opportunity exists, strictly <i>before</i> the ramp factor is applied,
+     *         breaking
+     *         that cycle while still staying accurate for fuel starvation (both paths also set it {@code false} when
+     *         nothing was actually deliverable).
+     *         <p>
+     *         <b>Client sync matters here too, or the working sound and front
+     *         overlay never activate even though the GUI status line (which reads this same method) correctly
+     *         shows "working".</b> {@code configureDisplayText} runs server-side (its output is pushed to the client as
+     *         pre-built text), so it's unaffected; but {@code MetaTileEntity#updateSound()} and
+     *         {@link RecipeWorkableMultiblockController#isOverlayActive()} (which this class overrides) are both called
+     *         directly on the <i>client</i>, where this method's raw field reads ({@link #generatingThisTick}, etc.)
+     *         are
+     *         not guaranteed to reflect the server's authoritative state (the same class of bug
+     *         {@code RecipeWorkable}'s
+     *         own JavaDoc documents for {@code isActive()}/{@code isWorkingEnabled()}). This method branches on
+     *         {@link World#isRemote}, returning
+     *         {@link #clientGeneratingPower} (a cache kept current by an explicit
+     *         {@link GregtechDataCodes#LARGE_TURBINE_GENERATING_POWER_CHANGED} push, including the
+     *         {@code scheduleRenderUpdate()} call {@code RecipeWorkable}'s own sync needs for the same reason) on the
+     *         client, and only computing the real condition on the server.
      */
     private boolean isGeneratingPower() {
         World world = getWorld();

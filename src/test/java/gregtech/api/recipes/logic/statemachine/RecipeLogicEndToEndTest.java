@@ -12,9 +12,9 @@ import gregtech.api.statemachine.GTStateMachine;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.items.ItemStackHandler;
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import net.minecraftforge.items.ItemStackHandler;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -61,7 +61,8 @@ class RecipeLogicEndToEndTest {
         GTStateMachine machine = RecipeLogicGraphBuilder.build(config);
         NBTTagCompound data = new NBTTagCompound();
 
-        RecipeLogicGraphBuilder.tick(machine, data); // search finds+queues the candidate; admission consumes and starts it progressing
+        RecipeLogicGraphBuilder.tick(machine, data); // search finds+queues the candidate; admission consumes and starts
+                                                     // it progressing
         assertThat("materials should already be consumed once admitted", input.getStackInSlot(0).isEmpty(), is(true));
         assertThat(ActiveRecipeList.count(data), is(1));
         assertThat(ActiveRecipeList.entryAt(0, data).getInteger(ActiveRecipeList.ENTRY_PROGRESS_KEY), is(1));
@@ -71,7 +72,8 @@ class RecipeLogicEndToEndTest {
         RecipeLogicGraphBuilder.tick(machine, data); // progress -> 2
         assertThat(ActiveRecipeList.entryAt(0, data).getInteger(ActiveRecipeList.ENTRY_PROGRESS_KEY), is(2));
 
-        RecipeLogicGraphBuilder.tick(machine, data); // progress -> 3 == duration -> completes and outputs this same tick
+        RecipeLogicGraphBuilder.tick(machine, data); // progress -> 3 == duration -> completes and outputs this same
+                                                     // tick
 
         assertThat(delivered.size(), is(1));
         assertThat(delivered.get(0).get(0).getItem(), is(Items.GOLD_INGOT));
@@ -96,7 +98,8 @@ class RecipeLogicEndToEndTest {
         GTStateMachine machine = RecipeLogicGraphBuilder.build(config);
         NBTTagCompound data = new NBTTagCompound();
 
-        RecipeLogicGraphBuilder.tick(machine, data); // admitted, progresses to 1 == duration -> completes this same tick
+        RecipeLogicGraphBuilder.tick(machine, data); // admitted, progresses to 1 == duration -> completes this same
+                                                     // tick
         assertThat(delivered.size(), is(1));
         assertThat(ActiveRecipeList.count(data), is(0));
 
@@ -126,7 +129,8 @@ class RecipeLogicEndToEndTest {
         GTStateMachine machine = RecipeLogicGraphBuilder.build(config);
         NBTTagCompound data = new NBTTagCompound();
 
-        RecipeLogicGraphBuilder.tick(machine, data); // admitted, progresses to 1 == duration -> completes this same tick
+        RecipeLogicGraphBuilder.tick(machine, data); // admitted, progresses to 1 == duration -> completes this same
+                                                     // tick
 
         assertThat(delivered.size(), is(1));
         assertThat(delivered.get(0).get(0).getItem(), is(Items.GOLD_INGOT));
@@ -153,7 +157,8 @@ class RecipeLogicEndToEndTest {
         GTStateMachine machine = RecipeLogicGraphBuilder.build(config);
         NBTTagCompound data = new NBTTagCompound();
 
-        RecipeLogicGraphBuilder.tick(machine, data); // admitted, progresses to 1 == duration -> completes this same tick
+        RecipeLogicGraphBuilder.tick(machine, data); // admitted, progresses to 1 == duration -> completes this same
+                                                     // tick
 
         assertThat(delivered.size(), is(1));
         assertThat(delivered.get(0).size(), is(1));

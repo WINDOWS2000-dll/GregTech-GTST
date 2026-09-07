@@ -30,7 +30,8 @@ public interface RecipePredicateFilter<T> {
     /**
      * @return a test a recipe declaring {@link #recipeProperty()} must pass its own value through to remain a
      *         candidate this search, or {@code null} if this filter doesn't apply at all this search (e.g. the
-     *         searching machine doesn't track whatever {@link gregtech.api.recipes.logic.statemachine.property.RecipeSearchProperty}
+     *         searching machine doesn't track whatever
+     *         {@link gregtech.api.recipes.logic.statemachine.property.RecipeSearchProperty}
      *         this needs) &mdash; in which case every recipe declaring {@link #recipeProperty()} is left
      *         unfiltered by this check for this search, not excluded.
      */

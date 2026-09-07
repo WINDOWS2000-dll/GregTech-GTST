@@ -10,7 +10,8 @@ import org.jetbrains.annotations.Nullable;
 
 /**
  * Bridges {@link FusionEUToStartProperty} (a recipe's own minimum required starting EU) to the Fusion Reactor's
- * {@link BitflagRecipeLookup} via {@link FusionStartCapacityProperty}. A recipe passes iff its own required starting EU is
+ * {@link BitflagRecipeLookup} via {@link FusionStartCapacityProperty}. A recipe passes iff its own required starting EU
+ * is
  * no more than the machine's currently available starting EU.
  * <p>
  * Register with {@code lookup.registerFilter(FusionStartEnergyFilter.INSTANCE)} on the Fusion Reactor's

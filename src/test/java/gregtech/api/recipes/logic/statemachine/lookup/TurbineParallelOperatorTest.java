@@ -39,8 +39,10 @@ class TurbineParallelOperatorTest {
         return map.recipeBuilder().fluidInputs(new FluidStack(fluid, 100)).duration(10).EUt(euT).build().getResult();
     }
 
-    /** As {@link #fuelRecipe(long)}'s transientData, but with an effectively unlimited fluid supply available, so
-     *  ingredient availability never binds -- for tests focused purely on the ceiling/banking math. */
+    /**
+     * As {@link #fuelRecipe(long)}'s transientData, but with an effectively unlimited fluid supply available, so
+     * ingredient availability never binds -- for tests focused purely on the ceiling/banking math.
+     */
     private static Map<String, Object> transientDataWithAmpleFuel(Recipe candidate) {
         Map<String, Object> transientData = new HashMap<>();
         transientData.put(RecipeSelectionOperator.SELECTED_RECIPE_KEY, candidate);

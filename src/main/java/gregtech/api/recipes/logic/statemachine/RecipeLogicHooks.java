@@ -91,7 +91,10 @@ public final class RecipeLogicHooks {
      */
     public @Nullable RecipeEntryEnricher entryEnricher;
 
-    /** Additional transient operators run during search setup, after the standard providers but before recipe search itself. */
+    /**
+     * Additional transient operators run during search setup, after the standard providers but before recipe search
+     * itself.
+     */
     public final List<GTStateMachineTransientOperator> additionalSearchSetupOperators = new ObjectArrayList<>();
 
     /**
@@ -104,6 +107,9 @@ public final class RecipeLogicHooks {
      */
     public @Nullable Consumer<String> onNoMatchFound;
 
-    /** Whether recipe search and setup may run offthread via {@link gregtech.api.statemachine.GTStateMachine#dispatchAsync}. */
+    /**
+     * Whether recipe search and setup may run offthread via
+     * {@link gregtech.api.statemachine.GTStateMachine#dispatchAsync}.
+     */
     public boolean asyncSearchAndSetup = false;
 }

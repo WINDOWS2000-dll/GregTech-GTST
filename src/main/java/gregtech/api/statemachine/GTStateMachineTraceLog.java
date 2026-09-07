@@ -26,7 +26,9 @@ public final class GTStateMachineTraceLog {
 
     private GTStateMachineTraceLog() {}
 
-    /** Logs one traced operator visit, prefixed with a caller-supplied label distinguishing multiple traced machines. */
+    /**
+     * Logs one traced operator visit, prefixed with a caller-supplied label distinguishing multiple traced machines.
+     */
     public static void log(@NotNull String label, @NotNull String debugName) {
         String line = "[" + label + "] -> " + debugName;
         logger.info(line);
@@ -49,7 +51,7 @@ public final class GTStateMachineTraceLog {
             File parent = file.getParentFile();
             if (parent != null) parent.mkdirs();
             try (BufferedWriter out = new BufferedWriter(new FileWriter(file, true))) {
-                //noinspection InfiniteLoopStatement -- daemon thread, lives for the JVM's lifetime
+                // noinspection InfiniteLoopStatement -- daemon thread, lives for the JVM's lifetime
                 while (true) {
                     out.write(queue.take());
                     out.newLine();

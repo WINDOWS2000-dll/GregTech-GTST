@@ -36,7 +36,10 @@ class IngredientBitflagIndexTest {
                 .itemInputs(70).itemOutputs(3).fluidInputs(2).fluidOutputs(1).build();
     }
 
-    /** Registers {@code builder}'s recipe into {@code map} and returns it, since {@code buildAndRegister()} itself returns {@code void}. */
+    /**
+     * Registers {@code builder}'s recipe into {@code map} and returns it, since {@code buildAndRegister()} itself
+     * returns {@code void}.
+     */
     private static Recipe register(RecipeMap<SimpleRecipeBuilder> map, SimpleRecipeBuilder builder) {
         ValidationResult<Recipe> result = builder.build();
         map.addRecipe(result);
@@ -59,8 +62,9 @@ class IngredientBitflagIndexTest {
     @Test
     void matchExcludesARecipeMissingOneOfItsIngredientTypes() {
         RecipeMap<SimpleRecipeBuilder> map = newMap();
-        register(map, map.recipeBuilder().inputs(new ItemStack(Items.IRON_INGOT, 1), new ItemStack(Items.GOLD_NUGGET, 1))
-                .outputs(new ItemStack(Items.GOLD_INGOT)).duration(1).EUt(1));
+        register(map,
+                map.recipeBuilder().inputs(new ItemStack(Items.IRON_INGOT, 1), new ItemStack(Items.GOLD_NUGGET, 1))
+                        .outputs(new ItemStack(Items.GOLD_INGOT)).duration(1).EUt(1));
 
         IngredientBitflagIndex index = IngredientBitflagIndex.build(map.getRecipeList());
         // only iron present, gold nugget is missing entirely
@@ -132,7 +136,8 @@ class IngredientBitflagIndexTest {
 
         List<ItemStack> sufficientApples = new ObjectArrayList<>();
         sufficientApples.add(new ItemStack(Items.APPLE, 65));
-        assertThat(index.match(sufficientApples, Collections.emptyList(), new BitSet()), is(Collections.singletonList(recipe)));
+        assertThat(index.match(sufficientApples, Collections.emptyList(), new BitSet()),
+                is(Collections.singletonList(recipe)));
     }
 
     @Test

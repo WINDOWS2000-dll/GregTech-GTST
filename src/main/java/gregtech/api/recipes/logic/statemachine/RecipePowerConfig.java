@@ -44,7 +44,8 @@ public final class RecipePowerConfig {
      * Whether a candidate whose voltage differs from this logic's supply/capacity voltage may still draw amperage
      * from it by "down-transforming" the supply's total power: e.g. a single high-voltage/low-amperage supply
      * powering several lower-voltage/higher-amperage recipes. When
-     * {@code false} (the default, matching GregTech's current behavior of never mixing voltage tiers), a candidate whose
+     * {@code false} (the default, matching GregTech's current behavior of never mixing voltage tiers), a candidate
+     * whose
      * voltage doesn't match this logic's supply/capacity voltage simply cannot draw any amperage from it at all.
      */
     public boolean downTransformForParallels = false;
@@ -62,7 +63,8 @@ public final class RecipePowerConfig {
     }
 
     /**
-     * @return the highest voltage a recipe could <i>possibly</i> be searched for at all, unlike {@link #getMaxVoltage()}
+     * @return the highest voltage a recipe could <i>possibly</i> be searched for at all, unlike
+     *         {@link #getMaxVoltage()}
      *         accounting for amperage (the higher of this logic's supply/capacity total EU/t, i.e. voltage &times;
      *         amperage), or {@link Long#MAX_VALUE} if {@link #properties} is {@code null}. Used only by
      *         {@code RecipeSearchOperator} as a coarse search-stage prefilter, deliberately more permissive than

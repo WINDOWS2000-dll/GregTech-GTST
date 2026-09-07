@@ -2,7 +2,6 @@ package gregtech.api.metatileentity.multiblock;
 
 import gregtech.Bootstrap;
 import gregtech.api.GTValues;
-import gregtech.api.capability.IDistinctBusController;
 import gregtech.api.capability.IHeatingCoil;
 import gregtech.api.capability.impl.EnergyContainerHandler;
 import gregtech.api.capability.impl.ItemHandlerList;
@@ -215,8 +214,8 @@ class RecipeWorkableMultiblockControllerTest {
                 properties.add(new TemperatureCapacityProperty(temperature));
                 return properties;
             };
-            config.overclock.overclockFactory = (costFactor, speedFactor, canUpTransform, durationDiscount) ->
-                    new RecipeCoilOverclockOperator(config);
+            config.overclock.overclockFactory = (costFactor, speedFactor, canUpTransform,
+                                                 durationDiscount) -> new RecipeCoilOverclockOperator(config);
             return config;
         }
     }
@@ -309,12 +308,14 @@ class RecipeWorkableMultiblockControllerTest {
                 RecipePropertySet properties = RecipePropertySet.empty();
                 properties.add(new PowerSupplyProperty(getEnergyContainer().getInputVoltage(), 1));
                 properties.add(new FusionStartCapacityProperty(
-                        Math.min(getEnergyContainer().getEnergyCapacity(), getEnergyContainer().getEnergyStored() + heat)));
+                        Math.min(getEnergyContainer().getEnergyCapacity(),
+                                getEnergyContainer().getEnergyStored() + heat)));
                 return properties;
             };
             config.overclock.costFactor = OverclockingLogic.PERFECT_HALF_VOLTAGE_FACTOR;
-            config.overclock.overclockFactory = (costFactor, speedFactor, canUpTransform, durationDiscount) ->
-                    new RecipeFusionOverclockOperator(config, () -> tier);
+            config.overclock.overclockFactory = (costFactor, speedFactor, canUpTransform,
+                                                 durationDiscount) -> new RecipeFusionOverclockOperator(config,
+                                                         () -> tier);
             config.hooks.finalCheck = this::chargeHeatForStart;
             return config;
         }

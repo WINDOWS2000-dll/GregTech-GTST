@@ -1,12 +1,11 @@
 package gregtech.api.recipes.ingredients.match;
 
-import org.jgrapht.Graph;
-import org.jgrapht.alg.flow.PushRelabelMFImpl;
-import org.jgrapht.graph.DefaultWeightedEdge;
-
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jgrapht.Graph;
+import org.jgrapht.alg.flow.PushRelabelMFImpl;
+import org.jgrapht.graph.DefaultWeightedEdge;
 
 import java.util.List;
 import java.util.Map;

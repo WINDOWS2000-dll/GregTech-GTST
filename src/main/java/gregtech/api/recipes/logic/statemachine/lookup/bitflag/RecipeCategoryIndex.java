@@ -53,7 +53,8 @@ public final class RecipeCategoryIndex<T> {
 
     /**
      * @return every indexed recipe whose own declared value fails {@code query} (i.e. would need to be excluded
-     *         from a search run against it). A fresh {@link BitSet} each call (unlike {@link RecipeThresholdIndex#excluded},
+     *         from a search run against it). A fresh {@link BitSet} each call (unlike
+     *         {@link RecipeThresholdIndex#excluded},
      *         since there's no single cached exclusion set per query here &mdash; every distinct value is
      *         re-evaluated against {@code query} each time); callers may freely mutate the result.
      */

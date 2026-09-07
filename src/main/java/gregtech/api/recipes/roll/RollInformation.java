@@ -8,4 +8,4 @@ import com.github.bsideup.jabel.Desugar;
  * interpreter, and {@link Long#MIN_VALUE} as a {@code rollValue} sentinel for "not rollable".
  */
 @Desugar
-public record RollInformation<T>(T value, long rollValue, long rollBoost) {}
+public record RollInformation<T> (T value, long rollValue, long rollBoost) {}

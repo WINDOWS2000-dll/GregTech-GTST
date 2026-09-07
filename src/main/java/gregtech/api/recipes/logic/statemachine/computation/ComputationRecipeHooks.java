@@ -64,12 +64,12 @@ public final class ComputationRecipeHooks {
     }
 
     /**
-     * @param provider     the machine's own computation network access point.
-     * @param type         see {@link ComputationType}.
-     * @param drainEnergy  the machine's own energy-drawing per-tick check (e.g. {@code drainRecipeEnergy}), run
-     *                     <i>first</i> and unconditionally &mdash; specifically so energy is always drawn whenever
-     *                     it's available, independently of whatever this recipe's CWU outcome turns out to be (see
-     *                     {@link ComputationType#SPORADIC}'s JavaDoc for why that order matters).
+     * @param provider    the machine's own computation network access point.
+     * @param type        see {@link ComputationType}.
+     * @param drainEnergy the machine's own energy-drawing per-tick check (e.g. {@code drainRecipeEnergy}), run
+     *                    <i>first</i> and unconditionally &mdash; specifically so energy is always drawn whenever
+     *                    it's available, independently of whatever this recipe's CWU outcome turns out to be (see
+     *                    {@link ComputationType#SPORADIC}'s JavaDoc for why that order matters).
      * @return a {@code config.hooks.perTickRecipeCheck} that draws energy, then checks (but does not yet draw) this
      *         tick's available CWU/t, recording the outcome for {@link #progressOverride} to act on. A computation
      *         shortfall under {@link ComputationType#STEADY} returns {@code false} here (funneling into the

@@ -68,7 +68,7 @@ import java.util.function.Function;
  * implementation.
  */
 public abstract class RecipeWorkableTieredMetaTileEntity extends TieredMetaTileEntity
-                                                          implements IControllable, ICleanroomReceiver {
+                                                         implements IControllable, ICleanroomReceiver {
 
     protected final @NotNull RecipeMap<?> recipeMap;
     protected final @NotNull RecipeWorkable workable;
@@ -337,7 +337,8 @@ public abstract class RecipeWorkableTieredMetaTileEntity extends TieredMetaTileE
         return tankScalingFunction;
     }
 
-    // Minecraft's FontRenderer FONT_HEIGHT value; matches legacy WorkableTieredMetaTileEntity's identically-named constant.
+    // Minecraft's FontRenderer FONT_HEIGHT value; matches legacy WorkableTieredMetaTileEntity's identically-named
+    // constant.
     private static final int FONT_HEIGHT = 9;
 
     /**

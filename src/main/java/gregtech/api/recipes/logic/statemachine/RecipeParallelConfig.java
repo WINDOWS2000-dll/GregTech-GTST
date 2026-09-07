@@ -10,7 +10,10 @@ import java.util.function.IntSupplier;
  */
 public final class RecipeParallelConfig {
 
-    /** Maximum number of recipe instances this logic may run in parallel. {@code null} means no parallelism (effectively 1). */
+    /**
+     * Maximum number of recipe instances this logic may run in parallel. {@code null} means no parallelism (effectively
+     * 1).
+     */
     public @Nullable IntSupplier parallelLimit;
 
     /**
