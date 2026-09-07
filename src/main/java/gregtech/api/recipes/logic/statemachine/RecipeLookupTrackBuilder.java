@@ -130,9 +130,12 @@ public final class RecipeLookupTrackBuilder {
         // JavaDoc for the key contract a custom factory's operator must honor (RecipeOverclockOperator.SUCCESS_KEY/
         // RESULT_KEY) so the rest of this graph keeps working. A machine that only needs to customize part of the
         // calculation should prefer config.overclock.ocAmountCalculator/ocAlgorithm instead (see
-        // RecipeOverclockConfig's JavaDoc). There is no standard implementation of upTransformForOverclocks yet; a
-        // custom factory ignoring that argument and closing over `config` directly, like RecipeOverclockOperator
-        // itself does, is the expected pattern until then.
+        // RecipeOverclockConfig's JavaDoc) -- both are already consulted by the standard RecipeOverclockOperator
+        // below, which also already implements upTransformForOverclocks itself (config.overclock
+        // .upTransformForOverclocks just toggles it on; no factory is needed to use it). Replacing the whole
+        // factory is only worthwhile when even that standard calculation isn't enough, in which case the custom
+        // operator becomes responsible for reimplementing whichever of overclocking/up-transform this machine
+        // still needs.
         GTStateMachineTransientOperator overclockOperator = config.overclock.overclockFactory != null ?
                 config.overclock.overclockFactory.produce(config.overclock.costFactor, config.overclock.speedFactor,
                         config.overclock.upTransformForOverclocks, config.overclock.durationDiscount) :

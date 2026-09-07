@@ -40,9 +40,9 @@ public final class RecipeOverclockConfig {
     /**
      * Whether overclocking may transform excess amperage into voltage tiers beyond the recipe's own tier (PR
      * #2755's "up-transform"), rather than being capped at the recipe's voltage tier the way GregTech currently caps
-     * overclocks. Not yet implemented by {@link RecipeOverclockOperator} (unlike the rest of this class's fields,
-     * this one is still a placeholder pending further design) &mdash; exact semantics will be revisited separately
-     * from voltage/amperage separation.
+     * overclocks. See {@link RecipeOverclockOperator}'s own JavaDoc for the calculation this enables. Defaults to
+     * {@code false}, leaving every existing machine's behavior unchanged; no machine has needed to opt into this
+     * yet (see project design notes for the analysis), but the calculation itself is fully implemented and tested.
      */
     public boolean upTransformForOverclocks = false;
 
