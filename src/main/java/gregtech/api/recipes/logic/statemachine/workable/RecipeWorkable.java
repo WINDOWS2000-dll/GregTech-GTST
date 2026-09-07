@@ -24,9 +24,12 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
 
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Range;
+
+import java.util.Map;
 
 /**
  * The recipe-driven {@link MTETrait} backed by {@link RecipeLogicGraphBuilder}/{@link RecipeLogicConfig}. Registered
@@ -69,6 +72,24 @@ public class RecipeWorkable extends MTETrait implements IWorkable, IControllable
     protected final @NotNull RecipeLogicConfig config;
     protected final @NotNull GTStateMachine machine;
     protected final @NotNull NBTTagCompound data = new NBTTagCompound();
+    /**
+     * Reused across every {@link #update()} call instead of letting {@link RecipeLogicGraphBuilder#tick} allocate
+     * a fresh pair every tick (real-machine GC pressure with many placed machines). Safe only because
+     * {@link RecipeLogicGraphBuilder#tick(GTStateMachine, NBTTagCompound, Map, Map, java.util.function.Consumer)}
+     * itself clears both maps unconditionally on entry -- this class does not need to (and must not rely on)
+     * clearing them itself, so a walk cut short by an exception or the step limit on one tick can never leak into
+     * the next. Two <i>separate</i> instances, never one shared between both: the search and progress tracks are
+     * documented as never sharing transient state with each other.
+     * <p>
+     * <b>Sound only because this trait always drives the machine synchronously</b> ({@code config.hooks
+     * .asyncSearchAndSetup} is never set true by anything using this class today): reusing these maps across an
+     * actual offthread {@link GTStateMachine#dispatchAsync} call would race the next tick's access against the
+     * still-running worker. If a future change makes this trait drive search asynchronously, this reuse must be
+     * revisited (either drop it back to fresh-map-per-call, or add real exclusion) rather than carried over as-is.
+     */
+    private final @NotNull Map<String, Object> searchTransientData = new Object2ObjectOpenHashMap<>();
+    /** @see #searchTransientData */
+    private final @NotNull Map<String, Object> progressTransientData = new Object2ObjectOpenHashMap<>();
     /**
      * Reported by {@link #getRecipeMap()}; stored directly rather than derived from {@link #config}'s
      * {@code lookup} (which may not even be backed by a single {@link RecipeMap}, e.g. a composite/dynamic lookup).
@@ -180,7 +201,8 @@ public class RecipeWorkable extends MTETrait implements IWorkable, IControllable
     public void update() {
         var world = getMetaTileEntity().getWorld();
         if (world == null || world.isRemote || !workingEnabled) return;
-        RecipeLogicGraphBuilder.tick(machine, data, traceEnabled ? this::logTrace : null);
+        RecipeLogicGraphBuilder.tick(machine, data, searchTransientData, progressTransientData,
+                traceEnabled ? this::logTrace : null);
         boolean nowActive = isActive();
         if (nowActive) {
             inactiveStreak = 0;
@@ -242,6 +264,11 @@ public class RecipeWorkable extends MTETrait implements IWorkable, IControllable
      */
     public void invalidate() {
         config.invalidate(data);
+        // Not required for correctness (both are cleared unconditionally on the next update() anyway, see
+        // searchTransientData's own JavaDoc), but drops any references a mid-walk candidate/recipe view was
+        // holding immediately rather than waiting for that next tick.
+        searchTransientData.clear();
+        progressTransientData.clear();
     }
 
     /** @return the {@link RecipeLogicConfig} driving this trait, for a machine that needs to inspect/tweak it live. */

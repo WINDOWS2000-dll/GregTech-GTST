@@ -11,6 +11,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Map;
 import java.util.function.Consumer;
 
 /**
@@ -76,8 +77,9 @@ public final class RecipeLogicGraphBuilder {
     }
 
     /**
-     * Runs one full tick of a machine built by {@link #build}: the search walk (finds and queues candidates), then
-     * the progress walk (admits queued candidates and advances/completes already-active ones).
+     * As {@link #tick(GTStateMachine, NBTTagCompound, Map, Map, Consumer)}, allocating a fresh transient-data map
+     * for each walk rather than reusing caller-owned ones. Prefer that overload for a caller (like
+     * {@code RecipeWorkable}) that ticks the same machine every tick and can keep the two maps around instead.
      *
      * @param traceSink if non-null, receives every operator's debug name from both walks, in order (the "trace this
      *                  machine" dev tool's hook; see {@link GTStateMachine#walk}). Pass {@code null} in normal
@@ -85,7 +87,32 @@ public final class RecipeLogicGraphBuilder {
      */
     public static void tick(@NotNull GTStateMachine machine, @NotNull NBTTagCompound data,
                             @Nullable Consumer<String> traceSink) {
-        machine.walk(SEARCH_ROOT, data, new Object2ObjectOpenHashMap<>(), false, traceSink);
-        machine.walk(PROGRESS_ROOT, data, new Object2ObjectOpenHashMap<>(), false, traceSink);
+        tick(machine, data, new Object2ObjectOpenHashMap<>(), new Object2ObjectOpenHashMap<>(), traceSink);
+    }
+
+    /**
+     * Runs one full tick of a machine built by {@link #build}: the search walk (finds and queues candidates), then
+     * the progress walk (admits queued candidates and advances/completes already-active ones).
+     * <p>
+     * <b>{@code searchTransientData}/{@code progressTransientData} are cleared unconditionally on entry</b>, before
+     * either walk runs -- a caller that reuses the same two maps across ticks (avoiding a fresh allocation every
+     * tick, see {@code RecipeWorkable}'s own fields) does not need to clear them itself first, and a walk cut short
+     * by an exception or {@code stepLimit} on one tick can never leak leftover keys into the next. The two maps
+     * must be distinct instances: {@link RecipeLookupTrackBuilder}'s and {@link RecipeProgressTrackBuilder}'s
+     * tracks are documented as never sharing transient state with each other, and passing the same map for both
+     * would silently break that.
+     *
+     * @param traceSink if non-null, receives every operator's debug name from both walks, in order (the "trace this
+     *                  machine" dev tool's hook; see {@link GTStateMachine#walk}). Pass {@code null} in normal
+     *                  operation to avoid the overhead entirely.
+     */
+    public static void tick(@NotNull GTStateMachine machine, @NotNull NBTTagCompound data,
+                            @NotNull Map<String, Object> searchTransientData,
+                            @NotNull Map<String, Object> progressTransientData,
+                            @Nullable Consumer<String> traceSink) {
+        searchTransientData.clear();
+        progressTransientData.clear();
+        machine.walk(SEARCH_ROOT, data, searchTransientData, false, traceSink);
+        machine.walk(PROGRESS_ROOT, data, progressTransientData, false, traceSink);
     }
 }

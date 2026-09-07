@@ -27,6 +27,12 @@ import org.jetbrains.annotations.NotNull;
  * <i>existing</i> GregTech machine the way legacy's {@code GregTechAPI.RECIPE_PROPERTIES} registry lets an addon add a
  * wholly new {@code RecipeProperty} type. A true registry-based extension point for
  * {@link ActiveRecipeList}/{@link RecipeLogicConfig} remains a documented future concern, not solved here.
+ * <p>
+ * <b>Chain, don't overwrite, if more than one concern needs this slot</b>: since {@code createConfig()} may already
+ * have set this (a trait layered on top, e.g. {@code RecipeWorkable} itself for {@code getPreviousRecipe()}, or a
+ * subclass's own override), read whatever is already installed first and delegate to it after doing your own work,
+ * rather than assigning over it outright and silently dropping the earlier one. See {@code RecipeWorkable}'s
+ * constructor for the established pattern.
  */
 @FunctionalInterface
 public interface RecipeEntryEnricher {
