@@ -164,4 +164,35 @@ class GTStateMachineTest {
         assertThat(original.operatorCount(), is(1));
         assertThat(copyBuilder.getConstructing().operatorCount(), is(2));
     }
+
+    @Test
+    void dispatchAsyncOnANonAsyncCompatibleOperatorCompletesImmediatelyWithoutRunningIt() {
+        GTStateMachine machine = new GTStateMachineBuilder()
+                .newOperator(incrementBy("value", 1), false, "syncStep")
+                .getConstructing();
+
+        NBTTagCompound data = new NBTTagCompound();
+        GTSMWalkCompletionData result = machine.dispatchAsync(0, data, new Object2ObjectOpenHashMap<>()).join();
+
+        // the operator at 0 isn't async-compatible, so dispatchAsync must not run it -- the caller is expected to
+        // fall back to a synchronous walk instead.
+        assertThat(result.nextOpID(), is(0));
+        assertThat(data.getInteger("value"), is(0));
+    }
+
+    @Test
+    void dispatchAsyncRunsConsecutiveAsyncCompatibleOperatorsThenStopsBeforeANonAsyncOne() {
+        GTStateMachine machine = new GTStateMachineBuilder()
+                .newOperator(incrementBy("value", 1), true, "asyncStep1")
+                .andThenDefault(incrementBy("value", 10), true, "asyncStep2")
+                .andThenDefault(incrementBy("value", 100), false, "syncStep3")
+                .getConstructing();
+
+        NBTTagCompound data = new NBTTagCompound();
+        GTSMWalkCompletionData result = machine.dispatchAsync(0, data, new Object2ObjectOpenHashMap<>()).join();
+
+        assertThat(data.getInteger("value"), is(11));
+        // stopped right before syncStep3 (operator ID 2), leaving it for a synchronous walk to pick up.
+        assertThat(result.nextOpID(), is(2));
+    }
 }

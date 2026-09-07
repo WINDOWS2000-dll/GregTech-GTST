@@ -85,4 +85,57 @@ class GTStateMachineStandardWorkerTest {
         assertThat(traced.logicData().getInteger("value"), is(1));
         assertThat(traced.logicPosition(), is(-1));
     }
+
+    /** Polls {@link GTStateMachineStandardWorker#hasAsyncWalkCompleted()} until it returns {@code true}. */
+    private static void awaitAsyncWalk(GTStateMachineStandardWorker worker) {
+        long deadline = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(5);
+        while (!worker.hasAsyncWalkCompleted()) {
+            if (System.nanoTime() > deadline) {
+                throw new AssertionError("Async walk did not complete within the timeout");
+            }
+            try {
+                Thread.sleep(1);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new AssertionError(e);
+            }
+        }
+    }
+
+    @Test
+    void dispatchAsyncWalkRunsTheAsyncPortionAndLeavesTheRestForASynchronousWalk() {
+        GTStateMachine machine = new GTStateMachineBuilder()
+                .newOperator(data -> data.setInteger("value", data.getInteger("value") + 1), true, "asyncStep")
+                .andThenDefault(data -> data.setInteger("value", data.getInteger("value") + 100), false, "syncStep")
+                .getConstructing();
+
+        GTStateMachineStandardWorker worker = new GTStateMachineStandardWorker(machine);
+        worker.setPosition(0);
+        worker.dispatchAsyncWalk();
+        awaitAsyncWalk(worker);
+
+        assertThat(worker.logicData().getInteger("value"), is(1));
+        assertThat(worker.logicPosition(), is(1));
+
+        // the async portion left off exactly where a normal synchronous walk can pick up from.
+        worker.walk(false);
+        assertThat(worker.logicData().getInteger("value"), is(101));
+    }
+
+    @Test
+    void abortAsyncWalkClearsTheTrackedFutureSoTheWorkerIsImmediatelyAvailableAgain() {
+        GTStateMachine machine = new GTStateMachineBuilder()
+                .newOperator(data -> data.setInteger("value", data.getInteger("value") + 1), true, "asyncStep")
+                .getConstructing();
+
+        GTStateMachineStandardWorker worker = new GTStateMachineStandardWorker(machine);
+        worker.setPosition(0);
+        worker.dispatchAsyncWalk();
+        worker.abortAsyncWalk();
+
+        // abortAsyncWalk discards the tracked future outright (rather than waiting for/consuming its result), so
+        // this must read as "no async walk pending" immediately, regardless of whether the dispatched work had
+        // already finished.
+        assertThat(worker.hasAsyncWalkCompleted(), is(true));
+    }
 }
