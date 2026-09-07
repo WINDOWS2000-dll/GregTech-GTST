@@ -45,7 +45,7 @@ public class CTRecipeUtils {
         for (Object recipe : recipeMap.getRecipeList()) {
             if (recipe instanceof Recipe) {
                 if (!mcItemOutputs.isEmpty()) {
-                    for (ItemStack output : ((Recipe) recipe).getOutputs()) {
+                    for (ItemStack output : ((Recipe) recipe).getGuaranteedItemOutputs()) {
                         for (ItemStack itemStack : mcItemOutputs) {
                             if (output.isItemEqual(itemStack) && output.getMetadata() == itemStack.getMetadata()) {
                                 if (useAmounts) {
@@ -62,7 +62,7 @@ public class CTRecipeUtils {
                     }
                 }
                 if (!mcFluidOutputs.isEmpty()) {
-                    for (FluidStack fluidOutput : ((Recipe) recipe).getFluidOutputs()) {
+                    for (FluidStack fluidOutput : ((Recipe) recipe).getGuaranteedFluidOutputs()) {
                         for (FluidStack fluidStack : mcFluidOutputs) {
                             if (fluidOutput.isFluidEqual(fluidStack)) {
                                 if (useAmounts) {

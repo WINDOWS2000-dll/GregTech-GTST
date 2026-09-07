@@ -5,13 +5,12 @@ import gregtech.api.capability.IObjectHolder;
 import gregtech.api.capability.IOpticalComputationHatch;
 import gregtech.api.capability.IOpticalComputationProvider;
 import gregtech.api.capability.IOpticalComputationReceiver;
-import gregtech.api.capability.impl.ComputationRecipeLogic;
 import gregtech.api.capability.impl.ItemHandlerList;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.metatileentity.multiblock.IMultiblockPart;
 import gregtech.api.metatileentity.multiblock.MultiblockAbility;
-import gregtech.api.metatileentity.multiblock.RecipeMapMultiblockController;
+import gregtech.api.metatileentity.multiblock.RecipeWorkableMultiblockController;
 import gregtech.api.metatileentity.multiblock.ui.KeyManager;
 import gregtech.api.metatileentity.multiblock.ui.MultiblockUIBuilder;
 import gregtech.api.metatileentity.multiblock.ui.UISyncer;
@@ -19,17 +18,18 @@ import gregtech.api.pattern.BlockPattern;
 import gregtech.api.pattern.FactoryBlockPattern;
 import gregtech.api.pattern.MultiblockShapeInfo;
 import gregtech.api.pattern.PatternMatchContext;
-import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeMaps;
-import gregtech.api.util.AssemblyLineManager;
+import gregtech.api.recipes.logic.statemachine.RecipeLogicConfig;
+import gregtech.api.recipes.logic.statemachine.RecipeStallType;
+import gregtech.api.recipes.logic.statemachine.computation.ComputationRecipeHooks;
+import gregtech.api.recipes.logic.statemachine.computation.ComputationType;
+import gregtech.api.recipes.logic.statemachine.property.ComputationProperties;
 import gregtech.api.util.GTUtility;
-import gregtech.api.util.KeyUtil;
 import gregtech.client.renderer.ICubeRenderer;
 import gregtech.client.renderer.texture.Textures;
 import gregtech.common.ConfigHolder;
 import gregtech.common.blocks.BlockComputerCasing;
 import gregtech.common.blocks.MetaBlocks;
-import gregtech.common.items.behaviors.DataItemBehavior;
 import gregtech.common.metatileentities.MetaTileEntities;
 
 import net.minecraft.block.state.IBlockState;
@@ -44,17 +44,33 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.items.IItemHandlerModifiable;
 
-import com.cleanroommc.modularui.utils.serialization.ByteBufAdapters;
+import com.cleanroommc.modularui.api.drawable.IKey;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import static gregtech.api.util.RelativeDirection.*;
 
-public class MetaTileEntityResearchStation extends RecipeMapMultiblockController
+/**
+ * As before, but backed by {@link RecipeWorkableMultiblockController}
+ * instead of {@code RecipeMapMultiblockController}/legacy {@code ComputationRecipeLogic}'s dedicated
+ * recipe-logic subclass. Notable pitfalls this design avoids: the search-side
+ * CWU capacity property never actually being exposed, CWU being drawn twice per tick, and energy no longer always
+ * being drawn on a computation shortfall.
+ * <p>
+ * <b>Object Holder item replacement:</b> unlike a normal machine, this one has no separate output inventory --
+ * the single Object Holder slot serves as both input and output, with the finished data item replacing the
+ * research item in place. {@link #createConfig()} expresses this by overriding {@code config.io.itemOutput}/
+ * {@code itemOutputSpace} directly (bypassing the standard "deliver to output inventory" hook entirely) rather than
+ * needing any new engine machinery -- this is a purely machine-specific detail, not a generic concern.
+ * <p>
+ * <b>Locking</b> the holder for the duration of a run (legacy: on recipe setup) is expressed via
+ * {@code config.hooks.finalCheck} -- the last point before a resolved run is queued, and (since this machine's
+ * {@code parallelLimit} stays at the inherited default of 1) effectively equivalent to "recipe just started".
+ */
+public class MetaTileEntityResearchStation extends RecipeWorkableMultiblockController
                                            implements IOpticalComputationReceiver {
 
     private IOpticalComputationProvider computationProvider;
@@ -62,12 +78,67 @@ public class MetaTileEntityResearchStation extends RecipeMapMultiblockController
 
     public MetaTileEntityResearchStation(ResourceLocation metaTileEntityId) {
         super(metaTileEntityId, RecipeMaps.RESEARCH_STATION_RECIPES);
-        this.recipeMapWorkable = new ResearchStationRecipeLogic(this);
     }
 
     @Override
     public MetaTileEntity createMetaTileEntity(IGregTechTileEntity tileEntity) {
         return new MetaTileEntityResearchStation(metaTileEntityId);
+    }
+
+    @Override
+    protected @NotNull RecipeLogicConfig createConfig() {
+        RecipeLogicConfig config = super.createConfig();
+        // This machine never overclocks (legacy ResearchStationRecipeLogic#isAllowOverclocking() == false).
+        config.overclock.ocAmountCalculator = (recipeVoltage, maxVoltage) -> 0;
+        // Legacy hardcodes a plain revert-by-one-tick on any per-tick check failure (both energy and, for STEADY,
+        // computation shortfalls) -- RecipeStallType.DEGRESS is exactly that.
+        config.hooks.stallType = RecipeStallType.DEGRESS;
+        config.hooks.entryEnricher = ComputationRecipeHooks::enrichEntry;
+        config.hooks.perTickRecipeCheck = ComputationRecipeHooks.perTickRecipeCheck(this::getComputationProvider,
+                ComputationType.SPORADIC, this::drainRecipeEnergy);
+        config.hooks.progressOperationOverride = ComputationRecipeHooks.progressOverride(this::getComputationProvider);
+        // Advertises this array's currently available CWU/t to the search, adding the property to the *returned*
+        // set here rather than replacing the base call's own set outright (which would drop cleanroom/dimension
+        // advertising -- see this class's own JavaDoc for the class of bug that would cause).
+        var baseProperties = config.power.properties;
+        config.power.properties = () -> {
+            var properties = baseProperties.get();
+            properties.add(ComputationProperties.of(getComputationProvider()));
+            return properties;
+        };
+        // No separate output inventory -- the finished data item replaces the research item in the Object Holder
+        // slot directly (legacy ResearchStationRecipeLogic#outputRecipeOutputs, verbatim) rather than being
+        // delivered anywhere conventional, so "is there space" is trivially always true.
+        config.io.itemOutputSpace = items -> true;
+        config.io.itemOutput = outputs -> {
+            objectHolder.setHeldItem(ItemStack.EMPTY);
+            ItemStack outputItem = outputs.isEmpty() ? ItemStack.EMPTY : outputs.get(0);
+            objectHolder.setDataItem(outputItem);
+            objectHolder.setLocked(false);
+        };
+        // Rejects a resolved run if the item it would consume isn't actually what's currently held.
+        //
+        // Must compare with isItemEqual (item + metadata only), not
+        // areItemStacksEqual (which also compares NBT) -- research/data items are registered via
+        // AssemblyLineManager#createDefaultResearchRecipe with inputNBT(..., NBTMatcher.ANY, ...) specifically
+        // because each one carries its own unique in-progress research NBT tag that the recipe's own ingredient
+        // template does not (and cannot) reproduce. Comparing NBT here made this check fail unconditionally,
+        // silently blocking every Research Station recipe from ever starting.
+        config.hooks.finalCheck = run -> !run.getItemsConsumed().isEmpty() &&
+                run.getItemsConsumed().get(0).isItemEqual(objectHolder.getHeldItem(false));
+        // Locks the holder once a recipe genuinely starts (legacy ResearchStationRecipeLogic#setupRecipe).
+        //
+        // Locking from within config.hooks.finalCheck instead would be wrong, even though finalCheck (the last
+        // check before a candidate is queued) looks like it should double as legacy's "setup"
+        // moment: finalCheck runs during *search*, one full step
+        // before RecipeQueueAdmissionOperator actually extracts the item from the Object Holder's own handler.
+        // MetaTileEntityObjectHolder#ObjectHolderHandler#extractItem unconditionally returns EMPTY while locked
+        // (by design, to stop the item being pulled out mid-research) -- so locking this early made every
+        // admission attempt's own extraction fail and discard the candidate as "stale", forever, before a recipe
+        // could ever actually start. onRecipeStarted fires from admission itself, after real consumption already
+        // succeeded, which is the only point this lock is actually safe to set.
+        config.callbacks.onRecipeStarted = entry -> objectHolder.setLocked(true);
+        return config;
     }
 
     @Override
@@ -97,11 +168,6 @@ public class MetaTileEntityResearchStation extends RecipeMapMultiblockController
         if (isStructureFormed() && objectHolder.getFrontFacing() != getFrontFacing().getOpposite()) {
             invalidateStructure();
         }
-    }
-
-    @Override
-    public ComputationRecipeLogic getRecipeMapWorkable() {
-        return (ComputationRecipeLogic) recipeMapWorkable;
     }
 
     @Override
@@ -231,107 +297,33 @@ public class MetaTileEntityResearchStation extends RecipeMapMultiblockController
 
     @Override
     protected void configureDisplayText(MultiblockUIBuilder builder) {
-        builder.setWorkingStatus(recipeMapWorkable.isWorkingEnabled(), recipeMapWorkable.isActive())
-                .addEnergyUsageLine(this.getEnergyContainer())
-                .addEnergyTierLine(GTUtility.getTierByVoltage(recipeMapWorkable.getMaxVoltage()))
-                .addComputationUsageExactLine(getRecipeMapWorkable().getCurrentDrawnCWUt())
-                .addParallelsLine(recipeMapWorkable.getParallelLimit());
+        // addRecipeOutputLine dropped: RecipeWorkable has no getPreviousRecipe() equivalent to back it -- see
+        // RecipeWorkableMultiblockController's JavaDoc "Recipe-output preview line intentionally omitted". Legacy's
+        // more detailed "researching: <sub-research item>" line (reading AssemblyLineManager research metadata off
+        // the previous recipe) is dropped for the same reason, replaced by the plain CWU progress line below.
+        builder.setWorkingStatus(workable.isWorkingEnabled(), workable.isActive())
+                .addEnergyUsageLine(getEnergyContainer())
+                .addEnergyTierLine(GTUtility.getTierByVoltage(getEnergyContainer().getInputVoltage()))
+                .addComputationUsageExactLine(
+                        workable.isActive() ?
+                                workable.getActiveRecipeCustomInt(0, ComputationRecipeHooks.ENTRY_CWU_PER_TICK_KEY) :
+                                0)
+                .addWorkingStatusLine()
+                .addCustom(this::addComputationProgress);
+    }
 
-        if (!recipeMapWorkable.isWorkingEnabled())
-            builder.addWorkPausedLine(false);
-        else if (recipeMapWorkable.isWorking()) {
-            builder.addCustom(this::researchingLine);
-        } else {
-            builder.addIdlingLine(false);
-        }
-
-        builder.addComputationProgressLine(getRecipeMapWorkable());
+    private void addComputationProgress(KeyManager manager, UISyncer syncer) {
+        if (!workable.isActive()) return;
+        int progress = syncer.syncInt(workable.getProgress(0));
+        int maxProgress = syncer.syncInt(workable.getMaxProgress(0));
+        manager.add(IKey.str("%s / %s CWU", progress, maxProgress).style(TextFormatting.GRAY));
     }
 
     @Override
     protected void configureWarningText(MultiblockUIBuilder builder) {
-        builder.addLowComputationLine(getRecipeMapWorkable().isHasNotEnoughComputation());
+        builder.addLowPowerLine(insufficientEnergy())
+                .addLowComputationLine(workable.isActive() &&
+                        !workable.getActiveRecipeCustomBoolean(0, ComputationRecipeHooks.ENTRY_HAS_ENOUGH_COMPUTATION_KEY));
         super.configureWarningText(builder);
-    }
-
-    private void researchingLine(KeyManager manager, UISyncer syncer) {
-        var recipe = getRecipeMapWorkable().getPreviousRecipe();
-        // todo fix recipe null on world load at some future point
-        if (syncer.syncBoolean(recipe == null)) return;
-        ItemStack stack = ItemStack.EMPTY;
-        if (recipe != null) {
-            List<ItemStack> outputs = recipe.getOutputs();
-            stack = outputs.get(outputs.size() - 1);
-        }
-        stack = syncer.syncObject(stack, ByteBufAdapters.ITEM_STACK);
-        if (stack.isEmpty()) return;
-        String id = AssemblyLineManager.readResearchId(stack);
-        if (id == null) return;
-        List<String> stacks = new ArrayList<>();
-        DataItemBehavior.collectResearchItems(id, stacks);
-        stacks.remove(0);
-        manager.add(KeyUtil.lang(TextFormatting.GREEN, "gregtech.machine.research_station.researching"));
-        for (String line : stacks) {
-            manager.add(KeyUtil.string(line));
-        }
-    }
-
-    private static class ResearchStationRecipeLogic extends ComputationRecipeLogic {
-
-        public ResearchStationRecipeLogic(MetaTileEntityResearchStation metaTileEntity) {
-            super(metaTileEntity, ComputationType.SPORADIC);
-        }
-
-        @NotNull
-        @Override
-        public MetaTileEntityResearchStation getMetaTileEntity() {
-            return (MetaTileEntityResearchStation) super.getMetaTileEntity();
-        }
-
-        @Override
-        public boolean isAllowOverclocking() {
-            return false;
-        }
-
-        @Override
-        protected @Nullable Recipe setupAndConsumeRecipeInputs(@NotNull Recipe recipe,
-                                                               @NotNull IItemHandlerModifiable importInventory) {
-            // this machine cannot overclock, so don't bother calling it
-            if (!hasEnoughPower(recipe.getEUt(), recipe.getDuration())) {
-                return null;
-            }
-
-            // skip "can fit" checks, it can always fit
-
-            // do not consume inputs here, consume them on completion
-            if (recipe.matches(false, importInventory, getInputTank())) {
-                this.metaTileEntity.addNotifiedInput(importInventory);
-                return recipe;
-            }
-            return null;
-        }
-
-        // lock the object holder on recipe start
-        @Override
-        protected void setupRecipe(@NotNull Recipe recipe) {
-            IObjectHolder holder = getMetaTileEntity().getObjectHolder();
-            holder.setLocked(true);
-            super.setupRecipe(recipe);
-        }
-
-        // "replace" the items in the slots rather than outputting elsewhere
-        // unlock the object holder
-        @Override
-        protected void outputRecipeOutputs() {
-            IObjectHolder holder = getMetaTileEntity().getObjectHolder();
-            holder.setHeldItem(ItemStack.EMPTY);
-
-            ItemStack outputItem = ItemStack.EMPTY;
-            if (itemOutputs != null && itemOutputs.size() >= 1) {
-                outputItem = itemOutputs.get(0);
-            }
-            holder.setDataItem(outputItem);
-            holder.setLocked(false);
-        }
     }
 }

@@ -3,6 +3,9 @@ package gregtech.common.metatileentities;
 import gregtech.api.GTValues;
 import gregtech.api.GregTechAPI;
 import gregtech.api.capability.FeCompat;
+import gregtech.api.metatileentity.RecipeWorkableGeneratorMetaTileEntity;
+import gregtech.api.metatileentity.RecipeWorkableSimpleMachineMetaTileEntity;
+import gregtech.api.metatileentity.RecipeWorkableSimpleMachineMetaTileEntityResizable;
 import gregtech.api.recipes.RecipeMaps;
 import gregtech.api.unification.material.Materials;
 import gregtech.api.util.GTUtility;
@@ -19,18 +22,16 @@ import gregtech.common.metatileentities.electric.MetaTileEntityBlockBreaker;
 import gregtech.common.metatileentities.electric.MetaTileEntityCharger;
 import gregtech.common.metatileentities.electric.MetaTileEntityDiode;
 import gregtech.common.metatileentities.electric.MetaTileEntityFisher;
-import gregtech.common.metatileentities.electric.MetaTileEntityGasCollector;
 import gregtech.common.metatileentities.electric.MetaTileEntityHull;
 import gregtech.common.metatileentities.electric.MetaTileEntityItemCollector;
 import gregtech.common.metatileentities.electric.MetaTileEntityMagicEnergyAbsorber;
 import gregtech.common.metatileentities.electric.MetaTileEntityMiner;
 import gregtech.common.metatileentities.electric.MetaTileEntityPump;
-import gregtech.common.metatileentities.electric.MetaTileEntityRockBreaker;
-import gregtech.common.metatileentities.electric.MetaTileEntitySingleCombustion;
-import gregtech.common.metatileentities.electric.MetaTileEntitySingleTurbine;
 import gregtech.common.metatileentities.electric.MetaTileEntityTransformer;
 import gregtech.common.metatileentities.electric.MetaTileEntityWorldAccelerator;
-import gregtech.common.metatileentities.electric.SimpleMachineMetaTileEntityResizable;
+import gregtech.common.metatileentities.electric.RecipeWorkableRockBreakerMetaTileEntity;
+import gregtech.common.metatileentities.electric.RecipeWorkableSingleCombustionMetaTileEntity;
+import gregtech.common.metatileentities.electric.RecipeWorkableSingleTurbineMetaTileEntity;
 import gregtech.common.metatileentities.multi.BoilerType;
 import gregtech.common.metatileentities.multi.MetaTileEntityCokeOven;
 import gregtech.common.metatileentities.multi.MetaTileEntityCokeOvenHatch;
@@ -205,13 +206,22 @@ final class MetaTileEntityRegistration {
         // Basic single block machines: 50-919
 
         // Electric Furnace, IDs 50-64
-        MetaTileEntities.registerSimpleMetaTileEntity(MetaTileEntities.ELECTRIC_FURNACE, 50, "electric_furnace",
-                RecipeMaps.FURNACE_RECIPES,
-                Textures.ELECTRIC_FURNACE_OVERLAY, true);
+        // Registered on the StateMachine-backed RecipeWorkableSimpleMachineMetaTileEntity instead of
+        // SimpleMachineMetaTileEntity/AbstractRecipeLogic, registered without particles (registerSimpleMetaTileEntity's
+        // own path always passes null for both, so switching away from it here loses nothing).
+        MetaTileEntities.registerMetaTileEntities(MetaTileEntities.ELECTRIC_FURNACE, 50, "electric_furnace",
+                (tier, voltageName) -> new RecipeWorkableSimpleMachineMetaTileEntity(
+                        gregtechId(String.format("%s.%s", "electric_furnace", voltageName)),
+                        RecipeMaps.FURNACE_RECIPES,
+                        Textures.ELECTRIC_FURNACE_OVERLAY,
+                        tier,
+                        true));
 
         // Macerator, IDs 65-79
+        // Uses RecipeWorkableSimpleMachineMetaTileEntityResizable (tier-variable I/O slot counts)
+        // and, for Macerator specifically, the ticking particle effect path.
         MetaTileEntities.registerMetaTileEntities(MetaTileEntities.MACERATOR, 65, "macerator",
-                (tier, voltageName) -> new SimpleMachineMetaTileEntityResizable(
+                (tier, voltageName) -> new RecipeWorkableSimpleMachineMetaTileEntityResizable(
                         gregtechId(String.format("%s.%s", "macerator", voltageName)),
                         RecipeMaps.MACERATOR_RECIPES,
                         -1,
@@ -233,7 +243,7 @@ final class MetaTileEntityRegistration {
 
         // Arc Furnace, IDs 95-109
         MetaTileEntities.registerMetaTileEntities(MetaTileEntities.ARC_FURNACE, 95, "arc_furnace",
-                (tier, voltageName) -> new SimpleMachineMetaTileEntityResizable(
+                (tier, voltageName) -> new RecipeWorkableSimpleMachineMetaTileEntityResizable(
                         gregtechId(String.format("%s.%s", "arc_furnace", voltageName)),
                         RecipeMaps.ARC_FURNACE_RECIPES,
                         -1,
@@ -244,9 +254,17 @@ final class MetaTileEntityRegistration {
                         GTUtility.hvCappedTankSizeFunction));
 
         // Assembler, IDs 110-124
-        MetaTileEntities.registerSimpleMetaTileEntity(MetaTileEntities.ASSEMBLER, 110, "assembler",
-                RecipeMaps.ASSEMBLER_RECIPES,
-                Textures.ASSEMBLER_OVERLAY, true, GTUtility.hvCappedTankSizeFunction);
+        // Uses ghost-circuit-
+        // configured real recipes (unverifiable in unit tests, see RecipeWorkableSimpleMachineMetaTileEntityTest)
+        // and a plain (non-RecipeMapFurnace-style) RecipeMap.
+        MetaTileEntities.registerMetaTileEntities(MetaTileEntities.ASSEMBLER, 110, "assembler",
+                (tier, voltageName) -> new RecipeWorkableSimpleMachineMetaTileEntity(
+                        gregtechId(String.format("%s.%s", "assembler", voltageName)),
+                        RecipeMaps.ASSEMBLER_RECIPES,
+                        Textures.ASSEMBLER_OVERLAY,
+                        tier,
+                        true,
+                        GTUtility.hvCappedTankSizeFunction));
 
         // Autoclave, IDs 125-139
         MetaTileEntities.registerSimpleMetaTileEntity(MetaTileEntities.AUTOCLAVE, 125, "autoclave",
@@ -377,11 +395,9 @@ final class MetaTileEntityRegistration {
         // FREE, IDs 515-529
 
         // Gas Collectors, IDs 530-544
-        MetaTileEntities.registerMetaTileEntities(MetaTileEntities.GAS_COLLECTOR, 530, "gas_collector",
-                (tier, voltageName) -> new MetaTileEntityGasCollector(
-                        gregtechId(String.format("%s.%s", "gas_collector", voltageName)),
-                        RecipeMaps.GAS_COLLECTOR_RECIPES, Textures.GAS_COLLECTOR_OVERLAY, tier, false,
-                        GTUtility.largeTankSizeFunction));
+        MetaTileEntities.registerSimpleMetaTileEntity(MetaTileEntities.GAS_COLLECTOR, 530, "gas_collector",
+                RecipeMaps.GAS_COLLECTOR_RECIPES, Textures.GAS_COLLECTOR_OVERLAY, false,
+                GTUtility.largeTankSizeFunction);
         // Polarizer, IDs 545-559
         MetaTileEntities.registerSimpleMetaTileEntity(MetaTileEntities.POLARIZER, 545, "polarizer",
                 RecipeMaps.POLARIZER_RECIPES,
@@ -414,7 +430,7 @@ final class MetaTileEntityRegistration {
 
         // Rock Breaker, IDs 665-679
         MetaTileEntities.registerMetaTileEntities(MetaTileEntities.ROCK_BREAKER, 665, "rock_breaker",
-                (tier, voltageName) -> new MetaTileEntityRockBreaker(
+                (tier, voltageName) -> new RecipeWorkableRockBreakerMetaTileEntity(
                         gregtechId(String.format("%s.%s", "rock_breaker", voltageName)),
                         RecipeMaps.ROCK_BREAKER_RECIPES, Textures.ROCK_BREAKER_OVERLAY, tier));
 
@@ -422,39 +438,45 @@ final class MetaTileEntityRegistration {
 
         // Diesel Generator, IDs 935-949
         MetaTileEntities.COMBUSTION_GENERATOR[0] = MetaTileEntities.registerMetaTileEntity(935,
-                new MetaTileEntitySingleCombustion(gregtechId("combustion_generator.lv"),
+                new RecipeWorkableSingleCombustionMetaTileEntity(gregtechId("combustion_generator.lv"),
                         RecipeMaps.COMBUSTION_GENERATOR_FUELS, Textures.COMBUSTION_GENERATOR_OVERLAY, 1,
                         GTUtility.genericGeneratorTankSizeFunction));
         MetaTileEntities.COMBUSTION_GENERATOR[1] = MetaTileEntities.registerMetaTileEntity(936,
-                new MetaTileEntitySingleCombustion(gregtechId("combustion_generator.mv"),
+                new RecipeWorkableSingleCombustionMetaTileEntity(gregtechId("combustion_generator.mv"),
                         RecipeMaps.COMBUSTION_GENERATOR_FUELS, Textures.COMBUSTION_GENERATOR_OVERLAY, 2,
                         GTUtility.genericGeneratorTankSizeFunction));
         MetaTileEntities.COMBUSTION_GENERATOR[2] = MetaTileEntities.registerMetaTileEntity(937,
-                new MetaTileEntitySingleCombustion(gregtechId("combustion_generator.hv"),
+                new RecipeWorkableSingleCombustionMetaTileEntity(gregtechId("combustion_generator.hv"),
                         RecipeMaps.COMBUSTION_GENERATOR_FUELS, Textures.COMBUSTION_GENERATOR_OVERLAY, 3,
                         GTUtility.genericGeneratorTankSizeFunction));
 
         // Steam Turbine, IDs 950-964
         MetaTileEntities.STEAM_TURBINE[0] = MetaTileEntities.registerMetaTileEntity(950,
-                new MetaTileEntitySingleTurbine(gregtechId("steam_turbine.lv"), RecipeMaps.STEAM_TURBINE_FUELS,
-                        Textures.STEAM_TURBINE_OVERLAY, 1, GTUtility.steamGeneratorTankSizeFunction));
+                new RecipeWorkableSingleTurbineMetaTileEntity(gregtechId("steam_turbine.lv"),
+                        RecipeMaps.STEAM_TURBINE_FUELS, Textures.STEAM_TURBINE_OVERLAY, 1,
+                        GTUtility.steamGeneratorTankSizeFunction));
         MetaTileEntities.STEAM_TURBINE[1] = MetaTileEntities.registerMetaTileEntity(951,
-                new MetaTileEntitySingleTurbine(gregtechId("steam_turbine.mv"), RecipeMaps.STEAM_TURBINE_FUELS,
-                        Textures.STEAM_TURBINE_OVERLAY, 2, GTUtility.steamGeneratorTankSizeFunction));
+                new RecipeWorkableSingleTurbineMetaTileEntity(gregtechId("steam_turbine.mv"),
+                        RecipeMaps.STEAM_TURBINE_FUELS, Textures.STEAM_TURBINE_OVERLAY, 2,
+                        GTUtility.steamGeneratorTankSizeFunction));
         MetaTileEntities.STEAM_TURBINE[2] = MetaTileEntities.registerMetaTileEntity(952,
-                new MetaTileEntitySingleTurbine(gregtechId("steam_turbine.hv"), RecipeMaps.STEAM_TURBINE_FUELS,
-                        Textures.STEAM_TURBINE_OVERLAY, 3, GTUtility.steamGeneratorTankSizeFunction));
+                new RecipeWorkableSingleTurbineMetaTileEntity(gregtechId("steam_turbine.hv"),
+                        RecipeMaps.STEAM_TURBINE_FUELS, Textures.STEAM_TURBINE_OVERLAY, 3,
+                        GTUtility.steamGeneratorTankSizeFunction));
 
         // Gas Turbine, IDs 965-979
         MetaTileEntities.GAS_TURBINE[0] = MetaTileEntities.registerMetaTileEntity(965,
-                new MetaTileEntitySingleTurbine(gregtechId("gas_turbine.lv"), RecipeMaps.GAS_TURBINE_FUELS,
-                        Textures.GAS_TURBINE_OVERLAY, 1, GTUtility.genericGeneratorTankSizeFunction));
+                new RecipeWorkableSingleTurbineMetaTileEntity(gregtechId("gas_turbine.lv"),
+                        RecipeMaps.GAS_TURBINE_FUELS, Textures.GAS_TURBINE_OVERLAY, 1,
+                        GTUtility.genericGeneratorTankSizeFunction));
         MetaTileEntities.GAS_TURBINE[1] = MetaTileEntities.registerMetaTileEntity(966,
-                new MetaTileEntitySingleTurbine(gregtechId("gas_turbine.mv"), RecipeMaps.GAS_TURBINE_FUELS,
-                        Textures.GAS_TURBINE_OVERLAY, 2, GTUtility.genericGeneratorTankSizeFunction));
+                new RecipeWorkableSingleTurbineMetaTileEntity(gregtechId("gas_turbine.mv"),
+                        RecipeMaps.GAS_TURBINE_FUELS, Textures.GAS_TURBINE_OVERLAY, 2,
+                        GTUtility.genericGeneratorTankSizeFunction));
         MetaTileEntities.GAS_TURBINE[2] = MetaTileEntities.registerMetaTileEntity(967,
-                new MetaTileEntitySingleTurbine(gregtechId("gas_turbine.hv"), RecipeMaps.GAS_TURBINE_FUELS,
-                        Textures.GAS_TURBINE_OVERLAY, 3, GTUtility.genericGeneratorTankSizeFunction));
+                new RecipeWorkableSingleTurbineMetaTileEntity(gregtechId("gas_turbine.hv"),
+                        RecipeMaps.GAS_TURBINE_FUELS, Textures.GAS_TURBINE_OVERLAY, 3,
+                        GTUtility.genericGeneratorTankSizeFunction));
 
         // Free Range, IDs 980-984
 

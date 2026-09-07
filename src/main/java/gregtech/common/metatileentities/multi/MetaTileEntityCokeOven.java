@@ -4,7 +4,7 @@ import gregtech.api.GTValues;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.metatileentity.multiblock.IMultiblockPart;
-import gregtech.api.metatileentity.multiblock.RecipeMapPrimitiveMultiblockController;
+import gregtech.api.metatileentity.multiblock.RecipeWorkablePrimitiveMultiblockController;
 import gregtech.api.metatileentity.multiblock.ui.MultiblockUIFactory;
 import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.mui.GTGuiTheme;
@@ -38,13 +38,11 @@ import codechicken.lib.render.pipeline.IVertexOperation;
 import codechicken.lib.vec.Matrix4;
 import com.cleanroommc.modularui.api.drawable.IKey;
 import com.cleanroommc.modularui.utils.Alignment;
-import com.cleanroommc.modularui.value.sync.DoubleSyncValue;
-import com.cleanroommc.modularui.widgets.ProgressWidget;
 import com.cleanroommc.modularui.widgets.slot.ItemSlot;
 import com.cleanroommc.modularui.widgets.slot.ModularSlot;
 import org.jetbrains.annotations.NotNull;
 
-public class MetaTileEntityCokeOven extends RecipeMapPrimitiveMultiblockController {
+public class MetaTileEntityCokeOven extends RecipeWorkablePrimitiveMultiblockController {
 
     public MetaTileEntityCokeOven(ResourceLocation metaTileEntityId) {
         super(metaTileEntityId, RecipeMaps.COKE_OVEN_RECIPES);
@@ -84,7 +82,7 @@ public class MetaTileEntityCokeOven extends RecipeMapPrimitiveMultiblockControll
     public void renderMetaTileEntity(CCRenderState renderState, Matrix4 translation, IVertexOperation[] pipeline) {
         super.renderMetaTileEntity(renderState, translation, pipeline);
         getFrontOverlay().renderOrientedState(renderState, translation, pipeline, getFrontFacing(),
-                recipeMapWorkable.isActive(), recipeMapWorkable.isWorkingEnabled());
+                workable.isActive(), workable.isWorkingEnabled());
     }
 
     @SideOnly(Side.CLIENT)
@@ -111,11 +109,11 @@ public class MetaTileEntityCokeOven extends RecipeMapPrimitiveMultiblockControll
                                     .slot(new ModularSlot(importItems, 0)
                                             .singletonSlotGroup())
                                     .pos(52, 30))
-                            .child(new ProgressWidget()
-                                    .texture(GTGuiTextures.PRIMITIVE_BLAST_FURNACE_PROGRESS_BAR, -1)
+                            .child(recipeMap.getRecipeMapUI()
+                                    .createJeiProgressWidget(() -> workable.getProgressPercent(0))
+                                    .texture(GTGuiTextures.PRIMITIVE_BLAST_FURNACE_PROGRESS_BAR, 20)
                                     .size(20, 15)
-                                    .pos(76, 32)
-                                    .value(new DoubleSyncValue(recipeMapWorkable::getProgressPercent)))
+                                    .pos(76, 32))
                             .child(new ItemSlot()
                                     .slot(new ModularSlot(exportItems, 0)
                                             .accessibility(false, true))

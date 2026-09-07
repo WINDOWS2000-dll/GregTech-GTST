@@ -15,10 +15,6 @@ import static gregtech.common.blocks.MetaBlocks.*;
 
 public enum BoilerType {
 
-    // targetWaterBoilRate is derived from the legacy steamPerTick / BoilerThermalModel.STEAM_PER_WATER.
-    // maximumChassisTemperature and thermalInertia are new tuning values with no legacy equivalent; see
-    // C:\MinecraftModding\GTST-recipe-rework-design\README.md for how these initial figures were derived.
-    // They are expected to need adjustment after playtesting.
     BRONZE(800, 1200, 5, 393, 10_800,
             METAL_CASING.getState(BRONZE_BRICKS),
             BOILER_FIREBOX_CASING.getState(BRONZE_FIREBOX),

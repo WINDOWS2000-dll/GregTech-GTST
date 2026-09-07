@@ -7,6 +7,7 @@ import gregtech.api.recipes.category.GTRecipeCategory;
 import gregtech.api.recipes.chance.boost.ChanceBoostFunction;
 import gregtech.api.recipes.ingredients.GTRecipeInput;
 import gregtech.api.recipes.ingredients.IntCircuitIngredient;
+import gregtech.api.recipes.logic.statemachine.lookup.bitflag.BitflagRecipeLookup;
 import gregtech.api.recipes.map.AbstractMapIngredient;
 import gregtech.api.recipes.map.Branch;
 import gregtech.api.recipes.map.Either;
@@ -124,6 +125,7 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
     private final Map<ResourceLocation, RecipeBuildAction<R>> recipeBuildActions = new Object2ObjectOpenHashMap<>();
     protected @Nullable SoundEvent sound;
     private @Nullable RecipeMap<?> smallRecipeMap;
+    private @Nullable BitflagRecipeLookup bitflagLookup;
 
     /**
      * Create and register new instance of RecipeMap with specified properties.
@@ -295,6 +297,7 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
                 v.add(recipe);
                 return v;
             });
+            if (bitflagLookup != null) bitflagLookup.invalidate();
             return true;
         }
         return false;
@@ -314,6 +317,7 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
                 if (v != null) v.remove(recipe);
                 return v == null || v.isEmpty() ? null : v;
             });
+            if (bitflagLookup != null) bitflagLookup.invalidate();
             return true;
         }
         return false;
@@ -332,6 +336,7 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
         this.lookup.getNodes().clear();
         this.lookup.getSpecialNodes().clear();
         this.recipeByCategory.clear();
+        if (bitflagLookup != null) bitflagLookup.invalidate();
     }
 
     /**
@@ -356,9 +361,9 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
             }
             recipeStatus = EnumValidationResult.INVALID;
         }
-        boolean emptyOutputs = !this.allowEmptyOutput && recipe.getEUt() > 0 && recipe.getOutputs().isEmpty() &&
-                recipe.getFluidOutputs().isEmpty() && recipe.getChancedOutputs().getChancedEntries().isEmpty() &&
-                recipe.getChancedFluidOutputs().getChancedEntries().isEmpty();
+        boolean emptyOutputs = !this.allowEmptyOutput && recipe.getEUt() > 0 &&
+                recipe.getItemOutputProvider().getMaximumOutputs(1) == 0 &&
+                recipe.getFluidOutputProvider().getMaximumOutputs(1) == 0;
         if (emptyOutputs) {
             GTLog.logger.error("Invalid amount of recipe outputs. Recipe outputs are empty.", new Throwable());
             if (recipe.getIsCTRecipe()) {
@@ -380,7 +385,7 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
             recipeStatus = EnumValidationResult.INVALID;
         }
 
-        amount = recipe.getOutputs().size() + recipe.getChancedOutputs().getChancedEntries().size();
+        amount = recipe.getItemOutputProvider().getMaximumOutputs(1);
         if (amount > getMaxOutputs()) {
             GTLog.logger.error("Invalid amount of recipe outputs. Actual: {}. Should be at most {}.", amount,
                     getMaxOutputs(), new Throwable());
@@ -405,7 +410,7 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
             recipeStatus = EnumValidationResult.INVALID;
         }
 
-        amount = recipe.getFluidOutputs().size() + recipe.getChancedFluidOutputs().getChancedEntries().size();
+        amount = recipe.getFluidOutputProvider().getMaximumOutputs(1);
         if (amount > getMaxFluidOutputs()) {
             GTLog.logger.error("Invalid amount of recipe fluid outputs. Actual: {}. Should be at most {}.", amount,
                     getMaxFluidOutputs(), new Throwable());
@@ -1091,6 +1096,20 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
         ObjectOpenHashSet<Recipe> recipes = new ObjectOpenHashSet<>();
         return lookup.getRecipes(true).filter(recipes::add).sorted(RECIPE_DURATION_THEN_EU)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * @return the performance-optimized alternative to searching {@link #getRecipeList()} directly (e.g. via
+     *         {@code RecipeMapLookup}): one {@link BitflagRecipeLookup} instance is lazily created and cached per
+     *         {@code RecipeMap}, and automatically invalidated whenever this map's recipes change (see
+     *         {@link #compileRecipe}/{@link #removeRecipe}/{@link #removeAllRecipes}), so every caller sharing this
+     *         map shares one up-to-date index rather than each building (and needlessly repeating the cost of
+     *         building) their own. See {@link BitflagRecipeLookup}'s JavaDoc for why it must be cached like this
+     *         rather than recreated per search.
+     */
+    public @NotNull BitflagRecipeLookup getBitflagLookup() {
+        if (bitflagLookup == null) bitflagLookup = new BitflagRecipeLookup(this);
+        return bitflagLookup;
     }
 
     public @Nullable SoundEvent getSound() {

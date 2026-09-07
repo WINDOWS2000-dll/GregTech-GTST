@@ -574,6 +574,8 @@ public final class MetaItems {
 
     public static MetaItem<?>.MetaValueItem MULTIBLOCK_BUILDER;
 
+    public static MetaItem<?>.MetaValueItem STATE_MACHINE_TRACER;
+
     private static final List<OrePrefix> orePrefixes = new ArrayList<>();
 
     static {

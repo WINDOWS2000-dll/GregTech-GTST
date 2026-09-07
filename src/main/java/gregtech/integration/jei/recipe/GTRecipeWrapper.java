@@ -97,8 +97,8 @@ public class GTRecipeWrapper extends AdvancedRecipeWrapper {
         }
 
         // Outputs
-        if (!recipe.getOutputs().isEmpty() || !recipe.getChancedOutputs().getChancedEntries().isEmpty()) {
-            List<ItemStack> recipeOutputs = recipe.getOutputs()
+        if (!recipe.getGuaranteedItemOutputs().isEmpty() || !recipe.getChancedItemOutputs().isEmpty()) {
+            List<ItemStack> recipeOutputs = recipe.getGuaranteedItemOutputs()
                     .stream().map(ItemStack::copy)
                     .collect(Collectors.toList());
 
@@ -107,7 +107,7 @@ public class GTRecipeWrapper extends AdvancedRecipeWrapper {
                 scannerPossibilities = new ArrayList<>();
                 // Scanner Output replacing, used for cycling research outputs
                 String researchId = null;
-                for (ItemStack stack : recipe.getOutputs()) {
+                for (ItemStack stack : recipe.getGuaranteedItemOutputs()) {
                     researchId = AssemblyLineManager.readResearchId(stack);
                     if (researchId != null) break;
                 }
@@ -116,7 +116,7 @@ public class GTRecipeWrapper extends AdvancedRecipeWrapper {
                             .getDataStickEntry(researchId);
                     if (possibleRecipes != null) {
                         for (Recipe r : possibleRecipes) {
-                            ItemStack researchItem = r.getOutputs().get(0);
+                            ItemStack researchItem = r.getGuaranteedItemOutputs().get(0);
                             researchItem = researchItem.copy();
                             researchItem.setCount(1);
                             boolean didMatch = false;
@@ -133,7 +133,7 @@ public class GTRecipeWrapper extends AdvancedRecipeWrapper {
                 }
             }
 
-            List<ChancedItemOutput> chancedOutputs = new ArrayList<>(recipe.getChancedOutputs().getChancedEntries());
+            List<ChancedItemOutput> chancedOutputs = new ArrayList<>(recipe.getChancedItemOutputs());
             for (ChancedItemOutput chancedEntry : chancedOutputs) {
                 recipeOutputs.add(chancedEntry.getIngredient());
             }
@@ -146,13 +146,12 @@ public class GTRecipeWrapper extends AdvancedRecipeWrapper {
         }
 
         // Fluid Outputs
-        if (!recipe.getFluidOutputs().isEmpty() || !recipe.getChancedFluidOutputs().getChancedEntries().isEmpty()) {
-            List<FluidStack> recipeOutputs = recipe.getFluidOutputs().stream()
+        if (!recipe.getGuaranteedFluidOutputs().isEmpty() || !recipe.getChancedFluidOutputs().isEmpty()) {
+            List<FluidStack> recipeOutputs = recipe.getGuaranteedFluidOutputs().stream()
                     .map(FluidStack::copy)
                     .collect(Collectors.toList());
 
-            List<ChancedFluidOutput> chancedOutputs = new ArrayList<>(
-                    recipe.getChancedFluidOutputs().getChancedEntries());
+            List<ChancedFluidOutput> chancedOutputs = new ArrayList<>(recipe.getChancedFluidOutputs());
             for (ChancedFluidOutput chancedEntry : chancedOutputs) {
                 recipeOutputs.add(chancedEntry.getIngredient());
             }
@@ -166,16 +165,16 @@ public class GTRecipeWrapper extends AdvancedRecipeWrapper {
 
         BoostableChanceEntry<?> entry = null;
         if (!input) {
-            if (!recipe.getChancedOutputs().getChancedEntries().isEmpty()) {
+            if (!recipe.getChancedItemOutputs().isEmpty()) {
                 int outputIndex = slotIndex - recipeMap.getMaxInputs();
-                if (outputIndex >= recipe.getOutputs().size()) {
-                    entry = recipe.getChancedOutputs().getChancedEntries()
-                            .get(outputIndex - recipe.getOutputs().size());
+                if (outputIndex >= recipe.getGuaranteedItemOutputs().size()) {
+                    entry = recipe.getChancedItemOutputs()
+                            .get(outputIndex - recipe.getGuaranteedItemOutputs().size());
                 }
             }
         }
 
-        addIngredientTooltips(tooltip, notConsumed, input, entry, recipe.getChancedOutputs().getChancedOutputLogic());
+        addIngredientTooltips(tooltip, notConsumed, input, entry, recipe.getItemOutputChanceLogic());
         addIngredientTooltips(tooltip, notConsumed, input, ingredient, null);
     }
 
@@ -186,16 +185,16 @@ public class GTRecipeWrapper extends AdvancedRecipeWrapper {
         boolean notConsumed = input && isNotConsumedFluid(slotIndex);
 
         BoostableChanceEntry<?> entry = null;
-        if (!recipe.getChancedFluidOutputs().getChancedEntries().isEmpty()) {
+        if (!recipe.getChancedFluidOutputs().isEmpty()) {
             int outputIndex = slotIndex - recipeMap.getMaxFluidInputs();
-            if (outputIndex >= recipe.getFluidOutputs().size()) {
-                entry = recipe.getChancedFluidOutputs().getChancedEntries()
-                        .get(outputIndex - recipe.getFluidOutputs().size());
+            if (outputIndex >= recipe.getGuaranteedFluidOutputs().size()) {
+                entry = recipe.getChancedFluidOutputs()
+                        .get(outputIndex - recipe.getGuaranteedFluidOutputs().size());
             }
         }
 
         addIngredientTooltips(tooltip, notConsumed, input, entry,
-                recipe.getChancedFluidOutputs().getChancedOutputLogic());
+                recipe.getFluidOutputChanceLogic());
         addIngredientTooltips(tooltip, notConsumed, input, ingredient, null);
     }
 
@@ -351,21 +350,21 @@ public class GTRecipeWrapper extends AdvancedRecipeWrapper {
     }
 
     public ChancedItemOutput getOutputChance(int slot) {
-        if (slot >= recipe.getChancedOutputs().getChancedEntries().size() || slot < 0) return null;
-        return recipe.getChancedOutputs().getChancedEntries().get(slot);
+        if (slot >= recipe.getChancedItemOutputs().size() || slot < 0) return null;
+        return recipe.getChancedItemOutputs().get(slot);
     }
 
     public ChancedOutputLogic getChancedOutputLogic() {
-        return recipe.getChancedOutputs().getChancedOutputLogic();
+        return recipe.getItemOutputChanceLogic();
     }
 
     public ChancedFluidOutput getFluidOutputChance(int slot) {
-        if (slot >= recipe.getChancedFluidOutputs().getChancedEntries().size() || slot < 0) return null;
-        return recipe.getChancedFluidOutputs().getChancedEntries().get(slot);
+        if (slot >= recipe.getChancedFluidOutputs().size() || slot < 0) return null;
+        return recipe.getChancedFluidOutputs().get(slot);
     }
 
     public ChancedOutputLogic getChancedFluidOutputLogic() {
-        return recipe.getChancedFluidOutputs().getChancedOutputLogic();
+        return recipe.getFluidOutputChanceLogic();
     }
 
     public boolean isNotConsumedItem(int slot) {

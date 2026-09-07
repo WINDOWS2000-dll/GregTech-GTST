@@ -4,12 +4,11 @@ import gregtech.api.GTValues;
 import gregtech.api.GregTechAPI;
 import gregtech.api.block.IHeatingCoilBlockStats;
 import gregtech.api.capability.IHeatingCoil;
-import gregtech.api.capability.impl.HeatingCoilRecipeLogic;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.metatileentity.multiblock.IMultiblockPart;
 import gregtech.api.metatileentity.multiblock.MultiblockAbility;
-import gregtech.api.metatileentity.multiblock.RecipeMapMultiblockController;
+import gregtech.api.metatileentity.multiblock.RecipeWorkableMultiblockController;
 import gregtech.api.metatileentity.multiblock.ui.KeyManager;
 import gregtech.api.metatileentity.multiblock.ui.MultiblockUIBuilder;
 import gregtech.api.metatileentity.multiblock.ui.UISyncer;
@@ -17,9 +16,15 @@ import gregtech.api.pattern.BlockPattern;
 import gregtech.api.pattern.FactoryBlockPattern;
 import gregtech.api.pattern.MultiblockShapeInfo;
 import gregtech.api.pattern.PatternMatchContext;
-import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeMaps;
-import gregtech.api.recipes.properties.impl.TemperatureProperty;
+import gregtech.api.recipes.logic.statemachine.RecipeLogicConfig;
+import gregtech.api.recipes.logic.statemachine.lookup.RecipeCoilOverclockOperator;
+import gregtech.api.recipes.logic.statemachine.lookup.bitflag.CoilTemperatureFilter;
+import gregtech.api.recipes.logic.statemachine.property.CleanroomProperties;
+import gregtech.api.recipes.logic.statemachine.property.DimensionProperties;
+import gregtech.api.recipes.logic.statemachine.property.EnergyContainerProperties;
+import gregtech.api.recipes.logic.statemachine.property.RecipePropertySet;
+import gregtech.api.recipes.logic.statemachine.property.impl.TemperatureCapacityProperty;
 import gregtech.api.util.GTUtility;
 import gregtech.api.util.KeyUtil;
 import gregtech.api.util.TextFormattingUtil;
@@ -56,13 +61,36 @@ import java.util.List;
 
 import static gregtech.api.util.RelativeDirection.*;
 
-public class MetaTileEntityElectricBlastFurnace extends RecipeMapMultiblockController implements IHeatingCoil {
+/**
+ * Migrated from {@code RecipeMapMultiblockController} to
+ * {@link RecipeWorkableMultiblockController}. Replaces legacy's {@code HeatingCoilRecipeLogic}
+ * ({@code modifyOverclockPre}/{@code runOverclockingLogic}) with {@link RecipeCoilOverclockOperator}, a full
+ * {@code config.overclock.overclockFactory} replacement (see that class's JavaDoc for why the narrower
+ * {@code ocAlgorithm}/{@code ocAmountCalculator} seams aren't enough: the coil overclock algorithm needs the
+ * recipe's own required temperature, which those seams' fixed signatures have no room to carry).
+ * <p>
+ * Legacy's {@code checkRecipe} hard gate (rejecting any candidate whose required temperature exceeds
+ * {@link #blastFurnaceTemperature}) is replaced by two layers, matching this migration's established "search-time
+ * pre-filter + authoritative operator-level gate" pattern: {@link CoilTemperatureFilter} (registered on
+ * {@link RecipeMaps#BLAST_RECIPES}'s shared {@code BitflagRecipeLookup}, so candidates that are too cold for this
+ * furnace's current coil temperature are excluded before they're even considered) and
+ * {@link RecipeCoilOverclockOperator}'s own unconditional re-check (in case the search-time filter is ever bypassed,
+ * e.g. a future dynamic-recipe {@code RecipeMap} fallback).
+ * <p>
+ * <b>{@link #blastFurnaceTemperature} vs. {@code createConfig()}'s construction-order trap:</b> exactly the same
+ * pitfall {@link MetaTileEntityDistillationTower}'s JavaDoc documents for its own {@code handler} field, and Multi
+ * Smelter's {@code heatingCoilLevel}/{@code heatingCoilDiscount} sidestep the same way: {@link #blastFurnaceTemperature}
+ * is set in {@link #formStructure}, long after {@code createConfig()} (called from the constructor) has already run,
+ * so {@code config.power.properties} (the only place this class threads the current temperature through --
+ * {@link RecipeCoilOverclockOperator} reads it back out from there, not from a separate supplier; see that class's
+ * JavaDoc) reads it only from inside a lazily-invoked lambda, never eagerly.
+ */
+public class MetaTileEntityElectricBlastFurnace extends RecipeWorkableMultiblockController implements IHeatingCoil {
 
     private int blastFurnaceTemperature;
 
     public MetaTileEntityElectricBlastFurnace(ResourceLocation metaTileEntityId) {
         super(metaTileEntityId, RecipeMaps.BLAST_RECIPES);
-        this.recipeMapWorkable = new HeatingCoilRecipeLogic(this);
     }
 
     @Override
@@ -71,15 +99,39 @@ public class MetaTileEntityElectricBlastFurnace extends RecipeMapMultiblockContr
     }
 
     @Override
+    protected @NotNull RecipeLogicConfig createConfig() {
+        RecipeLogicConfig config = super.createConfig();
+        config.power.properties = () -> {
+            RecipePropertySet properties = EnergyContainerProperties.of(getEnergyContainer());
+            properties.add(new TemperatureCapacityProperty(blastFurnaceTemperature));
+            // This replaces (not adds to) RecipeWorkableMultiblockController's own default properties supplier,
+            // so cleanroom/dimension advertising has to be repeated here explicitly -- see that class's JavaDoc.
+            properties.add(DimensionProperties.of(this));
+            properties.add(CleanroomProperties.of(this));
+            return properties;
+        };
+        // Ignores overclockFactory's own four scalar parameters entirely -- see RecipeCoilOverclockOperator's
+        // JavaDoc for why this factory closure needs config directly instead (it reads temperature back out of
+        // config.power.properties, set just above, rather than needing a separate supplier).
+        config.overclock.overclockFactory = (costFactor, speedFactor, canUpTransform, durationDiscount) ->
+                new RecipeCoilOverclockOperator(config);
+        // Idempotent: registerFilter adds to a Set keyed by filter identity, and RecipeMaps.BLAST_RECIPES's
+        // BitflagRecipeLookup is shared by every Electric Blast Furnace instance (see RecipeMap#getBitflagLookup()).
+        RecipeMaps.BLAST_RECIPES.getBitflagLookup().registerFilter(CoilTemperatureFilter.INSTANCE);
+        return config;
+    }
+
+    @Override
     protected void configureDisplayText(MultiblockUIBuilder builder) {
-        builder.setWorkingStatus(recipeMapWorkable.isWorkingEnabled(), recipeMapWorkable.isActive())
-                .addEnergyUsageLine(this.getEnergyContainer())
-                .addEnergyTierLine(GTUtility.getTierByVoltage(recipeMapWorkable.getMaxVoltage()))
+        // addParallelsLine dropped: parallelLimit stays 1 (no parallel support). addRecipeOutputLine dropped:
+        // RecipeWorkable has no getPreviousRecipe() equivalent to back it -- see RecipeWorkableMultiblockController's
+        // JavaDoc "Recipe-output preview line intentionally omitted".
+        builder.setWorkingStatus(workable.isWorkingEnabled(), workable.isActive())
+                .addEnergyUsageLine(getEnergyContainer())
+                .addEnergyTierLine(GTUtility.getTierByVoltage(getEnergyContainer().getInputVoltage()))
                 .addCustom(this::addHeatCapacity)
-                .addParallelsLine(recipeMapWorkable.getParallelLimit())
                 .addWorkingStatusLine()
-                .addProgressLine(recipeMapWorkable.getProgress(), recipeMapWorkable.getMaxProgress())
-                .addRecipeOutputLine(recipeMapWorkable);
+                .addProgressLine(workable.getProgress(), workable.getMaxProgress());
     }
 
     private void addHeatCapacity(KeyManager keyManager, UISyncer syncer) {
@@ -106,11 +158,6 @@ public class MetaTileEntityElectricBlastFurnace extends RecipeMapMultiblockContr
     public void invalidateStructure() {
         super.invalidateStructure();
         this.blastFurnaceTemperature = 0;
-    }
-
-    @Override
-    public boolean checkRecipe(@NotNull Recipe recipe, boolean consumeIfSuccess) {
-        return this.blastFurnaceTemperature >= recipe.getProperty(TemperatureProperty.getInstance(), 0);
     }
 
     @Override

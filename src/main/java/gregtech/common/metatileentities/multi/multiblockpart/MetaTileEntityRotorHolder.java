@@ -2,7 +2,6 @@ package gregtech.common.metatileentities.multi.multiblockpart;
 
 import gregtech.api.capability.GregtechDataCodes;
 import gregtech.api.capability.IRotorHolder;
-import gregtech.api.capability.impl.MultiblockFuelRecipeLogic;
 import gregtech.api.capability.impl.NotifiableItemStackHandler;
 import gregtech.api.damagesources.DamageSources;
 import gregtech.api.metatileentity.ITieredMetaTileEntity;
@@ -13,6 +12,7 @@ import gregtech.api.metatileentity.multiblock.IMultiblockAbilityPart;
 import gregtech.api.metatileentity.multiblock.MultiblockAbility;
 import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.mui.GTGuis;
+import gregtech.api.recipes.logic.statemachine.workable.RecipeWorkable;
 import gregtech.api.util.RelativeDirection;
 import gregtech.client.renderer.texture.Textures;
 import gregtech.common.items.behaviors.AbstractMaterialPartBehavior;
@@ -445,9 +445,15 @@ public class MetaTileEntityRotorHolder extends MetaTileEntityMultiblockNotifiabl
 
             if (getTurbineBehavior().getPartMaxDurability(getTurbineStack()) <=
                     AbstractMaterialPartBehavior.getPartDamage(getTurbineStack()) + damageAmount) {
-                var holder = (MultiblockFuelRecipeLogic) getController().getRecipeLogic();
-                if (holder != null && holder.isWorking()) {
-                    holder.invalidate();
+                // Must read this through the controller's own RecipeWorkable trait: legacy's getRecipeLogic()
+                // accessor always returns null for Large Turbine's StateMachine-based controller, which would
+                // silently turn the rotor-durability-triggered recipe invalidation below into dead code.
+                MetaTileEntityLargeTurbine controller = (MetaTileEntityLargeTurbine) getController();
+                if (controller != null) {
+                    RecipeWorkable workable = controller.getWorkable();
+                    if (workable.isWorking()) {
+                        workable.invalidate();
+                    }
                 }
             }
 

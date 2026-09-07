@@ -1,18 +1,16 @@
 package gregtech.common.metatileentities.multi.electric;
 
 import gregtech.api.block.IHeatingCoilBlockStats;
-import gregtech.api.capability.impl.MultiblockRecipeLogic;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.metatileentity.multiblock.IMultiblockPart;
-import gregtech.api.metatileentity.multiblock.RecipeMapMultiblockController;
+import gregtech.api.metatileentity.multiblock.RecipeWorkableMultiblockController;
 import gregtech.api.metatileentity.multiblock.ui.MultiblockUIBuilder;
 import gregtech.api.pattern.BlockPattern;
 import gregtech.api.pattern.FactoryBlockPattern;
 import gregtech.api.pattern.PatternMatchContext;
 import gregtech.api.recipes.RecipeMaps;
-import gregtech.api.recipes.logic.OCResult;
-import gregtech.api.recipes.properties.RecipePropertyStorage;
+import gregtech.api.recipes.logic.statemachine.RecipeLogicConfig;
 import gregtech.api.util.GTUtility;
 import gregtech.api.util.KeyUtil;
 import gregtech.client.renderer.ICubeRenderer;
@@ -37,13 +35,27 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-public class MetaTileEntityPyrolyseOven extends RecipeMapMultiblockController {
+public class MetaTileEntityPyrolyseOven extends RecipeWorkableMultiblockController {
 
-    private int coilTier;
+    private int coilTier = -1;
 
     public MetaTileEntityPyrolyseOven(ResourceLocation metaTileEntityId) {
         super(metaTileEntityId, RecipeMaps.PYROLYSE_RECIPES);
-        this.recipeMapWorkable = new PyrolyseOvenWorkableHandler(this);
+    }
+
+    /**
+     * Replaces legacy's {@code PyrolyseOvenWorkableHandler}
+     * ({@code modifyOverclockPost}, an inner-class-spam case this design avoids) with {@link RecipeLogicConfig#overclock}'s
+     * {@code durationDiscount} seam (applied post-overclock, exactly where legacy's hook ran), reading the same
+     * verbatim formula: 75% speed on cupronickel ({@code coilTier == 0}), each coil tier above kanthal
+     * ({@code coilTier >= 1}) 50% faster than the last.
+     */
+    @Override
+    protected @NotNull RecipeLogicConfig createConfig() {
+        RecipeLogicConfig config = super.createConfig();
+        config.overclock.durationDiscount = () -> coilTier < 0 ? 1.0 :
+                coilTier == 0 ? 4.0 / 3 : 2.0 / (coilTier + 1);
+        return config;
     }
 
     @Override
@@ -111,9 +123,12 @@ public class MetaTileEntityPyrolyseOven extends RecipeMapMultiblockController {
 
     @Override
     protected void configureDisplayText(MultiblockUIBuilder builder) {
-        builder.setWorkingStatus(recipeMapWorkable.isWorkingEnabled(), recipeMapWorkable.isActive())
-                .addEnergyUsageLine(this.getEnergyContainer())
-                .addEnergyTierLine(GTUtility.getTierByVoltage(recipeMapWorkable.getMaxVoltage()))
+        // addParallelsLine dropped: parallelLimit stays 1 (Pyrolyse Oven has no parallel support, unlike Multi
+        // Smelter). addRecipeOutputLine dropped: RecipeWorkable has no getPreviousRecipe() equivalent to back it --
+        // see RecipeWorkableMultiblockController's JavaDoc "Recipe-output preview line intentionally omitted".
+        builder.setWorkingStatus(workable.isWorkingEnabled(), workable.isActive())
+                .addEnergyUsageLine(getEnergyContainer())
+                .addEnergyTierLine(GTUtility.getTierByVoltage(getEnergyContainer().getInputVoltage()))
                 .addCustom((textList, syncer) -> {
                     if (!isStructureFormed()) return;
                     int tier = syncer.syncInt(coilTier);
@@ -127,10 +142,8 @@ public class MetaTileEntityPyrolyseOven extends RecipeMapMultiblockController {
                             "gregtech.multiblock.pyrolyse_oven.speed_hover");
                     textList.add(KeyUtil.setHover(body, hover));
                 })
-                .addParallelsLine(recipeMapWorkable.getParallelLimit())
                 .addWorkingStatusLine()
-                .addProgressLine(recipeMapWorkable.getProgress(), recipeMapWorkable.getMaxProgress())
-                .addRecipeOutputLine(recipeMapWorkable);
+                .addProgressLine(workable.getProgress(), workable.getMaxProgress());
     }
 
     @Override
@@ -157,30 +170,5 @@ public class MetaTileEntityPyrolyseOven extends RecipeMapMultiblockController {
     @Override
     public boolean canBeDistinct() {
         return true;
-    }
-
-    @SuppressWarnings("InnerClassMayBeStatic")
-    private class PyrolyseOvenWorkableHandler extends MultiblockRecipeLogic {
-
-        public PyrolyseOvenWorkableHandler(RecipeMapMultiblockController tileEntity) {
-            super(tileEntity);
-        }
-
-        @Override
-        protected void modifyOverclockPost(@NotNull OCResult ocResult, @NotNull RecipePropertyStorage storage) {
-            super.modifyOverclockPost(ocResult, storage);
-
-            int coilTier = ((MetaTileEntityPyrolyseOven) metaTileEntity).getCoilTier();
-            if (coilTier == -1)
-                return;
-
-            if (coilTier == 0) {
-                // 75% speed with cupronickel (coilTier = 0)
-                ocResult.setDuration(Math.max(1, (int) (ocResult.duration() * 4.0 / 3)));
-            } else {
-                // each coil above kanthal (coilTier = 1) is 50% faster
-                ocResult.setDuration(Math.max(1, (int) (ocResult.duration() * 2.0 / (coilTier + 1))));
-            }
-        }
     }
 }

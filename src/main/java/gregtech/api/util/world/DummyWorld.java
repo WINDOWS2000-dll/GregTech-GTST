@@ -26,9 +26,21 @@ public class DummyWorld extends World {
 
     public static final DummyWorld INSTANCE = new DummyWorld();
 
+    /**
+     * As {@link #INSTANCE}, but with {@link #isRemote} {@code true} -- for tests exercising the client-side branch
+     * of code that behaves differently there (e.g. {@link gregtech.api.recipes.logic.statemachine.workable
+     * .RecipeWorkable}'s cached {@code clientActive}/{@code clientWorkingEnabled}, which only take effect on a
+     * remote world).
+     */
+    public static final DummyWorld REMOTE_INSTANCE = new DummyWorld(true);
+
     public DummyWorld() {
+        this(false);
+    }
+
+    public DummyWorld(boolean isClient) {
         super(new DummySaveHandler(), new WorldInfo(DEFAULT_SETTINGS, "DummyServer"), new WorldProviderSurface(),
-                new Profiler(), false);
+                new Profiler(), isClient);
         // Guarantee the dimension ID was not reset by the provider
         this.provider.setDimension(Integer.MAX_VALUE);
         int providerDim = this.provider.getDimension();

@@ -1,6 +1,7 @@
 package gregtech.integration.opencomputers.drivers;
 
-import gregtech.api.metatileentity.SimpleMachineMetaTileEntity;
+import gregtech.api.metatileentity.ISimpleMachineIO;
+import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 
 import net.minecraft.tileentity.TileEntity;
@@ -14,18 +15,24 @@ import li.cil.oc.api.machine.Context;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.prefab.DriverSidedTileEntity;
 
+/**
+ * Generalized from {@code SimpleMachineMetaTileEntity} to
+ * {@link ISimpleMachineIO} -- see that interface's own JavaDoc for why (this
+ * driver's {@code gt_machine} OpenComputers component would otherwise not be created for a single-block
+ * machine using {@code RecipeWorkableSimpleMachineMetaTileEntity}).
+ */
 public class DriverSimpleMachine extends DriverSidedTileEntity {
 
     @Override
     public Class<?> getTileEntityClass() {
-        return SimpleMachineMetaTileEntity.class;
+        return ISimpleMachineIO.class;
     }
 
     @Override
     public boolean worksWith(World world, BlockPos pos, EnumFacing side) {
         TileEntity tileEntity = world.getTileEntity(pos);
         if (tileEntity instanceof IGregTechTileEntity) {
-            return ((IGregTechTileEntity) tileEntity).getMetaTileEntity() instanceof SimpleMachineMetaTileEntity;
+            return ((IGregTechTileEntity) tileEntity).getMetaTileEntity() instanceof ISimpleMachineIO;
         }
         return false;
     }
@@ -34,15 +41,16 @@ public class DriverSimpleMachine extends DriverSidedTileEntity {
     public ManagedEnvironment createEnvironment(World world, BlockPos pos, EnumFacing side) {
         TileEntity tileEntity = world.getTileEntity(pos);
         if (tileEntity instanceof IGregTechTileEntity) {
-            return new EnvironmentSimpleMachine((IGregTechTileEntity) tileEntity,
-                    (SimpleMachineMetaTileEntity) ((IGregTechTileEntity) tileEntity).getMetaTileEntity());
+            MetaTileEntity mte = ((IGregTechTileEntity) tileEntity).getMetaTileEntity();
+            if (mte instanceof ISimpleMachineIO)
+                return new EnvironmentSimpleMachine((IGregTechTileEntity) tileEntity, (ISimpleMachineIO) mte);
         }
         return null;
     }
 
-    public final static class EnvironmentSimpleMachine extends EnvironmentMetaTileEntity<SimpleMachineMetaTileEntity> {
+    public final static class EnvironmentSimpleMachine extends EnvironmentMetaTileEntity<ISimpleMachineIO> {
 
-        public EnvironmentSimpleMachine(IGregTechTileEntity holder, SimpleMachineMetaTileEntity tileEntity) {
+        public EnvironmentSimpleMachine(IGregTechTileEntity holder, ISimpleMachineIO tileEntity) {
             super(holder, tileEntity, "gt_machine");
         }
 

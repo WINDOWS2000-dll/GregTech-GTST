@@ -5,14 +5,13 @@ import gregtech.api.capability.GregtechDataCodes;
 import gregtech.api.capability.IEnergyContainer;
 import gregtech.api.capability.impl.EnergyContainerHandler;
 import gregtech.api.capability.impl.EnergyContainerList;
-import gregtech.api.capability.impl.MultiblockRecipeLogic;
 import gregtech.api.metatileentity.IFastRenderMetaTileEntity;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.metatileentity.multiblock.IMultiblockPart;
 import gregtech.api.metatileentity.multiblock.MultiblockAbility;
 import gregtech.api.metatileentity.multiblock.ProgressBarMultiblock;
-import gregtech.api.metatileentity.multiblock.RecipeMapMultiblockController;
+import gregtech.api.metatileentity.multiblock.RecipeWorkableMultiblockController;
 import gregtech.api.metatileentity.multiblock.ui.MultiblockUIFactory;
 import gregtech.api.metatileentity.multiblock.ui.TemplateBarBuilder;
 import gregtech.api.mui.GTGuiTextures;
@@ -20,10 +19,20 @@ import gregtech.api.pattern.BlockPattern;
 import gregtech.api.pattern.FactoryBlockPattern;
 import gregtech.api.pattern.MultiblockShapeInfo;
 import gregtech.api.pattern.PatternMatchContext;
-import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeMaps;
-import gregtech.api.recipes.logic.OCParams;
-import gregtech.api.recipes.properties.RecipePropertyStorage;
+import gregtech.api.recipes.logic.OverclockingLogic;
+import gregtech.api.recipes.logic.RecipeRun;
+import gregtech.api.recipes.logic.statemachine.ActiveRecipeList;
+import gregtech.api.recipes.logic.statemachine.RecipeLogicConfig;
+import gregtech.api.recipes.logic.statemachine.RecipeLogicCallbacks;
+import gregtech.api.recipes.logic.statemachine.RecipeLogicHooks;
+import gregtech.api.recipes.logic.statemachine.lookup.RecipeFusionOverclockOperator;
+import gregtech.api.recipes.logic.statemachine.lookup.bitflag.FusionStartEnergyFilter;
+import gregtech.api.recipes.logic.statemachine.property.CleanroomProperties;
+import gregtech.api.recipes.logic.statemachine.property.DimensionProperties;
+import gregtech.api.recipes.logic.statemachine.property.RecipePropertySet;
+import gregtech.api.recipes.logic.statemachine.property.impl.FusionStartCapacityProperty;
+import gregtech.api.recipes.logic.statemachine.property.impl.PowerSupplyProperty;
 import gregtech.api.recipes.properties.impl.FusionEUToStartProperty;
 import gregtech.api.util.KeyUtil;
 import gregtech.api.util.RelativeDirection;
@@ -60,6 +69,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
+import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -80,11 +90,37 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.UnaryOperator;
 
-import static gregtech.api.recipes.logic.OverclockingLogic.PERFECT_HALF_DURATION_FACTOR;
-import static gregtech.api.recipes.logic.OverclockingLogic.PERFECT_HALF_VOLTAGE_FACTOR;
 import static gregtech.api.util.RelativeDirection.*;
 
-public class MetaTileEntityFusionReactor extends RecipeMapMultiblockController
+/**
+ * Migrated from {@code RecipeMapMultiblockController} to
+ * {@link RecipeWorkableMultiblockController}. Replaces legacy's {@code FusionRecipeLogic} inner class
+ * (~90 lines for {@code getOverclockingDurationFactor}/{@code getOverclockingVoltageFactor}/{@code getMaxVoltage}/
+ * {@code checkRecipe}/{@code modifyOverclockPre}/NBT round-trip, the exact "inner class spam for a handful of small
+ * hooks" pattern this migration exists to eliminate) with declarative {@code createConfig()} wiring plus one
+ * dedicated operator, {@link RecipeFusionOverclockOperator} (see that class's JavaDoc for why the reactor-MK
+ * overclock clamp needs a full {@code overclockFactory}, not the narrower {@code ocAmountCalculator} seam an
+ * earlier paper assessment assumed would suffice).
+ * <p>
+ * <b>Heat charging (legacy {@code checkRecipe}'s side effect) is now {@link RecipeLogicHooks#finalCheck
+ * config.hooks.finalCheck}</b> ({@link #chargeHeatForStart}): both legacy and this migration run it <i>before</i>
+ * a candidate is guaranteed to actually start (legacy: before {@code prepareRecipe}'s own output-space check;
+ * here: after {@code RecipeOutputSpaceCheckOperator}'s worst-case check but still before admission's authoritative
+ * one) &mdash; a pre-existing legacy characteristic (heat can theoretically be "spent" on a candidate that later
+ * turns out unable to fit its output), not a new risk this migration introduces.
+ * <p>
+ * <b>The fusion ring color</b> (legacy: polled every tick against {@code getPreviousRecipe()}, which the new engine
+ * has no equivalent of) is now set directly from {@link RecipeLogicCallbacks#onRecipeCompleted
+ * config.callbacks.onRecipeCompleted}, which hands back the exact completed entry's rolled fluid outputs -- more
+ * precise than legacy's own
+ * "poll every tick until the ring happens to be off" approach, and needs no new engine-level plumbing at all.
+ * <p>
+ * <b>Deliberately kept:</b> legacy's heat-drain guard in {@code updateFormedValid()} ("don't drain heat while a
+ * recipe is genuinely in progress just because energy is briefly insufficient, to avoid a double penalty") is
+ * preserved verbatim rather than simplified to an unconditional
+ * {@code !isActive() || insufficientEnergy()}, which would drop the in-progress guard.
+ */
+public class MetaTileEntityFusionReactor extends RecipeWorkableMultiblockController
                                          implements IFastRenderMetaTileEntity, IBloomEffect, ProgressBarMultiblock {
 
     protected static final int NO_COLOR = 0;
@@ -94,12 +130,25 @@ public class MetaTileEntityFusionReactor extends RecipeMapMultiblockController
     private long heat = 0; // defined in TileEntityFusionReactor but serialized in FusionRecipeLogic
     private int fusionRingColor = NO_COLOR;
 
+    /**
+     * Whether {@link #onRecipeCompleted} fired during the search track's most recent
+     * {@code updateFormedValid()} call. Needed, or the ring never lights up: {@code RecipeWorkableMultiblockController}'s {@code shouldStartRecipeLookup} gate checks
+     * {@code getCommittedParallel()} <i>before</i> that tick's completion has run (search walks before progress,
+     * see {@code RecipeLogicGraphBuilder#tick}), so a just-completed recipe always leaves exactly one tick where
+     * {@link #workable}{@code .isActive()} reads {@code false} before the next candidate is admitted &mdash; unlike
+     * legacy {@code AbstractRecipeLogic}, which re-searched and restarted within the very same tick a recipe
+     * finished. Without this flag, the unconditional {@code isActive()}-based reset below fires in the very same
+     * {@code updateFormedValid()} call that {@link #onRecipeCompleted} just lit the ring in, undoing it before the
+     * client ever renders a frame with it on. Not persisted: only bridges within a single tick, reset unconditionally
+     * at the end of every {@code updateFormedValid()} call.
+     */
+    private boolean recipeJustCompletedThisTick = false;
+
     @SideOnly(Side.CLIENT)
     private boolean registeredBloomRenderTicket;
 
     public MetaTileEntityFusionReactor(ResourceLocation metaTileEntityId, int tier) {
         super(metaTileEntityId, RecipeMaps.FUSION_RECIPES);
-        this.recipeMapWorkable = new FusionRecipeLogic(this);
         this.tier = tier;
         this.energyContainer = new EnergyContainerHandler(this, 0, 0, 0, 0, 0) {
 
@@ -114,6 +163,72 @@ public class MetaTileEntityFusionReactor extends RecipeMapMultiblockController
     @Override
     public MetaTileEntity createMetaTileEntity(IGregTechTileEntity tileEntity) {
         return new MetaTileEntityFusionReactor(metaTileEntityId, tier);
+    }
+
+    @Override
+    protected @NotNull RecipeLogicConfig createConfig() {
+        RecipeLogicConfig config = super.createConfig();
+        config.power.properties = () -> {
+            // Not EnergyContainerProperties.of(getEnergyContainer()): the reactor's own energy container is a plain
+            // capacitor with maxInputAmperage=0 (see its construction) -- legacy's own getMaxVoltage() ignored
+            // amperage entirely and worked fine, but this engine's search-time prefilter and parallel-budget
+            // accounting are both EU/t-based (voltage * amperage), so a literal amperage=0 makes every recipe's
+            // voltage/EUt requirement look unaffordable regardless of how much energy is actually stored (the
+            // reactor would never start even with ample energy supplied). Fusion recipes
+            // always have amperage 1, so report 1 here to match.
+            RecipePropertySet properties = RecipePropertySet.empty();
+            properties.add(new PowerSupplyProperty(getEnergyContainer().getInputVoltage(), 1));
+            properties.add(new FusionStartCapacityProperty(
+                    Math.min(getEnergyContainer().getEnergyCapacity(), getEnergyContainer().getEnergyStored() + heat)));
+            // This replaces (not adds to) RecipeWorkableMultiblockController's own default properties supplier,
+            // so cleanroom/dimension advertising has to be repeated here explicitly -- see that class's JavaDoc.
+            properties.add(DimensionProperties.of(this));
+            properties.add(CleanroomProperties.of(this));
+            return properties;
+        };
+        // The reactor's gentler voltage growth per overclock (legacy PERFECT_HALF_VOLTAGE_FACTOR); duration still
+        // halves per overclock exactly like the standard default (speedFactor unchanged).
+        config.overclock.costFactor = OverclockingLogic.PERFECT_HALF_VOLTAGE_FACTOR;
+        // Ignores overclockFactory's own four scalar parameters entirely -- see RecipeFusionOverclockOperator's
+        // JavaDoc for why this factory closure needs config/tier directly instead.
+        config.overclock.overclockFactory = (costFactor, speedFactor, canUpTransform, durationDiscount) ->
+                new RecipeFusionOverclockOperator(config, () -> tier);
+        config.hooks.finalCheck = this::chargeHeatForStart;
+        config.callbacks.onRecipeCompleted = this::onRecipeCompleted;
+        // Idempotent: registerFilter adds to a Set keyed by filter identity, and RecipeMaps.FUSION_RECIPES's
+        // BitflagRecipeLookup is shared by every Fusion Reactor instance (see RecipeMap#getBitflagLookup()).
+        RecipeMaps.FUSION_RECIPES.getBitflagLookup().registerFilter(FusionStartEnergyFilter.INSTANCE);
+        return config;
+    }
+
+    /**
+     * Legacy {@code FusionRecipeLogic#checkRecipe}'s side effect, verbatim: tops up {@link #heat} from
+     * {@link #getEnergyContainer()} up to the candidate's required starting energy, rejecting the candidate outright
+     * if the reactor's total capacity could never hold enough, or if there isn't enough energy stored right now to
+     * finish topping up. See this class's JavaDoc for why running this here (rather than at admission) matches
+     * legacy's own timing characteristics.
+     */
+    private boolean chargeHeatForStart(RecipeRun run) {
+        long euToStart = run.getRecipeView().getRecipe().getProperty(FusionEUToStartProperty.getInstance(), 0L);
+        if (euToStart > getEnergyContainer().getEnergyCapacity()) return false;
+
+        long heatDiff = euToStart - heat;
+        if (heatDiff <= 0) return true;
+
+        if (getEnergyContainer().getEnergyStored() < heatDiff) return false;
+
+        getEnergyContainer().removeEnergy(heatDiff);
+        heat += heatDiff;
+        return true;
+    }
+
+    /** Lights up the fusion ring using the just-completed recipe's own rolled fluid output color. */
+    private void onRecipeCompleted(@NotNull NBTTagCompound completedEntry) {
+        recipeJustCompletedThisTick = true;
+        List<FluidStack> fluidsOut = ActiveRecipeList.fluidsOut(completedEntry);
+        if (fusionRingColor == NO_COLOR && !fluidsOut.isEmpty()) {
+            setFusionRingColor(0xFF000000 | fluidsOut.get(0).getFluid().getColor());
+        }
     }
 
     @NotNull
@@ -200,7 +315,7 @@ public class MetaTileEntityFusionReactor extends RecipeMapMultiblockController
     @SideOnly(Side.CLIENT)
     @Override
     public ICubeRenderer getBaseTexture(IMultiblockPart sourcePart) {
-        if (this.recipeMapWorkable.isActive()) {
+        if (isActive()) {
             return Textures.ACTIVE_FUSION_TEXTURE;
         } else {
             return Textures.FUSION_TEXTURE;
@@ -293,15 +408,27 @@ public class MetaTileEntityFusionReactor extends RecipeMapMultiblockController
             if (energyAdded > 0) this.inputEnergyContainers.removeEnergy(energyAdded);
         }
         super.updateFormedValid();
-        if (recipeMapWorkable.isWorking() && fusionRingColor == NO_COLOR) {
-            if (recipeMapWorkable.getPreviousRecipe() != null &&
-                    !recipeMapWorkable.getPreviousRecipe().getFluidOutputs().isEmpty()) {
-                setFusionRingColor(0xFF000000 |
-                        recipeMapWorkable.getPreviousRecipe().getFluidOutputs().get(0).getFluid().getColor());
+        // Legacy FusionRecipeLogic#updateWorkable's heat-drain guard, kept verbatim (see this class's JavaDoc for
+        // why): don't drain heat while a recipe is genuinely
+        // in progress just because energy is briefly insufficient, to avoid a double penalty (would have to recover
+        // both heat and recipe progress).
+        if (heat > 0) {
+            if (!workable.isActive() || !workable.isWorkingEnabled() ||
+                    (insufficientEnergy() && workable.getProgress() == 0)) {
+                heat = heat <= 10000 ? 0 : (heat - 10000);
             }
-        } else if (!recipeMapWorkable.isWorking() && isStructureFormed()) {
+        }
+        // Not reset on the exact tick a recipe just completed -- see recipeJustCompletedThisTick's JavaDoc: the
+        // engine's own admission gate always leaves a one-tick gap here before the next candidate starts, which
+        // must not read as "genuinely stopped", or this unconditional check would
+        // undo onRecipeCompleted's own write within the same call, so the ring would never render at all. A true
+        // stoppage (out of fuel, redstone off, structure broken) still clears the ring, just one tick later than
+        // before -- imperceptible.
+        if (!recipeJustCompletedThisTick && !(workable.isActive() && workable.isWorkingEnabled()) &&
+                isStructureFormed()) {
             setFusionRingColor(NO_COLOR);
         }
+        recipeJustCompletedThisTick = false;
     }
 
     @Override
@@ -364,14 +491,14 @@ public class MetaTileEntityFusionReactor extends RecipeMapMultiblockController
             title = GTGuiTextures.FUSION_REACTOR_MK3_TITLE;
         }
 
-        DoubleSyncValue progress = new DoubleSyncValue(recipeMapWorkable::getProgressPercent);
+        DoubleSyncValue progress = new DoubleSyncValue(() -> workable.getProgressPercent(0));
         return new MultiblockUIFactory(this)
                 .setScreenHeight(138)
                 .disableDisplayText()
                 .addScreenChildren((parent, syncManager) -> {
                     var status = MultiblockUIFactory.builder("status", syncManager);
                     status.setAction(b -> b.structureFormed(true)
-                            .setWorkingStatus(recipeMapWorkable.isWorkingEnabled(), recipeMapWorkable.isActive())
+                            .setWorkingStatus(workable.isWorkingEnabled(), workable.isActive())
                             .addWorkingStatusLine());
                     parent.child(new Column()
                             .padding(4)
@@ -433,93 +560,18 @@ public class MetaTileEntityFusionReactor extends RecipeMapMultiblockController
                         1.0 * heat.getLongValue() / capacity.getLongValue() : 0));
     }
 
-    private class FusionRecipeLogic extends MultiblockRecipeLogic {
+    @NotNull
+    @Override
+    public NBTTagCompound writeToNBT(NBTTagCompound data) {
+        super.writeToNBT(data);
+        data.setLong("Heat", heat);
+        return data;
+    }
 
-        public FusionRecipeLogic(MetaTileEntityFusionReactor tileEntity) {
-            super(tileEntity);
-        }
-
-        @Override
-        protected double getOverclockingDurationFactor() {
-            return PERFECT_HALF_DURATION_FACTOR;
-        }
-
-        @Override
-        protected double getOverclockingVoltageFactor() {
-            return PERFECT_HALF_VOLTAGE_FACTOR;
-        }
-
-        @Override
-        public long getMaxVoltage() {
-            return Math.min(GTValues.V[tier], super.getMaxVoltage());
-        }
-
-        @Override
-        public void updateWorkable() {
-            super.updateWorkable();
-            // Drain heat when the reactor is not active, is paused via soft mallet, or does not have enough energy and
-            // has fully wiped recipe progress
-            // Don't drain heat when there is not enough energy and there is still some recipe progress, as that makes
-            // it doubly hard to complete the recipe
-            // (Will have to recover heat and recipe progress)
-            if (heat > 0) {
-                if (!isActive || !workingEnabled || (hasNotEnoughEnergy && progressTime == 0)) {
-                    heat = heat <= 10000 ? 0 : (heat - 10000);
-                }
-            }
-        }
-
-        @Override
-        public boolean checkRecipe(@NotNull Recipe recipe) {
-            if (!super.checkRecipe(recipe))
-                return false;
-
-            // if the reactor is not able to hold enough energy for it, do not run the recipe
-            if (recipe.getProperty(FusionEUToStartProperty.getInstance(), 0L) > energyContainer.getEnergyCapacity())
-                return false;
-
-            long heatDiff = recipe.getProperty(FusionEUToStartProperty.getInstance(), 0L) - heat;
-            // if the stored heat is >= required energy, recipe is okay to run
-            if (heatDiff <= 0)
-                return true;
-
-            // if the remaining energy needed is more than stored, do not run
-            if (energyContainer.getEnergyStored() < heatDiff)
-                return false;
-
-            // remove the energy needed
-            energyContainer.removeEnergy(heatDiff);
-            // increase the stored heat
-            heat += heatDiff;
-            return true;
-        }
-
-        @Override
-        protected void modifyOverclockPre(@NotNull OCParams ocParams, @NotNull RecipePropertyStorage storage) {
-            super.modifyOverclockPre(ocParams, storage);
-
-            // Limit the number of OCs to the difference in fusion reactor MK.
-            // I.e., a MK2 reactor can overclock a MK1 recipe once, and a
-            // MK3 reactor can overclock a MK2 recipe once, or a MK1 recipe twice.
-            long euToStart = storage.get(FusionEUToStartProperty.getInstance(), 0L);
-            int fusionTier = FusionEUToStartProperty.getFusionTier(euToStart);
-            if (fusionTier != 0) fusionTier = MetaTileEntityFusionReactor.this.tier - fusionTier;
-            ocParams.setOcAmount(Math.min(fusionTier, ocParams.ocAmount()));
-        }
-
-        @NotNull
-        @Override
-        public NBTTagCompound serializeNBT() {
-            NBTTagCompound tag = super.serializeNBT();
-            tag.setLong("Heat", heat);
-            return tag;
-        }
-
-        @Override
-        public void deserializeNBT(@NotNull NBTTagCompound compound) {
-            super.deserializeNBT(compound);
-            heat = compound.getLong("Heat");
-        }
+    @Override
+    public void readFromNBT(NBTTagCompound data) {
+        super.readFromNBT(data);
+        heat = data.getLong("Heat");
     }
 
     @Override

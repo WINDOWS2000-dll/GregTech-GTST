@@ -223,18 +223,18 @@ public class CommandRecipeCheck extends CommandBase {
             }
         }
 
-        if (!recipe.getOutputs().isEmpty()) {
+        if (!recipe.getGuaranteedItemOutputs().isEmpty()) {
             output.append("Item outputs:\n");
-            for (ItemStack stack : recipe.getOutputs()) {
+            for (ItemStack stack : recipe.getGuaranteedItemOutputs()) {
                 output.append("    ")
                         .append(prettyPrintItemStack(stack))
                         .append("\n");
             }
         }
 
-        if (!recipe.getChancedOutputs().getChancedEntries().isEmpty()) {
+        if (!recipe.getChancedItemOutputs().isEmpty()) {
             output.append("Item chanced outputs:\n");
-            for (ChancedItemOutput chanceEntry : recipe.getChancedOutputs().getChancedEntries()) {
+            for (ChancedItemOutput chanceEntry : recipe.getChancedItemOutputs()) {
                 output.append("    ")
                         .append(prettyPrintItemStack(chanceEntry.getIngredient()))
                         .append(" (Chance: ")
@@ -245,9 +245,9 @@ public class CommandRecipeCheck extends CommandBase {
             }
         }
 
-        if (!recipe.getFluidOutputs().isEmpty()) {
+        if (!recipe.getGuaranteedFluidOutputs().isEmpty()) {
             output.append("Fluid outputs:\n");
-            for (FluidStack fluid : recipe.getFluidOutputs()) {
+            for (FluidStack fluid : recipe.getGuaranteedFluidOutputs()) {
                 output.append("    ")
                         .append(fluid.getUnlocalizedName())
                         .append(" * ")
@@ -256,9 +256,9 @@ public class CommandRecipeCheck extends CommandBase {
             }
         }
 
-        if (!recipe.getChancedFluidOutputs().getChancedEntries().isEmpty()) {
+        if (!recipe.getChancedFluidOutputs().isEmpty()) {
             output.append("Fluid chanced outputs:\n");
-            for (ChancedFluidOutput chanceEntry : recipe.getChancedFluidOutputs().getChancedEntries()) {
+            for (ChancedFluidOutput chanceEntry : recipe.getChancedFluidOutputs()) {
                 output.append("    ")
                         .append(chanceEntry.getIngredient().getUnlocalizedName())
                         .append(" (Chance: ")

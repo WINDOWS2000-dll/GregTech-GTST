@@ -4,8 +4,8 @@ import gregtech.api.GTValues;
 import gregtech.api.GregTechAPI;
 import gregtech.api.capability.GregtechTileCapabilities;
 import gregtech.api.capability.IControllable;
+import gregtech.api.capability.IHasRecipeMap;
 import gregtech.api.capability.IMultipleRecipeMaps;
-import gregtech.api.capability.impl.AbstractRecipeLogic;
 import gregtech.api.items.metaitem.MetaItem;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.SteamMetaTileEntity;
@@ -213,14 +213,14 @@ public class JustEnoughItemsModule extends IntegrationSubmodule implements IModP
                         if (override.shouldReplace()) continue;
                     }
 
-                    if (workableCapability instanceof AbstractRecipeLogic logic) {
+                    if (workableCapability instanceof IHasRecipeMap hasRecipeMap) {
                         if (metaTileEntity instanceof IMultipleRecipeMaps) {
                             for (RecipeMap<?> recipeMap : ((IMultipleRecipeMaps) metaTileEntity)
                                     .getAvailableRecipeMaps()) {
                                 registerRecipeMapCatalyst(registry, recipeMap, metaTileEntity);
                             }
-                        } else if (logic.getRecipeMap() != null) {
-                            registerRecipeMapCatalyst(registry, logic.getRecipeMap(), metaTileEntity);
+                        } else if (hasRecipeMap.getRecipeMap() != null) {
+                            registerRecipeMapCatalyst(registry, hasRecipeMap.getRecipeMap(), metaTileEntity);
                         }
                     }
                 }

@@ -5,15 +5,18 @@ import gregtech.api.capability.GregtechDataCodes;
 import gregtech.api.capability.IDataAccessHatch;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
+import gregtech.api.metatileentity.multiblock.AbilityInstances;
+import gregtech.api.metatileentity.multiblock.IMultiblockAbilityPart;
 import gregtech.api.metatileentity.multiblock.IMultiblockPart;
 import gregtech.api.metatileentity.multiblock.MultiblockAbility;
-import gregtech.api.metatileentity.multiblock.RecipeMapMultiblockController;
+import gregtech.api.metatileentity.multiblock.RecipeWorkableMultiblockController;
 import gregtech.api.pattern.BlockPattern;
 import gregtech.api.pattern.FactoryBlockPattern;
 import gregtech.api.pattern.TraceabilityPredicate;
 import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeMaps;
 import gregtech.api.recipes.ingredients.GTRecipeInput;
+import gregtech.api.recipes.logic.statemachine.RecipeLogicConfig;
 import gregtech.api.recipes.properties.impl.ResearchProperty;
 import gregtech.api.util.GTUtility;
 import gregtech.api.util.RelativeDirection;
@@ -51,12 +54,30 @@ import codechicken.lib.vec.Vector3;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
 import static gregtech.api.util.RelativeDirection.*;
 
-public class MetaTileEntityAssemblyLine extends RecipeMapMultiblockController {
+/**
+ * Migrated from {@code RecipeMapMultiblockController} to
+ * {@link RecipeWorkableMultiblockController}. Legacy's {@code checkRecipe} hard gate (ordered-assembly
+ * item/fluid-per-bus check, plus the research/Data Access Hatch gate) becomes {@code config.hooks
+ * .recipeSearchPredicate} verbatim -- both checks only ever needed the bare candidate {@link Recipe}, never the
+ * fully-resolved {@link gregtech.api.recipes.logic.RecipeRun}, so no {@code finalCheck} is needed either.
+ * <p>
+ * <b>Why the ordering requirement is expressed as a predicate rather than a dedicated matching algorithm:</b>
+ * each import bus is a single slot holding one item/fluid type, so
+ * validating "bus i's content is accepted by input i" independently of the underlying (ordinary, combined-pool)
+ * consumption cannot select the wrong bus for a given ingredient -- there is nothing ambiguous left for the
+ * combined-pool consumption logic to get wrong once the predicate has already confirmed every position matches.
+ * No caching of
+ * {@code getAbilities(...)}'s result was introduced here: matches legacy's
+ * own always-fresh lookup, and this project's usual anti-premature-optimization stance applies until profiling ever
+ * shows otherwise.
+ */
+public class MetaTileEntityAssemblyLine extends RecipeWorkableMultiblockController {
 
     private static final ResourceLocation LASER_LOCATION = GTUtility.gregtechId("textures/fx/laser/laser.png");
     private static final ResourceLocation LASER_HEAD_LOCATION = GTUtility
@@ -74,6 +95,13 @@ public class MetaTileEntityAssemblyLine extends RecipeMapMultiblockController {
     @Override
     public MetaTileEntity createMetaTileEntity(IGregTechTileEntity tileEntity) {
         return new MetaTileEntityAssemblyLine(metaTileEntityId);
+    }
+
+    @Override
+    protected @NotNull RecipeLogicConfig createConfig() {
+        RecipeLogicConfig config = super.createConfig();
+        config.hooks.recipeSearchPredicate = this::isRecipeAcceptable;
+        return config;
     }
 
     @NotNull
@@ -170,7 +198,7 @@ public class MetaTileEntityAssemblyLine extends RecipeMapMultiblockController {
     public void renderMetaTileEntity(CCRenderState renderState, Matrix4 translation, IVertexOperation[] pipeline) {
         super.renderMetaTileEntity(renderState, translation, pipeline);
         getFrontOverlay().renderOrientedState(renderState, translation, pipeline, getFrontFacing(),
-                recipeMapWorkable.isActive(), recipeMapWorkable.isWorkingEnabled());
+                workable.isActive(), workable.isWorkingEnabled());
     }
 
     @Override
@@ -182,15 +210,19 @@ public class MetaTileEntityAssemblyLine extends RecipeMapMultiblockController {
     public void update() {
         super.update();
         if (ConfigHolder.client.shader.assemblyLineParticles) {
-            if (getRecipeMapWorkable().isWorking()) {
+            // isActive() && isWorkingEnabled(), not legacy's isWorking() (== isActive && !hasNotEnoughEnergy &&
+            // workingEnabled): RecipeWorkable has no per-tick "was progress actually withheld this tick due to
+            // insufficient energy" accessor to mirror hasNotEnoughEnergy with. Close enough for a purely cosmetic
+            // particle effect -- the beams simply stay visible through a stall instead of flickering off.
+            if (workable.isActive() && workable.isWorkingEnabled()) {
                 int maxBeams = getAbilities(MultiblockAbility.IMPORT_ITEMS).size() + 1;
-                int maxProgress = getRecipeMapWorkable().getMaxProgress();
+                int maxProgress = workable.getMaxProgress();
 
                 // Each beam should be visible for an equal amount of time, which is derived from the maximum number of
                 // beams and the maximum progress in the recipe.
                 int beamTime = Math.max(1, maxProgress / maxBeams);
 
-                int beamCount = Math.min(maxBeams, getRecipeMapWorkable().getProgress() / beamTime + 1);
+                int beamCount = Math.min(maxBeams, workable.getProgress() / beamTime + 1);
 
                 if (beamCount != this.beamCount) {
                     if (beamCount < this.beamCount) {
@@ -327,13 +359,35 @@ public class MetaTileEntityAssemblyLine extends RecipeMapMultiblockController {
                 .setEmit(0.2f);
     }
 
-    @Override
-    public boolean checkRecipe(@NotNull Recipe recipe, boolean consumeIfSuccess) {
-        if (consumeIfSuccess) return true; // don't check twice
+    /**
+     * {@code config.hooks.recipeSearchPredicate}, equivalent of legacy's {@code checkRecipe(recipe, false)} branch
+     * (the {@code consumeIfSuccess} branch had no work of its own to do -- see this class's own JavaDoc), except
+     * {@link #getAbilities(MultiblockAbility)} is replaced with {@link #getOrderedAbilities(MultiblockAbility)} for
+     * both ordered checks.
+     * <p>
+     * <b>Using {@code getAbilities(MultiblockAbility.IMPORT_ITEMS)} directly here (as legacy always had) is
+     * wrong:</b> this
+     * ability list also includes every {@code MetaTileEntityFluidHatch}/{@code MetaTileEntityReservoirHatch}
+     * in the structure -- both dual-expose their ghost circuit-programming slot as an {@code IMPORT_ITEMS}
+     * instance too, specifically so a programmed circuit item dropped into a fluid hatch is visible to the
+     * combined-pool item search (see {@code MetaTileEntityFluidHatch#getAbilities()}/{@code #getPatternAbilities()}'s
+     * own JavaDoc). Interleaved among the real Import Item Bus positions (structure aisles place a fluid-input
+     * position on both sides of every item-bus position: {@code "FIF"}), that would make {@code itemInputInventory.get(i)}
+     * almost never actually mean "the i-th physical bus" -- it would mean "the i-th IMPORT_ITEMS-capable part in
+     * pattern order, buses and empty fluid-hatch ghost slots alike", silently misaligning (and, for any recipe
+     * with more than a couple of ordered inputs, outright rejecting) every candidate. This is a latent bug in
+     * ordered assembly's interaction with fluid hatches' ghost circuit slots, independent of which recipe engine
+     * runs the machine. Avoided generically via
+     * {@link #getOrderedAbilities(MultiblockAbility)}, which restricts to parts whose own
+     * {@link IMultiblockAbilityPart#getPatternAbilities()} -- documented as exactly the "ability this part's
+     * structural pattern position satisfies" subset -- includes the requested ability (fluid hatches' own
+     * {@code getPatternAbilities()} already excludes {@code IMPORT_ITEMS} for precisely this reason).
+     */
+    private boolean isRecipeAcceptable(@NotNull Recipe recipe) {
         // check ordered items
         if (ConfigHolder.machines.orderedAssembly) {
             List<GTRecipeInput> inputs = recipe.getInputs();
-            List<IItemHandlerModifiable> itemInputInventory = getAbilities(MultiblockAbility.IMPORT_ITEMS);
+            List<IItemHandlerModifiable> itemInputInventory = getOrderedAbilities(MultiblockAbility.IMPORT_ITEMS);
 
             // slot count is not enough, so don't try to match it
             if (itemInputInventory.size() < inputs.size()) return false;
@@ -347,7 +401,7 @@ public class MetaTileEntityAssemblyLine extends RecipeMapMultiblockController {
             // check ordered fluids
             if (ConfigHolder.machines.orderedFluidAssembly) {
                 inputs = recipe.getFluidInputs();
-                List<IFluidTank> fluidInputInventory = getAbilities(MultiblockAbility.IMPORT_FLUIDS);
+                List<IFluidTank> fluidInputInventory = getOrderedAbilities(MultiblockAbility.IMPORT_FLUIDS);
 
                 // slot count is not enough, so don't try to match it
                 if (fluidInputInventory.size() < inputs.size()) return false;
@@ -361,11 +415,33 @@ public class MetaTileEntityAssemblyLine extends RecipeMapMultiblockController {
         }
 
         if (!ConfigHolder.machines.enableResearch || !recipe.hasProperty(ResearchProperty.getInstance())) {
-            return super.checkRecipe(recipe, consumeIfSuccess);
+            return true;
         }
 
         return isRecipeAvailable(getAbilities(MultiblockAbility.DATA_ACCESS_HATCH), recipe) ||
                 isRecipeAvailable(getAbilities(MultiblockAbility.OPTICAL_DATA_RECEPTION), recipe);
+    }
+
+    /**
+     * As {@link #getAbilities(MultiblockAbility)}, but restricted to parts whose own
+     * {@link IMultiblockAbilityPart#getPatternAbilities()} includes {@code ability} -- i.e. parts that are
+     * structurally recognized <i>as this ability</i> by the pattern, excluding any part that merely aggregates an
+     * instance into the combined pool incidentally (see {@link #isRecipeAcceptable}'s JavaDoc for the real-machine
+     * bug this fixes). {@link #getMultiblockParts()} is already sorted by {@link #multiblockPartSorter()} (set once,
+     * at structure formation), so this preserves the same left-to-right ordering ordered assembly depends on.
+     */
+    @SuppressWarnings("unchecked")
+    private <T> List<T> getOrderedAbilities(@NotNull MultiblockAbility<T> ability) {
+        List<T> result = new ArrayList<>();
+        for (IMultiblockPart part : getMultiblockParts()) {
+            if (part instanceof IMultiblockAbilityPart<?> abilityPart &&
+                    abilityPart.getPatternAbilities().contains(ability)) {
+                AbilityInstances instances = new AbilityInstances(ability);
+                ((IMultiblockAbilityPart<Object>) abilityPart).registerAbilities(instances);
+                result.addAll(instances.cast());
+            }
+        }
+        return result;
     }
 
     private static boolean isRecipeAvailable(@NotNull Iterable<? extends IDataAccessHatch> hatches,

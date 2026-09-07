@@ -42,6 +42,10 @@ public class ConfigHolder {
     @Config.RequiresMcRestart
     public static WorldGenOptions worldgen = new WorldGenOptions();
 
+    @Config.Comment("Config options for developer-only debugging tools (StateMachine graph dump/trace, etc).")
+    @Config.Name("Developer Options")
+    public static DevOptions dev = new DevOptions();
+
     public static class MachineOptions {
 
         @Config.Comment({ "Whether insufficient energy supply should reset Machine recipe progress to zero.",
@@ -369,6 +373,20 @@ public class ConfigHolder {
 
         @Config.Comment({ "Whether to give the terminal to new players on login", "Default: true" })
         public boolean spawnTerminal = true;
+    }
+
+    /**
+     * Gates the StateMachine graph-dump command and execution-trace
+     * item entirely, independent of {@link MiscOptions#debug} (a general-purpose verbose logging switch unrelated
+     * to these tools). Deliberately a single master switch rather than one flag per tool: finer granularity isn't
+     * worth the config surface for two closely related dev tools.
+     */
+    public static class DevOptions {
+
+        @Config.Comment({ "Whether the StateMachine graph-dump command (/gtst dumpstatemachine) and execution-trace " +
+                "item are enabled at all. Both are developer-only debugging tools with no gameplay effect.",
+                "Default: false" })
+        public boolean enableStateMachineDebugTools = false;
     }
 
     public static class ClientOptions {

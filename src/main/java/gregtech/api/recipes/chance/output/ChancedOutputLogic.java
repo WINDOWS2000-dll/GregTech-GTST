@@ -38,6 +38,11 @@ public interface ChancedOutputLogic {
         }
 
         @Override
+        public long @NotNull [] applyCorrelation(long @NotNull [] yields) {
+            return yields;
+        }
+
+        @Override
         public @NotNull String getTranslationKey() {
             return "gregtech.chance_logic.or";
         }
@@ -64,6 +69,14 @@ public interface ChancedOutputLogic {
                 }
             }
             return ImmutableList.copyOf(chancedEntries);
+        }
+
+        @Override
+        public long @NotNull [] applyCorrelation(long @NotNull [] yields) {
+            for (long yield : yields) {
+                if (yield <= 0) return new long[yields.length];
+            }
+            return yields;
         }
 
         @Override
@@ -96,6 +109,18 @@ public interface ChancedOutputLogic {
         }
 
         @Override
+        public long @NotNull [] applyCorrelation(long @NotNull [] yields) {
+            long[] result = new long[yields.length];
+            for (int i = 0; i < yields.length; i++) {
+                if (yields[i] > 0) {
+                    result[i] = yields[i];
+                    break;
+                }
+            }
+            return result;
+        }
+
+        @Override
         public @NotNull String getTranslationKey() {
             return "gregtech.chance_logic.xor";
         }
@@ -117,6 +142,11 @@ public interface ChancedOutputLogic {
                                                                   @NotNull ChanceBoostFunction boostFunction,
                                                                   int baseTier, int machineTier) {
             return null;
+        }
+
+        @Override
+        public long @NotNull [] applyCorrelation(long @NotNull [] yields) {
+            return new long[yields.length];
         }
 
         @Override
@@ -173,6 +203,29 @@ public interface ChancedOutputLogic {
                                                                                   @NotNull @Unmodifiable List<@NotNull T> chancedEntries,
                                                                                   @NotNull ChanceBoostFunction boostFunction,
                                                                                   int baseTier, int machineTier);
+
+    /**
+     * Applies this logic's correlation rule to a set of already-rolled per-entry yields (see
+     * {@code gregtech.api.recipes.roll.RollInterpreter}), rather than rolling entries itself.
+     * <p>
+     * This exists alongside {@link #roll} (which independently rolls entries against a single fixed chance) so
+     * that {@code ChancedOutputLogic}'s correlation rules (OR/AND/XOR/NONE) can also be layered on top of the
+     * richer, per-entry {@code RollInterpreter} model (independent chance, weighted lottery, ranged yield, external
+     * override): a {@code RollInterpreter} decides <i>how much</i> each entry would yield in isolation, and this
+     * method decides which of those yields actually apply once the entries are considered together. A yield of
+     * {@code <= 0} is treated as "this entry did not succeed".
+     * <p>
+     * The default implementation applies no correlation (equivalent to {@link #OR}'s independence), which is a
+     * safe fallback for any custom {@link ChancedOutputLogic} that does not define one.
+     *
+     * @param yields the per-entry yields as computed by a {@code RollInterpreter}, in the same order as the
+     *               entries that were rolled.
+     * @return the adjusted yields after this logic's correlation rule is applied, same length and order as
+     *         {@code yields}.
+     */
+    default long @NotNull [] applyCorrelation(long @NotNull [] yields) {
+        return yields;
+    }
 
     @NotNull
     String getTranslationKey();

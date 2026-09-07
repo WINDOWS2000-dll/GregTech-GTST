@@ -2,8 +2,6 @@ package gregtech.api.metatileentity.multiblock.ui;
 
 import gregtech.api.GTValues;
 import gregtech.api.capability.IEnergyContainer;
-import gregtech.api.capability.impl.AbstractRecipeLogic;
-import gregtech.api.capability.impl.ComputationRecipeLogic;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.mui.GTByteBufAdapters;
 import gregtech.api.mui.drawable.GTObjectDrawable;
@@ -63,8 +61,6 @@ public class MultiblockUIBuilder {
 
     private Consumer<MultiblockUIBuilder> action;
     private final InternalSyncHandler syncHandler = new InternalSyncHandler();
-
-    private static final int DEFAULT_MAX_RECIPE_LINES = 25;
 
     @Nullable
     private InternalSyncer syncer;
@@ -367,30 +363,6 @@ public class MultiblockUIBuilder {
     }
 
     /**
-     * Adds a progress line that displays recipe progress as "time / total time (percentage)".
-     * <br>
-     * Added if structure is formed and the machine is active.
-     *
-     */
-    public MultiblockUIBuilder addComputationProgressLine(ComputationRecipeLogic crl) {
-        if (!isStructureFormed || !isActive) return this;
-
-        int progress = getSyncer().syncInt(crl.getProgress());
-        int maxProgress = getSyncer().syncInt(crl.getMaxProgress());
-        int maxCwu = getSyncer().syncInt(() -> crl.getComputationProvider().getMaxCWUt());
-
-        if (crl.shouldShowDuration()) {
-            addKey(IKey.str("%s / %s CWU", KeyUtil.number(progress), KeyUtil.number(maxProgress))
-                    .style(TextFormatting.GRAY));
-        } else {
-            // do fancy things
-            int cwuRate = getSyncer().syncInt(crl.getCurrentDrawnCWUt());
-            int currentCwu = progress * cwuRate;
-        }
-        return this;
-    }
-
-    /**
      * Adds a line indicating how many parallels this multi can potentially perform.
      * <br>
      * Added if structure is formed and the number of parallels is greater than one.
@@ -579,191 +551,6 @@ public class MultiblockUIBuilder {
         addKey(KeyUtil.lang(TextFormatting.GRAY, "gregtech.multiblock.machine_mode", mapName));
 
         return this;
-    }
-
-    /**
-     * Adds the current outputs of a recipe from recipe logic. Items then fluids.
-     *
-     * @param arl an instance of an {@link AbstractRecipeLogic} to gather the outputs from.
-     */
-    public MultiblockUIBuilder addRecipeOutputLine(@NotNull AbstractRecipeLogic arl) {
-        return addRecipeOutputLine(arl, DEFAULT_MAX_RECIPE_LINES);
-    }
-
-    /**
-     * Adds the current outputs of a recipe from recipe logic. Items then fluids.
-     *
-     * @param arl      an instance of an {@link AbstractRecipeLogic} to gather the outputs from.
-     * @param maxLines the maximum number of lines to print until truncating with {@code ...}
-     */
-    public MultiblockUIBuilder addRecipeOutputLine(AbstractRecipeLogic arl, int maxLines) {
-        // todo recipe is null on first load, fix in the future
-        Recipe recipe = arl.getPreviousRecipe();
-
-        if (getSyncer().syncBoolean(recipe == null)) return this;
-        RecipeMap<?> map = arl.getRecipeMap();
-        if (getSyncer().syncBoolean(map == null)) return this;
-
-        Recipe trimmed = null;
-        if (isServer()) {
-            MetaTileEntity mte = arl.getMetaTileEntity();
-            trimmed = Recipe.trimRecipeOutputs(recipe, map, mte.getItemOutputLimit(), mte.getFluidOutputLimit());
-        }
-
-        int p = getSyncer().syncInt(arl.getParallelRecipesPerformed());
-        if (p == 0) p = 1;
-
-        long eut = getSyncer().syncLong(trimmed == null ? 0 : trimmed.getEUt());
-        long maxVoltage = getSyncer().syncLong(arl.getMaximumOverclockVoltage());
-        int maxProgress = getSyncer().syncInt(arl.getMaxProgress());
-
-        if (maxProgress == 0) return this;
-
-        List<ItemStack> itemOutputs = new ArrayList<>();
-        List<ChancedItemOutput> chancedItemOutputs = new ArrayList<>();
-        List<FluidStack> fluidOutputs = new ArrayList<>();
-        List<ChancedFluidOutput> chancedFluidOutputs = new ArrayList<>();
-
-        if (isServer()) {
-            // recipe searching has to be done server only
-            itemOutputs.addAll(trimmed.getOutputs());
-            chancedItemOutputs.addAll(trimmed.getChancedOutputs().getChancedEntries());
-            fluidOutputs.addAll(trimmed.getFluidOutputs());
-            chancedFluidOutputs.addAll(trimmed.getChancedFluidOutputs().getChancedEntries());
-        }
-
-        itemOutputs = getSyncer().syncCollection(itemOutputs, ByteBufAdapters.ITEM_STACK);
-        fluidOutputs = getSyncer().syncCollection(fluidOutputs, ByteBufAdapters.FLUID_STACK);
-        chancedItemOutputs = getSyncer().syncCollection(chancedItemOutputs, GTByteBufAdapters.CHANCED_ITEM_OUTPUT);
-        chancedFluidOutputs = getSyncer().syncCollection(chancedFluidOutputs, GTByteBufAdapters.CHANCED_FLUID_OUTPUT);
-
-        addKey(KeyUtil.lang(TextFormatting.GRAY, "gregtech.gui.multiblock.recipe_producing"), Operation::addLine);
-
-        int recipeTier = GTUtility.getTierByVoltage(eut);
-        int machineTier = GTUtility.getOCTierByVoltage(maxVoltage);
-
-        // items
-
-        Object2IntMap<ItemStack> itemMap = GTHashMaps.fromItemStackCollection(itemOutputs);
-
-        for (var stack : itemMap.keySet()) {
-            addItemOutputLine(stack, (long) itemMap.getInt(stack) * p, maxProgress);
-        }
-
-        for (var chancedItemOutput : chancedItemOutputs) {
-            // noinspection DataFlowIssue
-            int chance = getSyncer()
-                    .syncInt(() -> map.chanceFunction.getBoostedChance(chancedItemOutput, recipeTier, machineTier));
-            int count = chancedItemOutput.getIngredient().getCount() * p;
-            addChancedItemOutputLine(chancedItemOutput, count, chance, maxProgress);
-        }
-
-        // fluids
-
-        Object2IntMap<FluidStack> fluidMap = GTHashMaps.fromFluidCollection(fluidOutputs);
-
-        for (var stack : fluidMap.keySet()) {
-            addFluidOutputLine(stack, (long) fluidMap.getInt(stack) * p, maxProgress);
-        }
-
-        for (var chancedFluidOutput : chancedFluidOutputs) {
-            // noinspection DataFlowIssue
-            int chance = getSyncer()
-                    .syncInt(() -> map.chanceFunction.getBoostedChance(chancedFluidOutput, recipeTier, machineTier));
-            int count = chancedFluidOutput.getIngredient().amount * p;
-            addChancedFluidOutputLine(chancedFluidOutput, count, chance, maxProgress);
-        }
-        return this;
-    }
-
-    /**
-     * Add an item output of a recipe to the display.
-     *
-     * @param stack        the {@link ItemStack} to display.
-     * @param recipeLength the recipe length, in ticks.
-     */
-    private void addItemOutputLine(@NotNull ItemStack stack, long count, int recipeLength) {
-        IKey name = KeyUtil.string(TextFormatting.AQUA, stack.getDisplayName());
-        IKey amount = KeyUtil.number(TextFormatting.GOLD, count);
-        IKey rate = KeyUtil.string(TextFormatting.WHITE,
-                formatRecipeRate(getSyncer().syncInt(recipeLength), count));
-
-        addKey(new GTObjectDrawable(stack, count)
-                .asIcon()
-                .asHoverable()
-                .addTooltipLine(formatRecipeData(name, amount, rate)), Operation::add);
-    }
-
-    /**
-     * Add the fluid outputs of a recipe to the display.
-     *
-     * @param stack        a {@link FluidStack}s to display.
-     * @param recipeLength the recipe length, in ticks.
-     */
-    private void addFluidOutputLine(@NotNull FluidStack stack, long count, int recipeLength) {
-        IKey name = KeyUtil.fluid(TextFormatting.AQUA, stack);
-        IKey amount = KeyUtil.number(TextFormatting.GOLD, count);
-        IKey rate = KeyUtil.string(TextFormatting.WHITE,
-                formatRecipeRate(getSyncer().syncInt(recipeLength), count));
-
-        addKey(new GTObjectDrawable(stack, count)
-                .asIcon()
-                .asHoverable()
-                .addTooltipLine(formatRecipeData(name, amount, rate)), Operation::add);
-    }
-
-    /**
-     * Add a chanced item output of a recipe to the display.
-     *
-     * @param recipeLength max duration of the recipe
-     */
-    private void addChancedItemOutputLine(@NotNull ChancedItemOutput output,
-                                          int count, int chance, int recipeLength) {
-        IKey name = KeyUtil.string(TextFormatting.AQUA, output.getIngredient().getDisplayName());
-        IKey amount = KeyUtil.number(TextFormatting.GOLD, count);
-        IKey rate = KeyUtil.string(TextFormatting.WHITE, formatRecipeRate(getSyncer().syncInt(recipeLength), count));
-
-        addKey(new GTObjectDrawable(output, count)
-                .setBoostFunction(entry -> chance)
-                .asIcon()
-                .asHoverable()
-                .addTooltipLine(formatRecipeData(name, amount, rate)), Operation::add);
-    }
-
-    /**
-     * Add a chanced fluid output of a recipe to the display.
-     *
-     * @param recipeLength max duration of the recipe
-     */
-    private void addChancedFluidOutputLine(ChancedFluidOutput output,
-                                           int count, int chance, int recipeLength) {
-        IKey name = KeyUtil.fluid(TextFormatting.AQUA, output.getIngredient());
-        IKey amount = KeyUtil.number(TextFormatting.GOLD, count);
-        IKey rate = KeyUtil.string(TextFormatting.WHITE,
-                formatRecipeRate(getSyncer().syncInt(recipeLength), count));
-
-        addKey(new GTObjectDrawable(output, count)
-                .setBoostFunction(entry -> chance)
-                .asIcon()
-                .asHoverable()
-                .addTooltipLine(formatRecipeData(name, amount, rate)), Operation::add);
-    }
-
-    private static String formatRecipeRate(int recipeLength, long amount) {
-        float perSecond = ((float) amount / recipeLength) * 20f;
-
-        String rate;
-        if (perSecond > 1) {
-            rate = "(" + String.format("%,.2f", perSecond).replaceAll("\\.?0+$", "") + "/s)";
-        } else {
-            rate = "(" + String.format("%,.2f", 1 / (perSecond)).replaceAll("\\.?0+$", "") + "s/ea)";
-        }
-
-        return rate;
-    }
-
-    private static IKey formatRecipeData(IKey name, IKey amount, IKey rate) {
-        return IKey.comp(name, KeyUtil.string(TextFormatting.WHITE, " x "), amount, IKey.SPACE, rate);
     }
 
     /** Insert an empty line into the text list. */

@@ -1,8 +1,7 @@
 package gregtech.integration.opencomputers.drivers;
 
 import gregtech.api.capability.GregtechTileCapabilities;
-import gregtech.api.capability.IWorkable;
-import gregtech.api.capability.impl.AbstractRecipeLogic;
+import gregtech.api.capability.IRecipeLogicInfoProvider;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.chance.output.impl.ChancedFluidOutput;
@@ -27,18 +26,25 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Generalized from {@code AbstractRecipeLogic} to
+ * {@link IRecipeLogicInfoProvider} -- see {@link IRecipeLogicInfoProvider#getPreviousRecipe()}'s own JavaDoc for
+ * why (this driver's {@code gt_recipeLogic} OpenComputers component would otherwise not
+ * be created for a StateMachine-migrated machine, since {@code RecipeWorkable} is not an
+ * {@code AbstractRecipeLogic}).
+ */
 public class DriverAbstractRecipeLogic extends DriverSidedTileEntity {
 
     @Override
     public Class<?> getTileEntityClass() {
-        return AbstractRecipeLogic.class;
+        return IRecipeLogicInfoProvider.class;
     }
 
     @Override
     public boolean worksWith(World world, BlockPos pos, EnumFacing side) {
         TileEntity tileEntity = world.getTileEntity(pos);
         if (tileEntity instanceof IGregTechTileEntity) {
-            return tileEntity.hasCapability(GregtechTileCapabilities.CAPABILITY_WORKABLE, side);
+            return tileEntity.hasCapability(GregtechTileCapabilities.CAPABILITY_RECIPE_LOGIC, side);
         }
         return false;
     }
@@ -47,24 +53,25 @@ public class DriverAbstractRecipeLogic extends DriverSidedTileEntity {
     public ManagedEnvironment createEnvironment(World world, BlockPos pos, EnumFacing side) {
         TileEntity tileEntity = world.getTileEntity(pos);
         if (tileEntity instanceof IGregTechTileEntity) {
-            IWorkable capability = tileEntity.getCapability(GregtechTileCapabilities.CAPABILITY_WORKABLE, side);
-            if (capability instanceof AbstractRecipeLogic)
-                return new EnvironmentAbstractRecipeLogic((IGregTechTileEntity) tileEntity,
-                        (AbstractRecipeLogic) capability);
+            IRecipeLogicInfoProvider capability = tileEntity
+                    .getCapability(GregtechTileCapabilities.CAPABILITY_RECIPE_LOGIC, side);
+            if (capability != null)
+                return new EnvironmentAbstractRecipeLogic((IGregTechTileEntity) tileEntity, capability);
         }
         return null;
     }
 
-    public final static class EnvironmentAbstractRecipeLogic extends EnvironmentMetaTileEntity<AbstractRecipeLogic> {
+    public final static class EnvironmentAbstractRecipeLogic
+                                                             extends EnvironmentMetaTileEntity<IRecipeLogicInfoProvider> {
 
-        public EnvironmentAbstractRecipeLogic(IGregTechTileEntity holder, AbstractRecipeLogic capability) {
+        public EnvironmentAbstractRecipeLogic(IGregTechTileEntity holder, IRecipeLogicInfoProvider capability) {
             super(holder, capability, "gt_recipeLogic");
         }
 
         @Callback(doc = "function():table -- Returns previous recipe.")
         public Object[] getCurrentRecipe(final Context context, final Arguments args) {
             Recipe previousRecipe = tileEntity.getPreviousRecipe();
-            if (previousRecipe != null && tileEntity.isActive()) {
+            if (previousRecipe != null && tileEntity.isWorking()) {
                 Map<String, Object> recipe = new Object2ObjectOpenHashMap<>();
                 recipe.put("duration", previousRecipe.getDuration());
                 recipe.put("EUt", previousRecipe.getEUt());
@@ -96,7 +103,7 @@ public class DriverAbstractRecipeLogic extends DriverSidedTileEntity {
                 }
 
                 List<Map<String, Object>> itemOutput = new ArrayList<>();
-                List<ItemStack> outputs = previousRecipe.getOutputs();
+                List<ItemStack> outputs = previousRecipe.getGuaranteedItemOutputs();
                 outputs.forEach(iR -> {
                     Map<String, Object> output = new Object2ObjectOpenHashMap<>();
                     output.put("count", iR.getCount());
@@ -108,7 +115,7 @@ public class DriverAbstractRecipeLogic extends DriverSidedTileEntity {
                 }
 
                 List<Map<String, Object>> chancedItemOutput = new ArrayList<>();
-                List<ChancedItemOutput> chancedOutputs = previousRecipe.getChancedOutputs().getChancedEntries();
+                List<ChancedItemOutput> chancedOutputs = previousRecipe.getChancedItemOutputs();
                 chancedOutputs.forEach(iR -> {
                     Map<String, Object> output = new Object2ObjectOpenHashMap<>();
                     output.put("chance", iR.getChance());
@@ -122,7 +129,7 @@ public class DriverAbstractRecipeLogic extends DriverSidedTileEntity {
                 }
 
                 List<Map<String, Object>> fluidOutput = new ArrayList<>();
-                List<FluidStack> fluidOutputs = previousRecipe.getFluidOutputs();
+                List<FluidStack> fluidOutputs = previousRecipe.getGuaranteedFluidOutputs();
                 fluidOutputs.forEach(iR -> {
                     Map<String, Object> output = new Object2ObjectOpenHashMap<>();
                     output.put("amount", iR.amount);
@@ -134,8 +141,7 @@ public class DriverAbstractRecipeLogic extends DriverSidedTileEntity {
                 }
 
                 List<Map<String, Object>> chancedFluidOutput = new ArrayList<>();
-                List<ChancedFluidOutput> chancedFluidOutputs = previousRecipe.getChancedFluidOutputs()
-                        .getChancedEntries();
+                List<ChancedFluidOutput> chancedFluidOutputs = previousRecipe.getChancedFluidOutputs();
                 chancedFluidOutputs.forEach(iR -> {
                     Map<String, Object> output = new Object2ObjectOpenHashMap<>();
                     output.put("chance", iR.getChance());

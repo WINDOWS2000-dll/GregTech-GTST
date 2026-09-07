@@ -40,6 +40,7 @@ public class GregtechDataCodes {
     public static final int NEEDS_VENTING = assignId();
     public static final int VENTING_SIDE = assignId();
     public static final int VENTING_STUCK = assignId();
+    public static final int LAST_STEAM_DRAIN_FAILED = assignId();
     public static final int BOILER_HEAT = assignId();
     public static final int BOILER_LAST_TICK_STEAM = assignId();
 
@@ -164,6 +165,8 @@ public class GregtechDataCodes {
     public static final int LOCK_OBJECT_HOLDER = assignId();
     public static final int CACHED_CWU = assignId();
 
+    public static final int LARGE_TURBINE_GENERATING_POWER_CHANGED = assignId();
+
     // NBT Keys
 
     // From MetaTileEntityHolder
@@ -179,6 +182,7 @@ public class GregtechDataCodes {
     // MTE Trait Names
 
     public static final String ABSTRACT_WORKABLE_TRAIT = "RecipeMapWorkable";
+    public static final String RECIPE_WORKABLE_TRAIT = "RecipeWorkable";
     public static final String ENERGY_CONTAINER_TRAIT = "EnergyContainer";
     public static final String ENERGY_CONVERTER_TRAIT = "EnergyConvertTrait";
     public static final String FUSION_REACTOR_ENERGY_CONTAINER_TRAIT = "EnergyContainerInternal";

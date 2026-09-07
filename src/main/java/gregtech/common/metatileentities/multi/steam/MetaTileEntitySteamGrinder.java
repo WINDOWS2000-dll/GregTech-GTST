@@ -1,10 +1,9 @@
 package gregtech.common.metatileentities.multi.steam;
 
-import gregtech.api.capability.impl.SteamMultiWorkable;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.metatileentity.multiblock.IMultiblockPart;
-import gregtech.api.metatileentity.multiblock.RecipeMapSteamMultiblockController;
+import gregtech.api.metatileentity.multiblock.RecipeWorkableSteamMultiblockController;
 import gregtech.api.pattern.BlockPattern;
 import gregtech.api.pattern.FactoryBlockPattern;
 import gregtech.api.recipes.RecipeMaps;
@@ -33,14 +32,17 @@ import java.util.List;
 import static gregtech.client.renderer.texture.Textures.BRONZE_PLATED_BRICKS;
 import static gregtech.client.renderer.texture.Textures.SOLID_STEEL_CASING;
 
-public class MetaTileEntitySteamGrinder extends RecipeMapSteamMultiblockController {
+public class MetaTileEntitySteamGrinder extends RecipeWorkableSteamMultiblockController {
 
     private static final int PARALLEL_LIMIT = 8;
 
     public MetaTileEntitySteamGrinder(ResourceLocation metaTileEntityId) {
-        super(metaTileEntityId, RecipeMaps.MACERATOR_RECIPES, CONVERSION_RATE);
-        this.recipeMapWorkable = new SteamMultiWorkable(this, CONVERSION_RATE);
-        this.recipeMapWorkable.setParallelLimit(PARALLEL_LIMIT);
+        super(metaTileEntityId, RecipeMaps.MACERATOR_RECIPES);
+    }
+
+    @Override
+    protected int getBaseParallelLimit() {
+        return PARALLEL_LIMIT;
     }
 
     @Override

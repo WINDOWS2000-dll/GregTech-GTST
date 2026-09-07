@@ -11,8 +11,8 @@ import gregtech.api.items.metaitem.MetaItem;
 import gregtech.api.items.metaitem.stats.IItemBehaviour;
 import gregtech.api.items.toolitem.ToolClasses;
 import gregtech.api.metatileentity.MetaTileEntity;
-import gregtech.api.metatileentity.SimpleGeneratorMetaTileEntity;
-import gregtech.api.metatileentity.WorkableTieredMetaTileEntity;
+import gregtech.api.metatileentity.RecipeWorkableGeneratorMetaTileEntity;
+import gregtech.api.metatileentity.RecipeWorkableTieredMetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.metatileentity.registry.MTERegistry;
 import gregtech.api.recipes.RecipeMap;
@@ -698,6 +698,13 @@ public class GTUtility {
 
     /**
      * Checks whether a machine is not a multiblock and has a recipemap not present in a blacklist
+     * <p>
+     * Recognizes {@link RecipeWorkableTieredMetaTileEntity} (legacy's equivalent
+     * {@code WorkableTieredMetaTileEntity} hierarchy no longer needs to be checked, since every single-block
+     * machine is now built on this class) so a single-block
+     * machine (e.g. Macerator, Circuit Assembler) can still be inserted into a Machine Hatch -- this
+     * {@code instanceof} must not recognize only the legacy class, or every migrated machine would be invalid here
+     * regardless of anything else.
      *
      * @param machineStack the ItemStack containing the machine to check the validity of
      * @return whether the machine is valid or not
@@ -706,9 +713,22 @@ public class GTUtility {
         if (machineStack == null || machineStack.isEmpty()) {
             return false;
         }
-
         MetaTileEntity machine = getMetaTileEntity(machineStack);
-        if (machine instanceof WorkableTieredMetaTileEntity && !(machine instanceof SimpleGeneratorMetaTileEntity)) {
+        return machine != null && isMachineValidForMachineHatch(machine, recipeMapBlacklist);
+    }
+
+    /**
+     * As {@link #isMachineValidForMachineHatch(ItemStack, String[])}, but for an already-resolved
+     * {@link MetaTileEntity} rather than re-deriving one from an {@link ItemStack} (for
+     * a caller that already has the resolved machine at hand -- e.g. via an overridable seam a unit test replaces,
+     * since the real {@link ItemStack}<-> {@link MetaTileEntity} round trip needs the real block/item registry --
+     * should use this overload directly instead of forcing a redundant, potentially-unreliable re-resolution).
+     */
+    public static boolean isMachineValidForMachineHatch(@NotNull MetaTileEntity machine,
+                                                         String[] recipeMapBlacklist) {
+        boolean isWorkableTiered = machine instanceof RecipeWorkableTieredMetaTileEntity &&
+                !(machine instanceof RecipeWorkableGeneratorMetaTileEntity);
+        if (isWorkableTiered) {
             RecipeMap<?> recipeMap = machine.getRecipeMap();
             return recipeMap != null && !ArrayUtils.contains(recipeMapBlacklist, recipeMap.getUnlocalizedName());
         }

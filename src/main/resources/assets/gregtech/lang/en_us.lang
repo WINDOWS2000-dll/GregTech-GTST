@@ -1204,6 +1204,9 @@ metaitem.tool.multiblock_builder.name=Multiblock Builder
 metaitem.tool.multiblock_builder.tooltip=For debugging and auto-building your Multiblocks!
 metaitem.tool.multiblock_builder.tooltip2=Sneak and right-click Multiblock controllers to auto-build them
 
+metaitem.tool.state_machine_tracer.name=StateMachine Tracer
+metaitem.tool.state_machine_tracer.tooltip=Right-click a StateMachine-based machine to toggle execution tracing for it
+
 metaarmor.nms.nightvision.enabled=NanoMuscle™ Suite: NightVision Enabled
 metaarmor.nms.nightvision.disabled=NanoMuscle™ Suite: NightVision Disabled
 metaarmor.nms.nightvision.error=NanoMuscle™ Suite: §cNot enough power!
@@ -2536,6 +2539,11 @@ behavior.tricorder.muffled=Muffled.
 behavior.tricorder.machine_disabled=Disabled.
 behavior.tricorder.machine_power_loss=Shut down due to power loss.
 behavior.tricorder.machine_progress=Progress/Load: %s / %s
+behavior.tricorder.machine_eut_required=Currently Requires: %s EU/t
+behavior.tricorder.machine_eut_required_detail=  Recipe #%s: %s V x %s A = %s EU/t
+behavior.tricorder.machine_active_debug=  [Debug] server isActive()=%s, server reportedActive=%s
+behavior.tricorder.machine_power_supply_debug=  [Debug] declared supply: %s V x %s A
+behavior.tricorder.assembly_line_bus_debug=  [Debug] bus %s: %s
 behavior.tricorder.energy_container_in=Max IN: %s (%s) EU at %s A
 behavior.tricorder.energy_container_out=Max OUT: %s (%s) EU at %s A
 behavior.tricorder.energy_container_storage=Energy: %s EU / %s EU
@@ -5635,6 +5643,8 @@ gregtech.recipe.explosive=Explosive: %s
 gregtech.recipe.eu_to_start=Energy To Start: %sEU
 gregtech.recipe.dimensions=Dimensions: %s
 gregtech.recipe.dimensions_blocked=Blocked Dimensions: %s
+gregtech.recipe.biomes=Biomes: %s
+gregtech.recipe.biomes_blocked=Blocked Biomes: %s
 gregtech.recipe.cleanroom=Requires %s
 gregtech.recipe.cleanroom.display_name=Cleanroom
 gregtech.recipe.cleanroom_sterile.display_name=Sterile Cleanroom
@@ -6047,6 +6057,9 @@ gregtech.command.recipecheck.end=Recipe conflict check found %d possible conflic
 gregtech.command.recipecheck.end_no_conflicts=No recipe conflicts found!
 gregtech.command.recipecheck.end_empty_inputs=Recipe check found %d recipes with empty inputs and %d empty oredicts. Check the server log for more info
 gregtech.command.benchmark.usage=Usage: /gregtech benchmark <system>
+gregtech.command.dumpstatemachine.usage=Usage: /gregtech dumpstatemachine <resourcelocation|list>
+gregtech.command.dumpstatemachine.not_found=No StateMachine-based machine registered as "%s"
+gregtech.command.dumpstatemachine.write_failed=Failed to write the StateMachine dump to %s; check the server log
 gregtech.command.benchmark.abort.usage=Usage: /gregtech benchmark abort
 gregtech.command.benchmark.lookup.usage=Usage: /gregtech benchmark lookup <trials> <rate>
 gregtech.command.benchmark.lookup.progress=Analysis at %s / %s trials complete.

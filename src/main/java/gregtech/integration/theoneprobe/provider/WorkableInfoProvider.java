@@ -3,8 +3,9 @@ package gregtech.integration.theoneprobe.provider;
 import gregtech.api.GTValues;
 import gregtech.api.capability.GregtechTileCapabilities;
 import gregtech.api.capability.IWorkable;
-import gregtech.api.capability.impl.ComputationRecipeLogic;
+import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.util.TextFormattingUtil;
+import gregtech.common.metatileentities.multi.electric.MetaTileEntityResearchStation;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
@@ -37,7 +38,8 @@ public class WorkableInfoProvider extends CapabilityInfoProvider<IWorkable> {
         int currentProgress = capability.getProgress();
         int maxProgress = capability.getMaxProgress();
 
-        if (capability instanceof ComputationRecipeLogic logic && !logic.shouldShowDuration()) {
+        if (tileEntity instanceof IGregTechTileEntity gtte &&
+                gtte.getMetaTileEntity() instanceof MetaTileEntityResearchStation) {
             // show as total computation instead
             int color = capability.isWorkingEnabled() ? 0xFF00D4CE : 0xFFBB1C28;
             probeInfo.progress(currentProgress, maxProgress, probeInfo.defaultProgressStyle()

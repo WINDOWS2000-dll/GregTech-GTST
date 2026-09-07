@@ -8,7 +8,7 @@ import gregtech.api.capability.GregtechTileCapabilities;
 import gregtech.api.capability.IControllable;
 import gregtech.api.capability.IDataStickIntractable;
 import gregtech.api.capability.IEnergyContainer;
-import gregtech.api.capability.impl.AbstractRecipeLogic;
+import gregtech.api.capability.IHasRecipeMap;
 import gregtech.api.capability.impl.FluidHandlerProxy;
 import gregtech.api.capability.impl.FluidTankList;
 import gregtech.api.capability.impl.ItemHandlerProxy;
@@ -1550,28 +1550,20 @@ public abstract class MetaTileEntity implements ISyncedTileEntity, CoverHolder, 
     }
 
     /**
-     * @return the MTE's {@link AbstractRecipeLogic}
-     */
-    @Nullable
-    public final AbstractRecipeLogic getRecipeLogic() {
-        MTETrait trait = getMTETrait(GregtechDataCodes.ABSTRACT_WORKABLE_TRAIT);
-        if (trait instanceof AbstractRecipeLogic) {
-            return ((AbstractRecipeLogic) trait);
-        } else if (trait != null) {
-            throw new IllegalStateException(
-                    "MTE Trait " + trait.getName() + " has name " + GregtechDataCodes.ABSTRACT_WORKABLE_TRAIT +
-                            " but is not instanceof AbstractRecipeLogic");
-        }
-        return null;
-    }
-
-    /**
-     * @return the RecipeMap from the MTE's {@link AbstractRecipeLogic}
+     * @return the {@link RecipeMap} reported by whichever of this MTE's traits implements {@link IHasRecipeMap}
+     *         (not necessarily {@link #getRecipeLogic()}'s {@code AbstractRecipeLogic} &mdash; a StateMachine-based
+     *         recipe trait reports its {@link RecipeMap} this way too, without needing to also satisfy
+     *         {@link #getRecipeLogic()}'s much larger {@code AbstractRecipeLogic}-specific contract; see
+     *         {@link IHasRecipeMap}'s JavaDoc).
      */
     @Nullable
     public final RecipeMap<?> getRecipeMap() {
-        AbstractRecipeLogic recipeLogic = getRecipeLogic();
-        return recipeLogic == null ? null : recipeLogic.getRecipeMap();
+        for (MTETrait trait : this.mteTraits.values()) {
+            if (trait instanceof IHasRecipeMap hasRecipeMap) {
+                return hasRecipeMap.getRecipeMap();
+            }
+        }
+        return null;
     }
 
     public void checkWeatherOrTerrainExplosion(float explosionPower, double additionalFireChance,

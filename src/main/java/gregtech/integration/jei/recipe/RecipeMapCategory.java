@@ -223,7 +223,7 @@ public class RecipeMapCategory implements IRecipeCategory<GTRecipeWrapper> {
                     itemStackGroup.init(importItems.getSlots() + index, false,
                             new ItemStackTextRenderer(
                                     recipeWrapper.getOutputChance(
-                                            index - recipeWrapper.getRecipe().getOutputs().size()),
+                                            index - recipeWrapper.getRecipe().getGuaranteedItemOutputs().size()),
                                     recipeWrapper.getChancedOutputLogic()),
                             area.x + 1, area.y + 1, area.width - 2, area.height - 2, 0, 0);
                 }
@@ -259,7 +259,7 @@ public class RecipeMapCategory implements IRecipeCategory<GTRecipeWrapper> {
                                     area.width - (2 * fluidRenderOffset),
                                     area.height - (2 * fluidRenderOffset), null,
                                     recipeWrapper.getFluidOutputChance(
-                                            exportIndex - recipeWrapper.getRecipe().getFluidOutputs().size()),
+                                            exportIndex - recipeWrapper.getRecipe().getGuaranteedFluidOutputs().size()),
                                     recipeWrapper.getChancedFluidOutputLogic()),
                             area.x + fluidRenderOffset, area.y + fluidRenderOffset,
                             area.width - (2 * fluidRenderOffset), area.height - (2 * fluidRenderOffset), 0, 0);

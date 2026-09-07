@@ -5,6 +5,8 @@ import gregtech.api.capability.IMiner;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeMap;
+import gregtech.api.recipes.logic.statemachine.property.RecipePropertySet;
+import gregtech.api.recipes.roll.OverclockRollBoost;
 import gregtech.api.unification.OreDictUnifier;
 import gregtech.api.unification.ore.OrePrefix;
 import gregtech.api.util.GTLog;
@@ -449,10 +451,13 @@ public class MinerLogic {
                                                          int fortuneLevel, @NotNull RecipeMap<?> map, int tier) {
         ItemStack itemStack = GTUtility.toItem(blockState);
         Recipe recipe = map.findRecipe(Long.MAX_VALUE, Collections.singletonList(itemStack), Collections.emptyList());
-        if (recipe != null && !recipe.getOutputs().isEmpty()) {
+        if (recipe != null && !recipe.getGuaranteedItemOutputs().isEmpty()) {
             drops.clear();
-            for (ItemStack outputStack : recipe.getResultItemOutputs(GTUtility.getTierByVoltage(recipe.getEUt()), tier,
-                    map)) {
+            int recipeTier = GTUtility.getTierByVoltage(recipe.getEUt());
+            int boostStrength = OverclockRollBoost.boostStrength(map.getChanceFunction(), recipeTier, tier);
+            for (ItemStack outputStack : recipe.getItemOutputProvider().computeOutputsWithBoost(
+                    Collections.emptyList(), Collections.emptyList(), RecipePropertySet.empty(), boostStrength, 1,
+                    Integer.MAX_VALUE)) {
                 outputStack = outputStack.copy();
                 if (OreDictUnifier.getPrefix(outputStack) == OrePrefix.crushed) {
                     if (fortuneLevel > 0) {
