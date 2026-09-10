@@ -449,7 +449,7 @@ public class PetrochemRecipes {
                 .fluidInputs(raw.getFluid(1000))
                 .fluidInputs(Steam.getFluid(1000))
                 .fluidOutputs(steamCracked.getFluid(500))
-                .duration(160).duration(VA[LV]).buildAndRegister();
+                .duration(160).EUt(VA[LV]).buildAndRegister();
     }
 
     private static void moderatelyCrack(Material raw, Material hydroCracked, Material steamCracked) {

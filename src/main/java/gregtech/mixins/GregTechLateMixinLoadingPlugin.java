@@ -30,7 +30,7 @@ public class GregTechLateMixinLoadingPlugin implements ILateMixinLoader {
         return switch (mixinConfig) {
             case "mixins.gregtech.theoneprobe.json" -> Mods.TheOneProbe.isModLoaded();
             case "mixins.gregtech.jei.json" -> Mods.JustEnoughItems.isModLoaded();
-            case "mixin.gregtech.ctm.json" -> Mods.CTM.isModLoaded();
+            case "mixins.gregtech.ctm.json" -> Mods.CTM.isModLoaded();
             case "mixins.gregtech.littletiles.json" -> Mods.LittleTiles.isModLoaded();
             case "mixins.gregtech.vintagium.json" -> Mods.Vintagium.isModLoaded();
             case "mixins.gregtech.nothirium.json" -> Mods.Nothirium.isModLoaded();

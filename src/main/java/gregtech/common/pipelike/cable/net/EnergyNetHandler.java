@@ -80,9 +80,12 @@ public class EnergyNetHandler implements IEnergyContainer {
             boolean cableBroken = false;
             for (TileEntityCable cable : path.getPath()) {
                 if (cable.getMaxVoltage() < voltage) {
-                    int heat = (int) (Math.log(
-                            GTUtility.getTierByVoltage(voltage) - GTUtility.getTierByVoltage(cable.getMaxVoltage())) *
-                            45 + 36.5);
+                    // voltage can exceed the cable's rating without crossing into the next voltage tier
+                    // (e.g. a cable rated slightly below the tier cap); the tier difference must be at
+                    // least 1 or Math.log(0) yields -Infinity and heat underflows to Integer.MIN_VALUE.
+                    int tierDiff = Math.max(1,
+                            GTUtility.getTierByVoltage(voltage) - GTUtility.getTierByVoltage(cable.getMaxVoltage()));
+                    int heat = (int) (Math.log(tierDiff) * 45 + 36.5);
                     cable.applyHeat(heat);
 
                     cableBroken = cable.isInvalid();

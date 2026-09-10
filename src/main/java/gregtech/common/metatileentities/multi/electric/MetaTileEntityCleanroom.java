@@ -694,8 +694,8 @@ public class MetaTileEntityCleanroom extends MultiblockWithDisplayBase
         super.writeToNBT(data);
         data.setInteger("lDist", this.lDist);
         data.setInteger("rDist", this.rDist);
-        data.setInteger("bDist", this.fDist);
-        data.setInteger("fDist", this.bDist);
+        data.setInteger("bDist", this.bDist);
+        data.setInteger("fDist", this.fDist);
         data.setInteger("hDist", this.hDist);
         data.setInteger("cleanAmount", this.cleanAmount);
         return this.cleanroomLogic.writeToNBT(data);
