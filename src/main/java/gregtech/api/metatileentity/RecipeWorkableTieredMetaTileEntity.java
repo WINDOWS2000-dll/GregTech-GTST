@@ -1,6 +1,7 @@
 package gregtech.api.metatileentity;
 
 import gregtech.api.GTValues;
+import gregtech.api.capability.GregtechDataCodes;
 import gregtech.api.capability.IControllable;
 import gregtech.api.capability.IEnergyContainer;
 import gregtech.api.capability.impl.EnergyContainerHandler;
@@ -27,6 +28,7 @@ import gregtech.client.renderer.ICubeRenderer;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.world.World;
@@ -78,6 +80,9 @@ public abstract class RecipeWorkableTieredMetaTileEntity extends TieredMetaTileE
 
     @Nullable
     private ICleanroomProvider cleanroom;
+
+    /** See {@link #insufficientEnergy}'s JavaDoc for why this, not a tank/buffer fill percentage, drives it. */
+    private boolean lastEnergyDrainFailed = false;
 
     public RecipeWorkableTieredMetaTileEntity(ResourceLocation metaTileEntityId, RecipeMap<?> recipeMap,
                                               ICubeRenderer renderer, int tier,
@@ -199,9 +204,22 @@ public abstract class RecipeWorkableTieredMetaTileEntity extends TieredMetaTileE
         long eut = (long) (Math.min(1, maxProgress - progress) * voltage * amperage);
         if (recipeData.getBoolean(ActiveRecipeList.ENTRY_GENERATING_KEY)) {
             getEnergyContainer().addEnergy(eut);
+            setLastEnergyDrainFailed(false);
             return true;
         }
-        return Math.abs(getEnergyContainer().removeEnergy(eut)) >= eut;
+        boolean success = Math.abs(getEnergyContainer().removeEnergy(eut)) >= eut;
+        setLastEnergyDrainFailed(!success);
+        return success;
+    }
+
+    private void setLastEnergyDrainFailed(boolean lastEnergyDrainFailed) {
+        if (this.lastEnergyDrainFailed != lastEnergyDrainFailed) {
+            this.lastEnergyDrainFailed = lastEnergyDrainFailed;
+            if (!getWorld().isRemote) {
+                writeCustomData(GregtechDataCodes.LAST_ENERGY_DRAIN_FAILED,
+                        buf -> buf.writeBoolean(lastEnergyDrainFailed));
+            }
+        }
     }
 
     protected IEnergyContainer getEnergyContainer() {
@@ -225,12 +243,19 @@ public abstract class RecipeWorkableTieredMetaTileEntity extends TieredMetaTileE
     }
 
     /**
-     * A simple heuristic for a
-     * GUI "not enough power" indicator: no dedicated stall-tracking state is needed, since active-and-nearly-empty
-     * is a good enough proxy in practice.
+     * Drives the GUI "not enough power" indicator. Tracks {@link #drainRecipeEnergy}'s own actual per-tick
+     * pass/fail result ({@link #lastEnergyDrainFailed}), not a tank/buffer fill percentage: an
+     * {@code isActive() && getEnergyStored() <= getEnergyCapacity() * 0.1} heuristic (this method's original
+     * implementation) is disconnected from whether energy actually ran short on any given tick -- e.g.
+     * {@link #reinitializeEnergyContainer}'s own {@code getInputAmperage()} override deliberately only grants 2A
+     * input once the buffer has drained below 50% capacity, so a machine drawing 2A steadily (fully supplied every
+     * tick) can legitimately sit at or below the old 10% threshold as a side effect of that amperage-gating
+     * hysteresis alone, well before supply is actually insufficient -- a false "not enough power" indicator despite
+     * the machine never having failed to draw its full EU/t. Mirrors the identical fix already applied to
+     * {@link gregtech.api.metatileentity.SteamMetaTileEntity#insufficientSteam()} for the same class of bug.
      */
     public boolean insufficientEnergy() {
-        return isActive() && getEnergyContainer().getEnergyStored() <= getEnergyContainer().getEnergyCapacity() * 0.1;
+        return isActive() && lastEnergyDrainFailed;
     }
 
     @Override
@@ -358,5 +383,25 @@ public abstract class RecipeWorkableTieredMetaTileEntity extends TieredMetaTileE
             return FONT_HEIGHT;
         }
         return 0;
+    }
+
+    @Override
+    public void writeInitialSyncData(@NotNull PacketBuffer buf) {
+        super.writeInitialSyncData(buf);
+        buf.writeBoolean(lastEnergyDrainFailed);
+    }
+
+    @Override
+    public void receiveInitialSyncData(@NotNull PacketBuffer buf) {
+        super.receiveInitialSyncData(buf);
+        this.lastEnergyDrainFailed = buf.readBoolean();
+    }
+
+    @Override
+    public void receiveCustomData(int dataId, @NotNull PacketBuffer buf) {
+        super.receiveCustomData(dataId, buf);
+        if (dataId == GregtechDataCodes.LAST_ENERGY_DRAIN_FAILED) {
+            this.lastEnergyDrainFailed = buf.readBoolean();
+        }
     }
 }

@@ -103,14 +103,17 @@ class RecipeWorkableTieredMetaTileEntityTest {
         assertTrue(host.isActive());
         assertThat(host.workable.getProgress(), is(1));
         assertThat(host.getEnergyContainer().getEnergyStored(), is(0L));
-        // active and (0 <= 10% of capacity) -- PR #2755's heuristic doesn't distinguish "just drained" from
-        // "actually starved", it only looks at the current snapshot.
-        assertTrue(host.insufficientEnergy());
+        // insufficientEnergy() tracks drainRecipeEnergy's own actual pass/fail result, not a fill-percentage
+        // snapshot -- this tick's drain succeeded (exactly the 30 needed EU was available), so despite the
+        // container now sitting at 0 energy, this must NOT be reported as insufficient (see insufficientEnergy's
+        // own JavaDoc for why a fill-percentage heuristic would produce a false positive here).
+        assertFalse(host.insufficientEnergy());
 
         host.update(); // per-tick check fails (0 EU available), progress degresses back to 0 rather than advancing
         assertTrue(host.isActive()); // still queued, just stalled -- not discarded
         assertThat(host.workable.getProgress(), is(0));
         assertThat(host.getEnergyContainer().getEnergyStored(), is(0L));
+        // this tick's drain genuinely failed (0 of the 30 needed EU was available) -- now correctly reported.
         assertTrue(host.insufficientEnergy());
     }
 

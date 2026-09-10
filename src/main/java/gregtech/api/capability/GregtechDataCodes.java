@@ -167,6 +167,9 @@ public class GregtechDataCodes {
 
     public static final int LARGE_TURBINE_GENERATING_POWER_CHANGED = assignId();
 
+    // RecipeWorkableTieredMetaTileEntity / RecipeWorkableMultiblockController
+    public static final int LAST_ENERGY_DRAIN_FAILED = assignId();
+
     // NBT Keys
 
     // From MetaTileEntityHolder

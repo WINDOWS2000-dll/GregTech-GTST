@@ -1,6 +1,7 @@
 package gregtech.api.metatileentity.multiblock;
 
 import gregtech.api.GTValues;
+import gregtech.api.capability.GregtechDataCodes;
 import gregtech.api.capability.IControllable;
 import gregtech.api.capability.IDistinctBusController;
 import gregtech.api.capability.IEnergyContainer;
@@ -129,6 +130,9 @@ public abstract class RecipeWorkableMultiblockController extends MultiblockWithD
     @Nullable
     private ICleanroomProvider cleanroom;
 
+    /** See {@link #insufficientEnergy}'s JavaDoc for why this, not a tank/buffer fill percentage, drives it. */
+    private boolean lastEnergyDrainFailed = false;
+
     public RecipeWorkableMultiblockController(ResourceLocation metaTileEntityId, RecipeMap<?> recipeMap) {
         super(metaTileEntityId);
         this.recipeMap = recipeMap;
@@ -244,14 +248,33 @@ public abstract class RecipeWorkableMultiblockController extends MultiblockWithD
         long eut = (long) (Math.min(1, maxProgress - progress) * voltage * amperage);
         if (recipeData.getBoolean(ActiveRecipeList.ENTRY_GENERATING_KEY)) {
             getEnergyContainer().addEnergy(eut);
+            setLastEnergyDrainFailed(false);
             return true;
         }
-        return Math.abs(getEnergyContainer().removeEnergy(eut)) >= eut;
+        boolean success = Math.abs(getEnergyContainer().removeEnergy(eut)) >= eut;
+        setLastEnergyDrainFailed(!success);
+        return success;
     }
 
-    /** As {@link gregtech.api.metatileentity.RecipeWorkableTieredMetaTileEntity#insufficientEnergy}, verbatim. */
+    private void setLastEnergyDrainFailed(boolean lastEnergyDrainFailed) {
+        if (this.lastEnergyDrainFailed != lastEnergyDrainFailed) {
+            this.lastEnergyDrainFailed = lastEnergyDrainFailed;
+            if (!getWorld().isRemote) {
+                writeCustomData(GregtechDataCodes.LAST_ENERGY_DRAIN_FAILED,
+                        buf -> buf.writeBoolean(lastEnergyDrainFailed));
+            }
+        }
+    }
+
+    /**
+     * Drives the GUI/TheOneProbe "not enough power" indicator. As
+     * {@link gregtech.api.metatileentity.RecipeWorkableTieredMetaTileEntity#insufficientEnergy}: tracks
+     * {@link #drainRecipeEnergy}'s own actual per-tick pass/fail result ({@link #lastEnergyDrainFailed}), not a
+     * tank/buffer fill percentage -- see that method's JavaDoc for why the fill-percentage heuristic (this method's
+     * original implementation) produces false positives during otherwise-normal operation.
+     */
     public boolean insufficientEnergy() {
-        return isActive() && getEnergyContainer().getEnergyStored() <= getEnergyContainer().getEnergyCapacity() * 0.1;
+        return isActive() && lastEnergyDrainFailed;
     }
 
     public IEnergyContainer getEnergyContainer() {
@@ -420,12 +443,22 @@ public abstract class RecipeWorkableMultiblockController extends MultiblockWithD
     public void writeInitialSyncData(PacketBuffer buf) {
         super.writeInitialSyncData(buf);
         buf.writeBoolean(isDistinct);
+        buf.writeBoolean(lastEnergyDrainFailed);
     }
 
     @Override
     public void receiveInitialSyncData(PacketBuffer buf) {
         super.receiveInitialSyncData(buf);
         isDistinct = buf.readBoolean();
+        lastEnergyDrainFailed = buf.readBoolean();
+    }
+
+    @Override
+    public void receiveCustomData(int dataId, PacketBuffer buf) {
+        super.receiveCustomData(dataId, buf);
+        if (dataId == GregtechDataCodes.LAST_ENERGY_DRAIN_FAILED) {
+            this.lastEnergyDrainFailed = buf.readBoolean();
+        }
     }
 
     private void resetTileAbilities() {
