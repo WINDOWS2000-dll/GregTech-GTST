@@ -56,7 +56,7 @@ public class MetadataSectionCTM implements IMetadataSection {
                     }
                     if (light.has("sky") && light.get("sky").isJsonPrimitive() &&
                             light.getAsJsonPrimitive("sky").isNumber()) {
-                        ret.blockLight = light.getAsJsonPrimitive("sky").getAsInt();
+                        ret.skyLight = light.getAsJsonPrimitive("sky").getAsInt();
                     }
                 }
             }

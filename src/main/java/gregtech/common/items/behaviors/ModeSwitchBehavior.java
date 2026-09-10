@@ -35,7 +35,10 @@ public class ModeSwitchBehavior<T extends Enum<T> & ILocalizationKey> implements
         }
         NBTTagCompound tagCompound = itemStack.getTagCompound();
         if (tagCompound == null) return enumConstants[0];
-        return enumConstants[tagCompound.getInteger("Mode")];
+        int mode = tagCompound.getInteger("Mode");
+        // guard against out-of-range NBT (e.g. from another mod version or manual NBT edits)
+        if (mode < 0 || mode >= enumConstants.length) return enumConstants[0];
+        return enumConstants[mode];
     }
 
     public void setModeForItemStack(ItemStack itemStack, T newMode) {

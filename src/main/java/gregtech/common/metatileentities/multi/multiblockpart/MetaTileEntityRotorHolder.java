@@ -265,25 +265,32 @@ public class MetaTileEntityRotorHolder extends MetaTileEntityMultiblockNotifiabl
     @Override
     public int getHolderPowerMultiplier() {
         int tierDifference = getTierDifference();
-        if (tierDifference == -1) return -1;
+        if (tierDifference == NO_CONTROLLER_TIER_DIFFERENCE) return -1;
 
-        return (int) Math.pow(2, getTierDifference());
+        return (int) Math.pow(2, tierDifference);
     }
 
     @Override
     public int getHolderEfficiency() {
         int tierDifference = getTierDifference();
-        if (tierDifference == -1)
+        if (tierDifference == NO_CONTROLLER_TIER_DIFFERENCE)
             return -1;
 
         return 100 + 10 * tierDifference;
     }
 
+    /**
+     * Sentinel returned by {@link #getTierDifference()} when there is no tiered controller to compare against.
+     * This must not collide with any value {@code getTier() - controllerTier} can legitimately produce (unlike
+     * {@code -1}, which the rotor holder can legitimately be if it is built one tier below its controller).
+     */
+    private static final int NO_CONTROLLER_TIER_DIFFERENCE = Integer.MIN_VALUE;
+
     private int getTierDifference() {
         if (getController() instanceof ITieredMetaTileEntity) {
             return getTier() - ((ITieredMetaTileEntity) getController()).getTier();
         }
-        return -1;
+        return NO_CONTROLLER_TIER_DIFFERENCE;
     }
 
     @Override

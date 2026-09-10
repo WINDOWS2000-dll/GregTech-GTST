@@ -25,7 +25,7 @@ public class TextPluginBehavior extends MonitorPluginBaseBehavior {
     public int[] colors;
 
     public void setText(int line, String text, int color) {
-        if (line < 0 || line > texts.length || (texts[line].equals(text) && colors[line] == color)) return;
+        if (line < 0 || line >= texts.length || (texts[line].equals(text) && colors[line] == color)) return;
         this.texts[line] = text;
         this.colors[line] = color;
         writePluginData(GregtechDataCodes.UPDATE_PLUGIN_CONFIG, packetBuffer -> {

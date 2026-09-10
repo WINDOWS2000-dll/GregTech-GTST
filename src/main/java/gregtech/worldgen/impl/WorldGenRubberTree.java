@@ -58,7 +58,7 @@ public class WorldGenRubberTree extends WorldGenAbstractTree {
             final int xLimit = posX + radius;
             final int zLimit = posZ + radius;
             for (int x = posX - radius; x <= xLimit; x++) {
-                for (int z = posZ - radius; z < zLimit; z++) {
+                for (int z = posZ - radius; z <= zLimit; z++) {
                     mutable.setPos(x, y, z);
                     if (!isReplaceable(world, mutable)) {
                         return false;

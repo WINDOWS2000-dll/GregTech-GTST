@@ -89,14 +89,12 @@ public class DriverSimpleMachine extends DriverSidedTileEntity {
 
         @Callback(doc = "function():boolean --  Returns is allowInputFromOutputSide enabled for items.")
         public Object[] isAllowInputFromOutputSideItems(final Context context, final Arguments args) {
-            return new Object[] {
-                    tileEntity.isAllowInputFromOutputSideItems() && tileEntity.isAllowInputFromOutputSideFluids() };
+            return new Object[] { tileEntity.isAllowInputFromOutputSideItems() };
         }
 
         @Callback(doc = "function():boolean --  Returns is allowInputFromOutputSide enabled for fluids.")
         public Object[] isAllowInputFromOutputSideFluids(final Context context, final Arguments args) {
-            return new Object[] {
-                    tileEntity.isAllowInputFromOutputSideItems() && tileEntity.isAllowInputFromOutputSideFluids() };
+            return new Object[] { tileEntity.isAllowInputFromOutputSideFluids() };
         }
 
         @Callback(doc = "function(allowInputFromOutputSide:boolean):boolean -- Sets allowInputFromOutputSide enabled for BOTH items and fluids.")
