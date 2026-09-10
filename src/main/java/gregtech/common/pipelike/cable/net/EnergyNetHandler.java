@@ -5,12 +5,7 @@ import gregtech.api.util.GTLog;
 import gregtech.api.util.GTUtility;
 import gregtech.common.pipelike.cable.tile.TileEntityCable;
 
-import net.minecraft.init.Blocks;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumParticleTypes;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraft.world.WorldServer;
 
 import java.util.Objects;
 
@@ -124,14 +119,9 @@ public class EnergyNetHandler implements IEnergyContainer {
         return amperesUsed;
     }
 
-    private void burnCable(World world, BlockPos pos) {
-        world.setBlockState(pos, Blocks.FIRE.getDefaultState());
-        if (!world.isRemote) {
-            ((WorldServer) world).spawnParticle(EnumParticleTypes.SMOKE_LARGE,
-                    pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
-                    5 + world.rand.nextInt(3), 0.0, 0.0, 0.0, 0.1);
-        }
-    }
+    // NOTE: cable burning/melting on overheat is handled entirely by TileEntityCable#applyHeat's scheduled
+    // update() (which sets the block to fire once temperature exceeds meltTemp); this class does not need
+    // its own duplicate implementation.
 
     @Override
     public long getInputAmperage() {

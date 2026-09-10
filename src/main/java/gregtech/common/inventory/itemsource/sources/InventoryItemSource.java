@@ -58,7 +58,7 @@ public class InventoryItemSource extends ItemSource {
         if (itemsInserted > 0 && !simulate) {
             int finalItemsInserted = itemsInserted;
             insertedMap.computeIfPresent(this, (source, count) -> count + finalItemsInserted);
-            insertedMap.putIfAbsent(this, amount);
+            insertedMap.putIfAbsent(this, finalItemsInserted);
         }
         return itemsInserted;
     }
@@ -82,7 +82,7 @@ public class InventoryItemSource extends ItemSource {
         if (itemsExtracted > 0 && !simulate) {
             int finalItemsExtracted = itemsExtracted;
             extractedMap.computeIfPresent(this, (source, count) -> count + finalItemsExtracted);
-            extractedMap.putIfAbsent(this, amount);
+            extractedMap.putIfAbsent(this, finalItemsExtracted);
         }
         return itemsExtracted;
     }

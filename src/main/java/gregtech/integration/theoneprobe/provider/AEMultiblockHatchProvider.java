@@ -1,5 +1,6 @@
 package gregtech.integration.theoneprobe.provider;
 
+import gregtech.api.GTValues;
 import gregtech.api.metatileentity.IAEStatusProvider;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 
@@ -16,7 +17,7 @@ public class AEMultiblockHatchProvider implements IProbeInfoProvider {
 
     @Override
     public String getID() {
-        return ":ae_multiblock_hatch_provider";
+        return GTValues.MODID + ":ae_multiblock_hatch_provider";
     }
 
     @Override

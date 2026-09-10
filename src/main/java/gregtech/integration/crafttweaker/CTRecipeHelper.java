@@ -122,6 +122,8 @@ public class CTRecipeHelper {
                         builder.append(".withTag(").append(nbt).append(")");
                     }
                 }
+
+                builder.append(", ");
             }
             builder.delete(builder.length() - 2, builder.length())
                     .append("])");
@@ -138,6 +140,8 @@ public class CTRecipeHelper {
                     builder.append(" * ")
                             .append(fluidStack.amount);
                 }
+
+                builder.append(", ");
             }
             builder.delete(builder.length() - 2, builder.length())
                     .append("])");
