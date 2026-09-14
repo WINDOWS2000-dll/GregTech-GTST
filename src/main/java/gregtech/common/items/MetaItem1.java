@@ -45,6 +45,7 @@ import gregtech.common.items.behaviors.ItemMagnetBehavior;
 import gregtech.common.items.behaviors.LighterBehaviour;
 import gregtech.common.items.behaviors.MultiblockBuilderBehavior;
 import gregtech.common.items.behaviors.NanoSaberBehavior;
+import gregtech.common.items.behaviors.PipeNetTraceBehavior;
 import gregtech.common.items.behaviors.ProspectorScannerBehavior;
 import gregtech.common.items.behaviors.StateMachineTraceBehavior;
 import gregtech.common.items.behaviors.TooltipBehavior;
@@ -1212,5 +1213,8 @@ public class MetaItem1 extends StandardMetaItem {
                 .setRecyclingData(new RecyclingData(new MaterialStack(Materials.Steel, M * 4)));
         SHAPE_MOLDS[22] = SHAPE_MOLD_PIPE_HUGE = addItem(1010, "shape.mold.pipe.huge")
                 .setRecyclingData(new RecyclingData(new MaterialStack(Materials.Steel, M * 4)));
+
+        PIPE_NET_TRACER = addItem(1011, "tool.pipe_net_tracer")
+                .addComponents(new PipeNetTraceBehavior()).setMaxStackSize(1);
     }
 }
