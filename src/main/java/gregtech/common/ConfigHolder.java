@@ -388,6 +388,13 @@ public class ConfigHolder {
                 "Default: false" })
         public boolean enableStateMachineDebugTools = false;
 
+        @Config.Comment({ "Whether the PipeNet graph-dump command (/gtst dumppipenet) and execution-trace item " +
+                "(right-click a pipe to toggle tracing its network's TPS/CPU/memory load, search overhead, and " +
+                "cache hit rate) are enabled at all. Both are developer-only debugging tools with no gameplay " +
+                "effect.",
+                "Default: false" })
+        public boolean enablePipeNetDebugTools = false;
+
         @Config.Comment({ "Master switch for gregtech.api.recipes.logic.statemachine.experimental's addon " +
                 "extension registry. This is an explicitly unstable, unsupported API surface with no compatibility " +
                 "guarantee across versions -- see that package's own JavaDoc before enabling this. Both this switch " +

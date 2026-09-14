@@ -11,15 +11,18 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.longs.LongSet;
+import it.unimi.dsi.fastutil.longs.LongSets;
 import org.jetbrains.annotations.Nullable;
 
 public class LaserNetWalker extends PipeNetWalker<TileEntityLaserPipe> {
 
-    public static final LaserRoutePath FAILED_MARKER = new LaserRoutePath(null, null, 0);
+    public static final LaserRoutePath FAILED_MARKER = new LaserRoutePath(null, null, 0, LongSets.EMPTY_SET);
 
     @Nullable
     public static LaserRoutePath createNetData(World world, BlockPos sourcePipe, EnumFacing faceToSourceHandler) {
-        LaserNetWalker walker = new LaserNetWalker(world, sourcePipe, 1);
+        LaserNetWalker walker = new LaserNetWalker(world, sourcePipe, 1, new LongOpenHashSet());
         walker.sourcePipe = sourcePipe;
         walker.facingToHandler = faceToSourceHandler;
         walker.axis = faceToSourceHandler.getAxis();
@@ -35,15 +38,19 @@ public class LaserNetWalker extends PipeNetWalker<TileEntityLaserPipe> {
     private BlockPos sourcePipe;
     private EnumFacing facingToHandler;
     private EnumFacing.Axis axis;
+    /** Positions visited by this walker's own lineage so far (root-to-current), used to build the eventual
+     *  {@link LaserRoutePath}'s dependency set -- see {@link #checkPipe}. */
+    private final LongSet path;
 
-    protected LaserNetWalker(World world, BlockPos sourcePipe, int distance) {
+    protected LaserNetWalker(World world, BlockPos sourcePipe, int distance, LongSet path) {
         super(world, sourcePipe, distance);
+        this.path = path;
     }
 
     @Override
     protected PipeNetWalker<TileEntityLaserPipe> createSubWalker(World world, EnumFacing facingToNextPos,
                                                                  BlockPos nextPos, int walkedBlocks) {
-        LaserNetWalker walker = new LaserNetWalker(world, nextPos, walkedBlocks);
+        LaserNetWalker walker = new LaserNetWalker(world, nextPos, walkedBlocks, new LongOpenHashSet(path));
         walker.facingToHandler = facingToHandler;
         walker.sourcePipe = sourcePipe;
         walker.axis = axis;
@@ -60,7 +67,9 @@ public class LaserNetWalker extends PipeNetWalker<TileEntityLaserPipe> {
     }
 
     @Override
-    protected void checkPipe(TileEntityLaserPipe pipeTile, BlockPos pos) {}
+    protected void checkPipe(TileEntityLaserPipe pipeTile, BlockPos pos) {
+        path.add(pos.toLong());
+    }
 
     @Override
     protected void checkNeighbour(TileEntityLaserPipe pipeTile, BlockPos pipePos, EnumFacing faceToNeighbour,
@@ -74,7 +83,8 @@ public class LaserNetWalker extends PipeNetWalker<TileEntityLaserPipe> {
             ILaserContainer handler = neighbourTile.getCapability(GregtechTileCapabilities.CAPABILITY_LASER,
                     faceToNeighbour.getOpposite());
             if (handler != null) {
-                ((LaserNetWalker) root).routePath = new LaserRoutePath(pipeTile, faceToNeighbour, getWalkedBlocks());
+                ((LaserNetWalker) root).routePath = new LaserRoutePath(pipeTile, faceToNeighbour, getWalkedBlocks(),
+                        path);
                 stop();
             }
         }

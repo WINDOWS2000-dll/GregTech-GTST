@@ -27,6 +27,17 @@ import java.util.*;
  * <b>Do not walk a walker more than once</b>
  * <p>
  * For example implementations look at {@link ItemNetWalker}
+ * <p>
+ * <b>Implementation note:</b> the traversal itself is a breadth-first search driven entirely by
+ * {@link #traversePipeNet(int)}'s own loop: every tick, every currently active walker is advanced by exactly
+ * one hop via {@link #step(List)}, and whatever it produces (itself, if it has a single successor; new
+ * sub-walkers, if it just branched) becomes next tick's frontier. No walker ever calls another walker's step
+ * directly -- this bounds the call stack to a small constant depth regardless of how many consecutive branch
+ * points a pipe network has (a "trunk line with a branch tap at every block" topology, common in real builds,
+ * previously produced a recursive descent one stack frame per branch point, i.e. proportional to the trunk's
+ * length). {@link #walkedBlocks} (and therefore every recorded distance) is unaffected by this: it is
+ * incremented exactly once per hop regardless of how many ticks that takes to schedule, so this is purely an
+ * internal scheduling change, not a behavioral one.
  */
 public abstract class PipeNetWalker<T extends IPipeTile<?, ?>> {
 
@@ -36,7 +47,10 @@ public abstract class PipeNetWalker<T extends IPipeTile<?, ?>> {
     private Set<T> walked;
     private final List<EnumFacing> nextPipeFacings = new ArrayList<>(5);
     private final List<T> nextPipes = new ArrayList<>(5);
-    private List<PipeNetWalker<T>> walkers;
+    /** The walker whose branch this one was spawned from, or {@code null} for the root. */
+    private PipeNetWalker<T> parentWalker;
+    /** Only meaningful once this walker has branched: how many of its children are still unfinished. */
+    private int pendingChildCount;
     @NotNull
     private final BlockPos.MutableBlockPos currentPos;
     private T currentPipe;
@@ -121,7 +135,9 @@ public abstract class PipeNetWalker<T extends IPipeTile<?, ?>> {
     /**
      * Starts walking the pipe net and gathers information.
      *
-     * @param maxWalks max walks to prevent possible stack overflow
+     * @param maxWalks max walks to prevent possible infinite loops. Since every tick advances the whole
+     *                 frontier by exactly one hop (see the class-level note), this bounds the network's
+     *                 traversable depth in blocks, not the total number of pipes visited.
      * @throws IllegalStateException if the walker already walked
      */
     public void traversePipeNet(int maxWalks) {
@@ -129,9 +145,18 @@ public abstract class PipeNetWalker<T extends IPipeTile<?, ?>> {
             throw new IllegalStateException("This walker already walked. Create a new one if you want to walk again");
         root = this;
         walked = new ObjectOpenHashSet<>();
-        int i = 0;
         running = true;
-        while (running && !walk() && i++ < maxWalks);
+
+        List<PipeNetWalker<T>> frontier = new ArrayList<>();
+        frontier.add(this);
+        int i = 0;
+        while (running && !frontier.isEmpty() && i++ < maxWalks) {
+            List<PipeNetWalker<T>> nextFrontier = new ArrayList<>();
+            for (PipeNetWalker<T> walker : frontier) {
+                walker.step(nextFrontier);
+            }
+            frontier = nextFrontier;
+        }
         running = false;
         walked = null;
         if (i >= maxWalks)
@@ -139,45 +164,67 @@ public abstract class PipeNetWalker<T extends IPipeTile<?, ?>> {
         invalid = true;
     }
 
-    private boolean walk() {
-        if (walkers == null) {
-            if (!checkPos()) {
-                this.root.failed = true;
-                return true;
-            }
-
-            if (nextPipeFacings.isEmpty())
-                return true;
-            if (nextPipeFacings.size() == 1) {
-                currentPos.setPos(nextPipes.get(0).getPipePos());
-                currentPipe = nextPipes.get(0);
-                from = nextPipeFacings.get(0).getOpposite();
-                walkedBlocks++;
-                return !isRunning();
-            }
-
-            walkers = new ArrayList<>();
-            for (int i = 0; i < nextPipeFacings.size(); i++) {
-                EnumFacing side = nextPipeFacings.get(i);
-                PipeNetWalker<T> walker = Objects.requireNonNull(
-                        createSubWalker(world, side, currentPos.offset(side), walkedBlocks + 1),
-                        "Walker can't be null");
-                walker.root = root;
-                walker.currentPipe = nextPipes.get(i);
-                walker.from = side.getOpposite();
-                walkers.add(walker);
-            }
-        }
-        Iterator<PipeNetWalker<T>> iterator = walkers.iterator();
-        while (iterator.hasNext()) {
-            PipeNetWalker<T> walker = iterator.next();
-            if (walker.walk()) {
-                onRemoveSubWalker(walker);
-                iterator.remove();
-            }
+    /**
+     * Advances this walker by exactly one hop. Appends whatever should be processed next tick to
+     * {@code nextFrontier}: this same walker again (if it has exactly one valid successor and is still
+     * running), or the new sub-walkers spawned for each branch (if it has multiple). Adds nothing, and bubbles
+     * completion up to {@link #parentWalker} via {@link #finish()}, on a dead end, a failed
+     * {@link #checkPos()}, or being told to stop.
+     */
+    private void step(List<PipeNetWalker<T>> nextFrontier) {
+        if (!checkPos()) {
+            root.failed = true;
+            finish();
+            return;
         }
 
-        return !isRunning() || walkers.isEmpty();
+        if (nextPipeFacings.isEmpty()) {
+            finish();
+            return;
+        }
+        if (nextPipeFacings.size() == 1) {
+            currentPos.setPos(nextPipes.get(0).getPipePos());
+            currentPipe = nextPipes.get(0);
+            from = nextPipeFacings.get(0).getOpposite();
+            walkedBlocks++;
+            if (isRunning()) {
+                nextFrontier.add(this);
+            } else {
+                finish();
+            }
+            return;
+        }
+
+        pendingChildCount = nextPipeFacings.size();
+        for (int i = 0; i < nextPipeFacings.size(); i++) {
+            EnumFacing side = nextPipeFacings.get(i);
+            PipeNetWalker<T> walker = Objects.requireNonNull(
+                    createSubWalker(world, side, currentPos.offset(side), walkedBlocks + 1),
+                    "Walker can't be null");
+            walker.root = root;
+            walker.parentWalker = this;
+            walker.currentPipe = nextPipes.get(i);
+            walker.from = side.getOpposite();
+            nextFrontier.add(walker);
+        }
+    }
+
+    /**
+     * Marks this walker as finished and bubbles completion up through {@link #parentWalker}, calling
+     * {@link #onRemoveSubWalker} on each ancestor for which this was (transitively) the last remaining active
+     * descendant -- exactly where the original recursive implementation would have.
+     */
+    private void finish() {
+        PipeNetWalker<T> child = this;
+        PipeNetWalker<T> parent = child.parentWalker;
+        while (parent != null) {
+            parent.onRemoveSubWalker(child);
+            if (--parent.pendingChildCount > 0) {
+                return;
+            }
+            child = parent;
+            parent = child.parentWalker;
+        }
     }
 
     private boolean checkPos() {

@@ -1207,6 +1207,9 @@ metaitem.tool.multiblock_builder.tooltip2=Sneak and right-click Multiblock contr
 metaitem.tool.state_machine_tracer.name=StateMachine Tracer
 metaitem.tool.state_machine_tracer.tooltip=Right-click a StateMachine-based machine to toggle execution tracing for it
 
+metaitem.tool.pipe_net_tracer.name=PipeNet Tracer
+metaitem.tool.pipe_net_tracer.tooltip=Right-click a pipe to toggle load tracing for its network
+
 metaarmor.nms.nightvision.enabled=NanoMuscle™ Suite: NightVision Enabled
 metaarmor.nms.nightvision.disabled=NanoMuscle™ Suite: NightVision Disabled
 metaarmor.nms.nightvision.error=NanoMuscle™ Suite: §cNot enough power!
@@ -6060,6 +6063,10 @@ gregtech.command.benchmark.usage=Usage: /gregtech benchmark <system>
 gregtech.command.dumpstatemachine.usage=Usage: /gregtech dumpstatemachine <resourcelocation|list>
 gregtech.command.dumpstatemachine.not_found=No StateMachine-based machine registered as "%s"
 gregtech.command.dumpstatemachine.write_failed=Failed to write the StateMachine dump to %s; check the server log
+gregtech.command.dumppipenet.usage=Usage: /gregtech dumppipenet <x> <y> <z>|list
+gregtech.command.dumppipenet.not_a_pipe=No pipe found at %d, %d, %d
+gregtech.command.dumppipenet.no_net=The pipe at %d, %d, %d has no PipeNet (this shouldn't happen; report it)
+gregtech.command.dumppipenet.write_failed=Failed to write the PipeNet dump to %s; check the server log
 gregtech.command.benchmark.abort.usage=Usage: /gregtech benchmark abort
 gregtech.command.benchmark.lookup.usage=Usage: /gregtech benchmark lookup <trials> <rate>
 gregtech.command.benchmark.lookup.progress=Analysis at %s / %s trials complete.

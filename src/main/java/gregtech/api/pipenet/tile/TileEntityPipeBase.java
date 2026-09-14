@@ -268,7 +268,7 @@ public abstract class TileEntityPipeBase<PipeType extends Enum<PipeType> & IPipe
             WorldPipeNet<?, ?> worldPipeNet = getPipeBlock().getWorldPipeNet(getWorld());
             PipeNet<?> net = worldPipeNet.getNetFromPos(pos);
             if (net != null) {
-                net.onPipeConnectionsUpdate();
+                net.onPipeConnectionsUpdate(pos);
             }
         }
     }
@@ -550,7 +550,7 @@ public abstract class TileEntityPipeBase<PipeType extends Enum<PipeType> & IPipe
             WorldPipeNet<?, ?> worldPipeNet = getPipeBlock().getWorldPipeNet(getWorld());
             PipeNet<?> net = worldPipeNet.getNetFromPos(pos);
             if (net != null) {
-                net.onChunkUnload();
+                net.onChunkUnload(pos);
             }
         }
     }

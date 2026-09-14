@@ -2,6 +2,7 @@ package gregtech.common.pipelike.itempipe.net;
 
 import gregtech.api.pipenet.Node;
 import gregtech.api.pipenet.PipeNet;
+import gregtech.api.pipenet.PipeNetTraceLog;
 import gregtech.api.pipenet.WorldPipeNet;
 import gregtech.api.unification.material.properties.ItemPipeProperties;
 
@@ -26,13 +27,27 @@ public class ItemPipeNet extends PipeNet<ItemPipeProperties> {
     public List<ItemRoutePath> getNetData(BlockPos pipePos, EnumFacing facing) {
         List<ItemRoutePath> data = NET_DATA.get(pipePos);
         if (data == null) {
+            boolean traced = isTraceEnabled();
+            if (traced) getTraceStats().recordCacheMiss();
+            long start = traced ? System.nanoTime() : 0;
             data = ItemNetWalker.createNetData(getWorldData(), pipePos, facing);
+            if (traced) {
+                // unlike Laser/Optical, ItemNetWalker never stops early -- it always walks every reachable node
+                // in the net to enumerate all destinations (see GTST-pipenet-optimization-design/README.md's
+                // "今後の検討課題" section on why fine-grained cache invalidation doesn't help here), so
+                // getAllNodes().size() (not the result list's size) is the actual work performed.
+                getTraceStats().recordWalkerTraversal(System.nanoTime() - start, getAllNodes().size());
+                PipeNetTraceLog.log(getTraceLabel(),
+                        "getNetData(" + pipePos + "," + facing + "): cache miss, walker traversal");
+            }
             if (data == null) {
                 // walker failed, don't cache so it tries again on next insertion
                 return Collections.emptyList();
             }
             data.sort(Comparator.comparingInt(inv -> inv.getProperties().getPriority()));
             NET_DATA.put(pipePos, data);
+        } else if (isTraceEnabled()) {
+            getTraceStats().recordCacheHit();
         }
         return data;
     }
@@ -43,12 +58,12 @@ public class ItemPipeNet extends PipeNet<ItemPipeProperties> {
     }
 
     @Override
-    public void onPipeConnectionsUpdate() {
+    public void onPipeConnectionsUpdate(BlockPos pos) {
         NET_DATA.clear();
     }
 
     @Override
-    public void onChunkUnload() {
+    public void onChunkUnload(BlockPos pos) {
         NET_DATA.clear();
     }
 
