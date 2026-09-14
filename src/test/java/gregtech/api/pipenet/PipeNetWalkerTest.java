@@ -1,7 +1,6 @@
 package gregtech.api.pipenet;
 
 import gregtech.Bootstrap;
-import gregtech.api.metatileentity.interfaces.INeighborCache;
 import gregtech.api.pipenet.block.IPipeType;
 import gregtech.api.pipenet.tile.IPipeTile;
 import gregtech.api.pipenet.tile.PipeCoverableImplementation;
@@ -43,10 +42,12 @@ class PipeNetWalkerTest {
         Bootstrap.perform();
     }
 
-    /** A {@link DummyWorld} that looks tile entities up from a plain map instead of going through real chunk
-     *  storage (which requires a matching {@code ITileEntityProvider} block state at that position -- more
-     *  setup than this pure walker-logic test needs). A fresh instance per test avoids any shared state with
-     *  {@link DummyWorld#INSTANCE}, which other test classes use. */
+    /**
+     * A {@link DummyWorld} that looks tile entities up from a plain map instead of going through real chunk
+     * storage (which requires a matching {@code ITileEntityProvider} block state at that position -- more
+     * setup than this pure walker-logic test needs). A fresh instance per test avoids any shared state with
+     * {@link DummyWorld#INSTANCE}, which other test classes use.
+     */
     private static final class TestWorld extends DummyWorld {
 
         private final Map<BlockPos, TileEntity> tiles = new HashMap<>();
@@ -82,12 +83,14 @@ class PipeNetWalkerTest {
         }
     }
 
-    /** The minimal {@link IPipeTile} double needed to drive {@link PipeNetWalker}: only {@link #isConnected},
-     *  {@link #getNeighbor}, and {@link #isFaceBlocked} are ever called by the base class itself. Neighbor
-     *  lookup goes through a directly-supplied position map rather than {@link #getPipeWorld()}, so this
-     *  doesn't depend on {@link TestWorld} at all except for the walker's own initial root lookup. */
+    /**
+     * The minimal {@link IPipeTile} double needed to drive {@link PipeNetWalker}: only {@link #isConnected},
+     * {@link #getNeighbor}, and {@link #isFaceBlocked} are ever called by the base class itself. Neighbor
+     * lookup goes through a directly-supplied position map rather than {@link #getPipeWorld()}, so this
+     * doesn't depend on {@link TestWorld} at all except for the walker's own initial root lookup.
+     */
     private static final class FakePipeTile extends TileEntity
-                                             implements IPipeTile<FakePipeType, Object> {
+                                            implements IPipeTile<FakePipeType, Object> {
 
         private final Map<BlockPos, FakePipeTile> allTiles;
         private int connections = 0;
@@ -245,9 +248,11 @@ class PipeNetWalkerTest {
         public void scheduleChunkForRenderUpdate() {}
     }
 
-    /** Records every position visited (via {@link #checkPipe}) and every dead-end/neighbor-less edge (via
-     *  {@link #checkNeighbour}), shared across every sub-walker of one traversal exactly like the real
-     *  {@code EnergyNetWalker}/{@code ItemNetWalker} share their own collector fields. */
+    /**
+     * Records every position visited (via {@link #checkPipe}) and every dead-end/neighbor-less edge (via
+     * {@link #checkNeighbour}), shared across every sub-walker of one traversal exactly like the real
+     * {@code EnergyNetWalker}/{@code ItemNetWalker} share their own collector fields.
+     */
     private static final class TestWalker extends PipeNetWalker<FakePipeTile> {
 
         private final List<BlockPos> visited;
@@ -263,7 +268,7 @@ class PipeNetWalkerTest {
 
         @Override
         protected PipeNetWalker<FakePipeTile> createSubWalker(World world, EnumFacing facingToNextPos,
-                                                               BlockPos nextPos, int walkedBlocks) {
+                                                              BlockPos nextPos, int walkedBlocks) {
             return new TestWalker(world, nextPos, walkedBlocks, visited);
         }
 

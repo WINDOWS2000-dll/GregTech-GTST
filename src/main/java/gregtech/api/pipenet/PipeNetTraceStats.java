@@ -37,34 +37,42 @@ public final class PipeNetTraceStats {
     private long cacheHitCount;
     private long cacheMissCount;
 
-    /** Records one {@code PipeNetWalker#traversePipeNet()} call (a route/inventory-list search walking the
-     *  pipe graph itself, e.g. {@code LaserNetWalker}/{@code ItemNetWalker}/{@code EnergyNetWalker}). */
+    /**
+     * Records one {@code PipeNetWalker#traversePipeNet()} call (a route/inventory-list search walking the
+     * pipe graph itself, e.g. {@code LaserNetWalker}/{@code ItemNetWalker}/{@code EnergyNetWalker}).
+     */
     public void recordWalkerTraversal(long elapsedNanos, int nodesVisited) {
         walkerTraversalCount++;
         walkerTraversalNanos += elapsedNanos;
         walkerNodesVisited += nodesVisited;
     }
 
-    /** Records one {@link PipeNet#findAllConnectedBlocks} call (the {@code BreadthFirstIterator}-backed
-     *  split-detection check run after a blocked-connection/mark change or node removal). */
+    /**
+     * Records one {@link PipeNet#findAllConnectedBlocks} call (the {@code BreadthFirstIterator}-backed
+     * split-detection check run after a blocked-connection/mark change or node removal).
+     */
     public void recordFindConnected(long elapsedNanos, int nodesVisited) {
         findConnectedCount++;
         findConnectedNanos += elapsedNanos;
         findConnectedNodesVisited += nodesVisited;
     }
 
-    /** @return {@link #findConnectedNanos} as of right now. {@link PipeNet#removeNode} calls this before and
-     *          after {@code rebuildNetworkOnNodeRemoval} to measure how much of that nested call's time was
-     *          already recorded under {@code findConnected} (it can trigger {@link PipeNet#findAllConnectedBlocks}
-     *          internally for its own split-check), then subtracts that back out of its own recorded duration --
-     *          without this, that nested time would be counted twice in {@link Snapshot#totalNanos()}: once under
-     *          {@code findConnected}, once again as part of {@code removeNode}'s wrapping duration. */
+    /**
+     * @return {@link #findConnectedNanos} as of right now. {@link PipeNet#removeNode} calls this before and
+     *         after {@code rebuildNetworkOnNodeRemoval} to measure how much of that nested call's time was
+     *         already recorded under {@code findConnected} (it can trigger {@link PipeNet#findAllConnectedBlocks}
+     *         internally for its own split-check), then subtracts that back out of its own recorded duration --
+     *         without this, that nested time would be counted twice in {@link Snapshot#totalNanos()}: once under
+     *         {@code findConnected}, once again as part of {@code removeNode}'s wrapping duration.
+     */
     long findConnectedNanosSoFar() {
         return findConnectedNanos;
     }
 
-    /** Records one {@link PipeNet#uniteNetworks} call (via {@link PipeNet#mergeWithSizeOrdering} or directly),
-     *  i.e. one net being fully absorbed into another. */
+    /**
+     * Records one {@link PipeNet#uniteNetworks} call (via {@link PipeNet#mergeWithSizeOrdering} or directly),
+     * i.e. one net being fully absorbed into another.
+     */
     public void recordMerge(long elapsedNanos, int nodesCopied) {
         mergeCount++;
         mergeNanos += elapsedNanos;
@@ -81,8 +89,10 @@ public final class PipeNetTraceStats {
         removeNodeNanos += elapsedNanos;
     }
 
-    /** Records one {@code getNetData} call whose cached entry was reused as-is (no walker re-traversal needed) --
-     *  see {@code LaserPipeNet}/{@code OpticalPipeNet}/{@code ItemPipeNet}/{@code EnergyNet#getNetData}. */
+    /**
+     * Records one {@code getNetData} call whose cached entry was reused as-is (no walker re-traversal needed) --
+     * see {@code LaserPipeNet}/{@code OpticalPipeNet}/{@code ItemPipeNet}/{@code EnergyNet#getNetData}.
+     */
     public void recordCacheHit() {
         cacheHitCount++;
     }
@@ -147,8 +157,10 @@ public final class PipeNetTraceStats {
             return new Snapshot(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
         }
 
-        /** @return a new snapshot holding {@code this - earlier}, field by field -- "what happened between
-         *          {@code earlier} and {@code this}". */
+        /**
+         * @return a new snapshot holding {@code this - earlier}, field by field -- "what happened between
+         *         {@code earlier} and {@code this}".
+         */
         @NotNull
         public Snapshot minus(@NotNull Snapshot earlier) {
             return new Snapshot(

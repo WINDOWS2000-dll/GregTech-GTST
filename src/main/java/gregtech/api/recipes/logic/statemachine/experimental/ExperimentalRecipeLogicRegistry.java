@@ -121,10 +121,10 @@ public final class ExperimentalRecipeLogicRegistry {
      * on that specific instance.
      *
      * @throws IllegalArgumentException                    if {@code modid} is blank or not currently loaded
-     * @throws ExperimentalRegistryFrozenException          if the registry has already frozen (see class JavaDoc)
-     * @throws ExperimentalExtensionsNotPermittedException  if the two-tier gate isn't fully open for {@code modid}
-     * @throws ExperimentalExtensionConflictException       if {@code extensionType} already has a registration
-     *                                                       whose {@code targetType} overlaps this one
+     * @throws ExperimentalRegistryFrozenException         if the registry has already frozen (see class JavaDoc)
+     * @throws ExperimentalExtensionsNotPermittedException if the two-tier gate isn't fully open for {@code modid}
+     * @throws ExperimentalExtensionConflictException      if {@code extensionType} already has a registration
+     *                                                     whose {@code targetType} overlaps this one
      */
     public static <T> void putExtensionFactory(@NotNull String modid,
                                                @NotNull Class<? extends MetaTileEntity> targetType,
@@ -158,8 +158,8 @@ public final class ExperimentalRecipeLogicRegistry {
      * this class's JavaDoc section on the circuit breaker for details.
      *
      * @throws IllegalArgumentException                    if {@code modid} is blank or not currently loaded
-     * @throws ExperimentalRegistryFrozenException          if the registry has already frozen (see class JavaDoc)
-     * @throws ExperimentalExtensionsNotPermittedException  if the two-tier gate isn't fully open for {@code modid}
+     * @throws ExperimentalRegistryFrozenException         if the registry has already frozen (see class JavaDoc)
+     * @throws ExperimentalExtensionsNotPermittedException if the two-tier gate isn't fully open for {@code modid}
      */
     public static void addPostProcessor(@NotNull String modid, @NotNull Class<? extends MetaTileEntity> targetType,
                                         @NotNull ExperimentalPriority priority,
@@ -175,7 +175,8 @@ public final class ExperimentalRecipeLogicRegistry {
                                         int priority, @NotNull Consumer<GTStateMachineBuilder> processor) {
         validateRegistration(modid);
         synchronized (ExperimentalRecipeLogicRegistry.class) {
-            postProcessors.add(new PostProcessorEntry(modid, targetType, priority, processor, new AtomicBoolean(false)));
+            postProcessors
+                    .add(new PostProcessorEntry(modid, targetType, priority, processor, new AtomicBoolean(false)));
         }
     }
 
@@ -189,7 +190,8 @@ public final class ExperimentalRecipeLogicRegistry {
      * during that machine's construction.
      */
     @ApiStatus.Internal
-    public static void resolveExtensionsFor(@NotNull MetaTileEntity owner, @NotNull ExperimentalConfigExtensions target) {
+    public static void resolveExtensionsFor(@NotNull MetaTileEntity owner,
+                                            @NotNull ExperimentalConfigExtensions target) {
         freezeIfNotAlready();
         Class<? extends MetaTileEntity> concreteClass = owner.getClass();
         for (List<ExtensionFactoryEntry<?>> entries : extensionFactories.values()) {
@@ -304,10 +306,10 @@ public final class ExperimentalRecipeLogicRegistry {
     // ================================================================================================================
 
     @Desugar
-    private record ExtensionFactoryEntry<T>(@NotNull String modid, @NotNull Class<? extends MetaTileEntity> targetType,
-                                            @NotNull Class<T> extensionType,
-                                            @NotNull Function<MetaTileEntity, T> factory,
-                                            @NotNull Throwable registrationSite) {}
+    private record ExtensionFactoryEntry<T> (@NotNull String modid, @NotNull Class<? extends MetaTileEntity> targetType,
+                                             @NotNull Class<T> extensionType,
+                                             @NotNull Function<MetaTileEntity, T> factory,
+                                             @NotNull Throwable registrationSite) {}
 
     /** {@code disabled} is the one mutable field: flipped by the circuit breaker in {@link #applyPostProcessorsFor}. */
     @Desugar

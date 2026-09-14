@@ -68,7 +68,7 @@ public class CommandDumpPipeNet extends CommandBase {
         BlockPos pos = parseBlockPos(sender, args, 0, false);
         World world = sender.getEntityWorld();
         TileEntity tileEntity = world.getTileEntity(pos);
-        if (!(tileEntity instanceof IPipeTile<?, ?> pipeTile)) {
+        if (!(tileEntity instanceof IPipeTile<?, ?>pipeTile)) {
             throw new CommandException("gregtech.command.dumppipenet.not_a_pipe", pos.getX(), pos.getY(),
                     pos.getZ());
         }

@@ -38,7 +38,7 @@ public class PipeNetTraceBehavior implements IItemBehaviour {
         if (!ConfigHolder.dev.enablePipeNetDebugTools) return EnumActionResult.PASS;
 
         TileEntity tileEntity = world.getTileEntity(pos);
-        if (!(tileEntity instanceof IPipeTile<?, ?> pipeTile)) return EnumActionResult.PASS;
+        if (!(tileEntity instanceof IPipeTile<?, ?>pipeTile)) return EnumActionResult.PASS;
 
         if (world.isRemote) return EnumActionResult.SUCCESS;
 

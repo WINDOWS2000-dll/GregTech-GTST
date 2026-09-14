@@ -18,8 +18,10 @@ import java.util.Map;
 
 public class OpticalPipeNet extends PipeNet<OpticalPipeProperties> {
 
-    /** Keyed by {@link BlockPos#toLong()} rather than {@code BlockPos} itself, to avoid one {@code BlockPos}
-     *  allocation and its (comparatively expensive) hash/equals per lookup. */
+    /**
+     * Keyed by {@link BlockPos#toLong()} rather than {@code BlockPos} itself, to avoid one {@code BlockPos}
+     * allocation and its (comparatively expensive) hash/equals per lookup.
+     */
     private final Long2ObjectMap<OpticalRoutePath> NET_DATA = new Long2ObjectOpenHashMap<>();
 
     public OpticalPipeNet(WorldPipeNet<OpticalPipeProperties, ? extends PipeNet<OpticalPipeProperties>> world) {

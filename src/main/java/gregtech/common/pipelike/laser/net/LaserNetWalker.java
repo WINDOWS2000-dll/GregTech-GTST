@@ -38,8 +38,10 @@ public class LaserNetWalker extends PipeNetWalker<TileEntityLaserPipe> {
     private BlockPos sourcePipe;
     private EnumFacing facingToHandler;
     private EnumFacing.Axis axis;
-    /** Positions visited by this walker's own lineage so far (root-to-current), used to build the eventual
-     *  {@link LaserRoutePath}'s dependency set -- see {@link #checkPipe}. */
+    /**
+     * Positions visited by this walker's own lineage so far (root-to-current), used to build the eventual
+     * {@link LaserRoutePath}'s dependency set -- see {@link #checkPipe}.
+     */
     private final LongSet path;
 
     protected LaserNetWalker(World world, BlockPos sourcePipe, int distance, LongSet path) {

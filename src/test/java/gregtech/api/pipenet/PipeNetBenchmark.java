@@ -283,7 +283,7 @@ class PipeNetBenchmark {
 
         @Override
         protected PipeNetWalker<FakePipeTile> createSubWalker(World world, EnumFacing facingToNextPos,
-                                                               BlockPos nextPos, int walkedBlocks) {
+                                                              BlockPos nextPos, int walkedBlocks) {
             return new BenchWalker(world, nextPos, walkedBlocks);
         }
 
@@ -317,9 +317,11 @@ class PipeNetBenchmark {
         return tiles;
     }
 
-    /** As {@code PipeNetWalkerTest}'s comb topology: a trunk with a single-block dead-end stub off every
-     *  trunk block, so every trunk block is a branch point -- the pathological case for the old recursive
-     *  walker (see {@link PipeNetWalker}'s own class doc). */
+    /**
+     * As {@code PipeNetWalkerTest}'s comb topology: a trunk with a single-block dead-end stub off every
+     * trunk block, so every trunk block is a branch point -- the pathological case for the old recursive
+     * walker (see {@link PipeNetWalker}'s own class doc).
+     */
     private static Map<BlockPos, FakePipeTile> buildComb(BlockPos base, int trunkLength) {
         Map<BlockPos, FakePipeTile> tiles = new HashMap<>();
         for (int i = 0; i < trunkLength; i++) {

@@ -29,8 +29,10 @@ import java.util.WeakHashMap;
 @EventBusSubscriber(modid = GTValues.MODID)
 public final class PipeNetTraceTickHandler {
 
-    /** 100 ticks = 5 seconds at a healthy 20 TPS -- frequent enough to see load trends develop, infrequent
-     *  enough that the summary lines themselves stay a rounding error next to whatever they're measuring. */
+    /**
+     * 100 ticks = 5 seconds at a healthy 20 TPS -- frequent enough to see load trends develop, infrequent
+     * enough that the summary lines themselves stay a rounding error next to whatever they're measuring.
+     */
     private static final int SUMMARY_INTERVAL_TICKS = 100;
 
     private static final Set<PipeNet<?>> tracedNets = Collections.newSetFromMap(new WeakHashMap<>());

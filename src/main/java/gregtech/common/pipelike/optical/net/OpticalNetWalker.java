@@ -31,8 +31,10 @@ public class OpticalNetWalker extends PipeNetWalker<TileEntityOpticalPipe> {
     private OpticalRoutePath routePath;
     private BlockPos sourcePipe;
     private EnumFacing facingToHandler;
-    /** Positions visited by this walker's own lineage so far (root-to-current), used to build the eventual
-     *  {@link OpticalRoutePath}'s dependency set -- see {@link #checkPipe}. */
+    /**
+     * Positions visited by this walker's own lineage so far (root-to-current), used to build the eventual
+     * {@link OpticalRoutePath}'s dependency set -- see {@link #checkPipe}.
+     */
     private final LongSet path;
 
     protected OpticalNetWalker(World world, BlockPos sourcePipe, int distance, LongSet path) {

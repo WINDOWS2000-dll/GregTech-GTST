@@ -18,8 +18,10 @@ import java.util.Map;
 
 public class LaserPipeNet extends PipeNet<LaserPipeProperties> {
 
-    /** Keyed by {@link BlockPos#toLong()} rather than {@code BlockPos} itself, to avoid one {@code BlockPos}
-     *  allocation and its (comparatively expensive) hash/equals per lookup. */
+    /**
+     * Keyed by {@link BlockPos#toLong()} rather than {@code BlockPos} itself, to avoid one {@code BlockPos}
+     * allocation and its (comparatively expensive) hash/equals per lookup.
+     */
     private final Long2ObjectMap<LaserRoutePath> netData = new Long2ObjectOpenHashMap<>();
 
     public LaserPipeNet(WorldPipeNet<LaserPipeProperties, ? extends PipeNet<LaserPipeProperties>> world) {
