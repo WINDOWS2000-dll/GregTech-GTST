@@ -1,5 +1,8 @@
 package gregtech.common.pipelike.itempipe.net;
 
+import gregtech.api.util.FacingPos;
+
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 
 import org.junit.jupiter.api.Test;
@@ -17,6 +20,10 @@ import java.util.Map;
  * invalidation would provide no benefit here even if implemented (see {@code
  * GTST-pipenet-optimization-design/README.md}'s "今後の検討課題" section). This benchmark exists to confirm
  * that expectation empirically.
+ * <p>
+ * {@code NET_DATA} is keyed by {@link FacingPos} (pos+facing), not {@code BlockPos} alone -- see {@link
+ * ItemPipeNet#NET_DATA}'s own note on why a single face's cache miss must not be satisfied by another face's
+ * stale entry. This benchmark mirrors that key shape so it stays representative of the real map.
  */
 class ItemCacheBenchmark {
 
@@ -28,12 +35,12 @@ class ItemCacheBenchmark {
         Field netDataField = ItemPipeNet.class.getDeclaredField("NET_DATA");
         netDataField.setAccessible(true);
         @SuppressWarnings("unchecked")
-        Map<BlockPos, List<ItemRoutePath>> netData = (Map<BlockPos, List<ItemRoutePath>>) netDataField.get(net);
+        Map<FacingPos, List<ItemRoutePath>> netData = (Map<FacingPos, List<ItemRoutePath>>) netDataField.get(net);
 
         for (int i = 0; i < sourceCount; i++) {
-            BlockPos sourcePos = new BlockPos(i, 0, 0);
+            FacingPos sourceKey = new FacingPos(new BlockPos(i, 0, 0), EnumFacing.UP);
             ItemRoutePath route = new ItemRoutePath(null, null, 1, null, Collections.emptyList());
-            netData.put(sourcePos, Collections.singletonList(route));
+            netData.put(sourceKey, Collections.singletonList(route));
         }
 
         BlockPos changedPos = new BlockPos(sourceCount / 2, 0, 0);

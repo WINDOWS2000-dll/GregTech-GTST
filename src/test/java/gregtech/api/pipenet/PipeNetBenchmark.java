@@ -42,10 +42,13 @@ import java.util.function.Consumer;
  * Scenarios, each targeting one specific optimization:
  * <ul>
  * <li>{@link #bfsTraversalBenchmark()} -- {@code PipeNetWalker}'s iterative rewrite (phase 1a)</li>
- * <li>{@link #nodeRemovalChurnBenchmark()}/{@link #trimmingALeafFromAHugeNetBenchmark()} -- {@code PipeNet}'s
- * JGraphT-backed {@code findAllConnectedBlocks} (phase 1a, plus the {@code BreadthFirstIterator} fix found via
- * a real playtest using the execution-trace dev tool -- see {@code GTST-pipenet-optimization-design/README.md})
- * </li>
+ * <li>{@link #nodeRemovalChurnBenchmark()}/{@link #trimmingALeafFromAHugeNetBenchmark()} -- {@code
+ * PipeNet#findAllConnectedBlocks}'s split-detection cost, across three successive implementations: a
+ * JGraphT {@code ConnectivityInspector} misuse (phase 1a; paid the whole net's vertex count on every call --
+ * see {@code GTST-pipenet-optimization-design/README.md}), then a JGraphT {@code BreadthFirstIterator} fix for
+ * that specific bug (phase 4, found via a real playtest using the execution-trace dev tool), then the current
+ * plain hand-rolled BFS with no persistent graph structure at all (phase 6 -- the graph itself turned out to be
+ * pure overhead, see {@code PipeNet#findAllConnectedBlocks}'s own note)</li>
  * <li>{@link #unionBySizeBenchmark()} -- {@code mergeWithSizeOrdering} (phase 2)</li>
  * </ul>
  */
@@ -395,7 +398,7 @@ class PipeNetBenchmark {
     }
 
     // ================================================================================================
-    // Scenario B: node removal churn (JGraphT/ConnectivityInspector-backed split detection)
+    // Scenario B: node removal churn (findAllConnectedBlocks-backed split detection)
     // ================================================================================================
 
     private static final class TestPipeNet extends PipeNet<Object> {

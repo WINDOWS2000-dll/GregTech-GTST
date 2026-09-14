@@ -5,6 +5,7 @@ import gregtech.api.pipenet.PipeNet;
 import gregtech.api.pipenet.PipeNetTraceLog;
 import gregtech.api.pipenet.WorldPipeNet;
 import gregtech.api.unification.material.properties.ItemPipeProperties;
+import gregtech.api.util.FacingPos;
 
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
@@ -18,14 +19,25 @@ import java.util.Map;
 
 public class ItemPipeNet extends PipeNet<ItemPipeProperties> {
 
-    private final Map<BlockPos, List<ItemRoutePath>> NET_DATA = new HashMap<>();
+    /**
+     * Keyed by {@code (pipePos, facing)}, NOT {@code pipePos} alone: a single item pipe exposes one independent
+     * {@code ItemNetHandler} per face (see {@code TileEntityItemPipe}'s {@code handlers} map), and the computed
+     * route list actually depends on {@code facing} too -- {@link ItemNetWalker} excludes whichever neighbour
+     * lies back through {@code facing} itself, to avoid immediately routing an inserted item back out the side
+     * it just came in from. A junction pipe with items being pushed in from two different faces at once (a
+     * common real-base pattern) would otherwise have the second face's insertion silently reuse the first
+     * face's cached route list -- computed with the wrong exclusion -- and could route items back out the face
+     * they just arrived from.
+     */
+    private final Map<FacingPos, List<ItemRoutePath>> NET_DATA = new HashMap<>();
 
     public ItemPipeNet(WorldPipeNet<ItemPipeProperties, ? extends PipeNet<ItemPipeProperties>> world) {
         super(world);
     }
 
     public List<ItemRoutePath> getNetData(BlockPos pipePos, EnumFacing facing) {
-        List<ItemRoutePath> data = NET_DATA.get(pipePos);
+        FacingPos key = new FacingPos(pipePos, facing);
+        List<ItemRoutePath> data = NET_DATA.get(key);
         if (data == null) {
             boolean traced = isTraceEnabled();
             if (traced) getTraceStats().recordCacheMiss();
@@ -45,7 +57,7 @@ public class ItemPipeNet extends PipeNet<ItemPipeProperties> {
                 return Collections.emptyList();
             }
             data.sort(Comparator.comparingInt(inv -> inv.getProperties().getPriority()));
-            NET_DATA.put(pipePos, data);
+            NET_DATA.put(key, data);
         } else if (isTraceEnabled()) {
             getTraceStats().recordCacheHit();
         }

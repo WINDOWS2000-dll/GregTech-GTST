@@ -17,12 +17,12 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Regression coverage for {@link PipeNet}'s JGraphT-backed {@link PipeNet#findAllConnectedBlocks} (see that
- * method's own JavaDoc for how the graph is kept in sync and why it uses {@link
- * org.jgrapht.traverse.BreadthFirstIterator} rather than {@code ConnectivityInspector}). Confirms these
- * connectivity queries agree with the network's actual split/merge behaviour across a straight line, a cyclic
- * topology (a redundant path, which stresses the explicit edge-set representation differently than a simple
- * tree-shaped walk), and node removal that either does or does not sever the network.
+ * Regression coverage for {@link PipeNet#findAllConnectedBlocks} (see that method's own JavaDoc for why it is
+ * a plain iterative breadth-first search over {@link PipeNet}'s own node map, with no persistent
+ * graph/adjacency structure backing it). Confirms these connectivity queries agree with the network's actual
+ * split/merge behaviour across a straight line, a cyclic topology (a redundant path, which stresses branching
+ * during the search differently than a simple tree-shaped walk), and node removal that either does or does not
+ * sever the network.
  */
 class PipeNetTest {
 
@@ -371,5 +371,37 @@ class PipeNetTest {
 
         assertFalse(net.isTraceEnabled(), "tracing must be disabled once the traced net has no nodes left");
         assertNull(net.getTraceLabel());
+    }
+
+    /**
+     * Regression coverage for {@link PipeNet#describeMemoryProxy}'s edge count, computed on demand by scanning
+     * every node's neighbours (see that method's own note on why there is no persistent structure to just read
+     * a count from). A 3-node straight line has exactly 2 edges; a 4-node cycle (see {@link
+     * #cyclicTopologyIsOneConnectedComponentDespiteRedundantPath}'s topology) has exactly 4.
+     */
+    @Test
+    void describeMemoryProxyReportsTheActualEdgeCount() {
+        for (int i = 0; i < 3; i++) {
+            addNode(new BlockPos(i, 0, 0));
+        }
+        PipeNet<Object> net = world.getNetFromPos(new BlockPos(0, 0, 0));
+        assertNotNull(net);
+        assertTrue(net.describeMemoryProxy().contains("nodes=3, edges=2"), net.describeMemoryProxy());
+    }
+
+    @Test
+    void describeMemoryProxyReportsFourEdgesForAFourNodeCycle() {
+        BlockPos a = new BlockPos(0, 0, 0);
+        BlockPos b = new BlockPos(1, 0, 0);
+        BlockPos c = new BlockPos(1, 0, 1);
+        BlockPos d = new BlockPos(0, 0, 1);
+        addNode(a);
+        addNode(b);
+        addNode(c);
+        addNode(d);
+
+        PipeNet<Object> net = world.getNetFromPos(a);
+        assertNotNull(net);
+        assertTrue(net.describeMemoryProxy().contains("nodes=4, edges=4"), net.describeMemoryProxy());
     }
 }
