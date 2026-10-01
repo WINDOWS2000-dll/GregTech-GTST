@@ -69,9 +69,14 @@ public class GroovyExpansions {
         return new FluidBuilder();
     }
 
+    /**
+     * {@code decayTo} was dropped (replaced by {@link gregtech.api.unification.DecayMode}, which isn't
+     * script-representable) -- this overload now only sets the half-life; addons wanting script-visible decay
+     * chains should expose their own accessor.
+     */
     public static Element addElement(MaterialEvent event, long protons, long neutrons, long halfLifeSeconds,
-                                     String decayTo, String name, String symbol, boolean isIsotope) {
-        return Elements.add(protons, neutrons, halfLifeSeconds, decayTo, name, symbol, isIsotope);
+                                     String name, String symbol, boolean isIsotope) {
+        return Elements.add(protons, neutrons, halfLifeSeconds, null, name, symbol, isIsotope);
     }
 
     public static Element addElement(MaterialEvent event, long protons, long neutrons, String name, String symbol,

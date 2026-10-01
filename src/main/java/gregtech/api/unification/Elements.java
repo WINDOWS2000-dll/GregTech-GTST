@@ -5,6 +5,7 @@ import gregtech.api.util.GTLog;
 import com.google.common.base.CaseFormat;
 import crafttweaker.annotations.ZenRegister;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import org.jetbrains.annotations.Nullable;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
 
@@ -28,10 +29,17 @@ public class Elements {
     private Elements() {}
 
     public static final Element H = add(1, 0, "Hydrogen", "H");
-    public static final Element D = add(1, 1, -1, "H", "Deuterium", "D", true);
-    public static final Element T = add(1, 2, -1, "D", "Tritium", "T", true);
+    // Stable -- the old "H"/"D"/"H&D" decayTo strings here were vestigial/never-consumed placeholder data and
+    // physically inconsistent with halfLifeSeconds=-1 (stable); dropped rather than migrated.
+    public static final Element D = add(1, 1, "Deuterium", "D", true);
+    // Real physics: beta-minus decay to He-3, half-life ~12.32y (388,781,000s), 18.6 keV decay energy. The old
+    // entry here ("D" -> Deuterium, halfLifeSeconds=-1/stable) was physically wrong; corrected during the
+    // decayTo -> DecayMode migration (2026-09-16).
+    public static final Element T = add(1, 2, 388781000.0,
+            Collections.singletonList(new DecayMode(DecayType.BETA_MINUS, 1.0, "He-3", 0.0186)), "Tritium", "T",
+            true);
     public static final Element He = add(2, 2, "Helium", "He");
-    public static final Element He3 = add(2, 1, -1, "H&D", "Helium-3", "He-3", true);
+    public static final Element He3 = add(2, 1, "Helium-3", "He-3", true); // stable
     public static final Element Li = add(3, 4, "Lithium", "Li");
     public static final Element Be = add(4, 5, "Beryllium", "Be");
     public static final Element B = add(5, 5, "Boron", "B");
@@ -122,12 +130,40 @@ public class Elements {
     public static final Element Th = add(90, 140, "Thorium", "Th");
     public static final Element Pa = add(91, 138, "Protactinium", "Pa");
     public static final Element U = add(92, 146, 1.4090285e+17, null, "Uranium", "U", false);
-    public static final Element U238 = add(92, 146, 1.4090285e+17, null, "Uranium-238", "U-238", true);
-    public static final Element U235 = add(92, 143, 2.2195037e+16, null, "Uranium-235", "U-235", true);
+    // Decay chain heads whose daughters (Th-234, Th-231, ...) are registered by the GregTech-Nuclear addon --
+    // decayModes' daughterElementKey resolves lazily via Elements#get, so this forward reference is fine even
+    // though those Elements don't exist yet at GTST's own static-init time (2026-09-16, see GTNuclear memory
+    // gtnuclear-collaboration-style / feedback_gtst_fork_changes for why this data lives here rather than being
+    // added via an Elements#add overwrite call from the addon: overwriting would leave the Material objects below,
+    // which capture their Element reference at build time, pointing at a stale pre-overwrite instance).
+    // Delayed neutron decay constants (lambda_i, s^-1) shared across all four fissile/fertile isotopes below --
+    // see NeutronCrossSections' own JavaDoc for why (standard Keepin 1965 U-235 six-group values, reused since a
+    // reliable independent per-isotope six-group breakdown was not available).
+    private static final double[] DELAYED_NEUTRON_DECAY_CONSTANTS = { 0.0124, 0.0305, 0.111, 0.301, 1.14, 3.01 };
+    public static final Element U238 = add(92, 146, 1.4090285e+17,
+            Collections.singletonList(new DecayMode(DecayType.ALPHA, 1.0, "Th-234", 4.270)),
+            new NeutronCrossSections(0.00002, 2.68, 0.55, 0.30, 8.90, DELAYED_NEUTRON_DECAY_CONSTANTS,
+                    new double[] { 0.000532, 0.002982, 0.002632, 0.005698, 0.001792, 0.000364 }),
+            "Uranium-238", "U-238", true);
+    public static final Element U235 = add(92, 143, 2.2195037e+16,
+            Collections.singletonList(new DecayMode(DecayType.ALPHA, 1.0, "Th-231", 4.678)),
+            new NeutronCrossSections(584.0, 99.0, 1.2, 0.09, 10.0, DELAYED_NEUTRON_DECAY_CONSTANTS,
+                    new double[] { 0.000247, 0.0013845, 0.001222, 0.0026455, 0.0008320, 0.000169 }),
+            "Uranium-235", "U-235", true);
     public static final Element Np = add(93, 144, "Neptunium", "Np");
     public static final Element Pu = add(94, 152, 760332960000.0, null, "Plutonium", "Pu", false);
-    public static final Element Pu239 = add(94, 145, 760332960000.0, null, "Plutonium-239", "Pu-239", true);
-    public static final Element Pu241 = add(94, 147, 450649440.0, null, "Plutonium-241", "Pu-241", true);
+    public static final Element Pu239 = add(94, 145, 760332960000.0,
+            Collections.singletonList(new DecayMode(DecayType.ALPHA, 1.0, "U-235", 5.157)),
+            new NeutronCrossSections(747.0, 270.0, 1.8, 0.05, 7.9, DELAYED_NEUTRON_DECAY_CONSTANTS,
+                    new double[] { 0.0000798, 0.0004473, 0.0003948, 0.0008547, 0.0002688, 0.0000546 }),
+            "Plutonium-239", "Pu-239", true);
+    // Rare alpha branch to U-237 (~0.0025%) omitted per GregTech-Nuclear's rare-branch policy (<0.1% -> rounded to
+    // the dominant path) -- see GTNuclear memory project_gtnuclear_phase1_scope.
+    public static final Element Pu241 = add(94, 147, 450649440.0,
+            Collections.singletonList(new DecayMode(DecayType.BETA_MINUS, 1.0, "Am-241", 0.0208)),
+            new NeutronCrossSections(1012.0, 363.0, 1.9, 0.06, 10.0, DELAYED_NEUTRON_DECAY_CONSTANTS,
+                    new double[] { 0.0002014, 0.0011289, 0.0009964, 0.0021571, 0.0006784, 0.0001378 }),
+            "Plutonium-241", "Pu-241", true);
     public static final Element Am = add(95, 150, "Americium", "Am");
     public static final Element Cm = add(96, 153, "Curium", "Cm");
     public static final Element Bk = add(97, 152, "Berkelium", "Bk");
@@ -168,17 +204,31 @@ public class Elements {
 
     @ZenMethod
     public static Element add(long protons, long neutrons, String name, String symbol) {
-        return add(protons, neutrons, -1, null, name, symbol, false);
+        return add(protons, neutrons, -1, Collections.emptyList(), null, name, symbol, false);
     }
 
     @ZenMethod
     public static Element add(long protons, long neutrons, String name, String symbol, boolean isotope) {
-        return add(protons, neutrons, -1, null, name, symbol, isotope);
+        return add(protons, neutrons, -1, Collections.emptyList(), null, name, symbol, isotope);
     }
 
-    @ZenMethod
-    public static Element add(long protons, long neutrons, double halfLifeSeconds, String decayTo, String name,
-                              String symbol, boolean isIsotope) {
+    /**
+     * As {@link #add(long, long, double, List, NeutronCrossSections, String, String, boolean)}, without cross-section
+     * data.
+     */
+    public static Element add(long protons, long neutrons, double halfLifeSeconds, @Nullable List<DecayMode> decayModes,
+                              String name, String symbol, boolean isIsotope) {
+        return add(protons, neutrons, halfLifeSeconds, decayModes, null, name, symbol, isIsotope);
+    }
+
+    /**
+     * Not exposed to CraftTweaker/GroovyScript ({@link DecayMode}/{@link NeutronCrossSections} aren't
+     * script-representable) -- {@code decayTo}, this method's single-{@code String}-parameter predecessor, used to
+     * be.
+     */
+    public static Element add(long protons, long neutrons, double halfLifeSeconds, @Nullable List<DecayMode> decayModes,
+                              @Nullable NeutronCrossSections crossSections, String name, String symbol,
+                              boolean isIsotope) {
         validateNameAndSymbol(name, symbol);
         String key = toMapKey(name);
         Element current = elements.get(key);
@@ -195,7 +245,8 @@ public class Elements {
                     "Element with symbol '{}' already exists. The element in the symbol map will be overwritten!",
                     symbol);
         }
-        Element element = new Element(protons, neutrons, halfLifeSeconds, decayTo, name, symbol, isIsotope);
+        Element element = new Element(protons, neutrons, halfLifeSeconds, decayModes, crossSections, name, symbol,
+                isIsotope);
         elements.put(key, element);
         elementsBySymbol.put(symbol, element);
         elementList.add(element);

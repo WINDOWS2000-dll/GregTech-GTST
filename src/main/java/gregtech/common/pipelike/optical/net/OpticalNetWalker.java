@@ -3,12 +3,14 @@ package gregtech.common.pipelike.optical.net;
 import gregtech.api.capability.GregtechTileCapabilities;
 import gregtech.api.pipenet.PipeNetWalker;
 import gregtech.api.util.GTUtility;
+import gregtech.common.pipelike.optical.BlockOpticalPipe;
 import gregtech.common.pipelike.optical.tile.TileEntityOpticalPipe;
 
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraftforge.common.capabilities.Capability;
 
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -64,16 +66,28 @@ public class OpticalNetWalker extends PipeNetWalker<TileEntityOpticalPipe> {
             return;
         }
 
-        if (((OpticalNetWalker) root).routePath == null) {
-            if (neighbourTile.hasCapability(GregtechTileCapabilities.CAPABILITY_DATA_ACCESS,
-                    faceToNeighbour.getOpposite()) ||
-                    neighbourTile.hasCapability(GregtechTileCapabilities.CABABILITY_COMPUTATION_PROVIDER,
-                            faceToNeighbour.getOpposite())) {
-                ((OpticalNetWalker) root).routePath = new OpticalRoutePath(pipeTile, faceToNeighbour,
-                        getWalkedBlocks(), path);
-                stop();
-            }
+        if (((OpticalNetWalker) root).routePath == null && isValidRouteTarget(neighbourTile, faceToNeighbour)) {
+            ((OpticalNetWalker) root).routePath = new OpticalRoutePath(pipeTile, faceToNeighbour, getWalkedBlocks(),
+                    path);
+            stop();
         }
+    }
+
+    /**
+     * True if {@code neighbourTile} exposes one of the two built-in capability types, or one registered via
+     * {@link BlockOpticalPipe#registerConnectableCapability} -- see that registry's own JavaDoc for why both
+     * this check and {@link BlockOpticalPipe#canPipeConnectToBlock} need to agree on what counts as connectable.
+     */
+    private static boolean isValidRouteTarget(TileEntity neighbourTile, EnumFacing faceToNeighbour) {
+        EnumFacing side = faceToNeighbour.getOpposite();
+        if (neighbourTile.hasCapability(GregtechTileCapabilities.CAPABILITY_DATA_ACCESS, side) ||
+                neighbourTile.hasCapability(GregtechTileCapabilities.CABABILITY_COMPUTATION_PROVIDER, side)) {
+            return true;
+        }
+        for (Capability<?> capability : BlockOpticalPipe.getExtraConnectableCapabilities()) {
+            if (neighbourTile.hasCapability(capability, side)) return true;
+        }
+        return false;
     }
 
     @Override
