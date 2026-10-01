@@ -2,15 +2,22 @@ package gregtech.api.recipes;
 
 import gregtech.api.capability.IMultipleTankHandler;
 import gregtech.api.recipes.category.GTRecipeCategory;
-import gregtech.api.recipes.chance.boost.ChanceBoostFunction;
-import gregtech.api.recipes.chance.output.ChancedOutputList;
 import gregtech.api.recipes.chance.output.ChancedOutputLogic;
 import gregtech.api.recipes.chance.output.impl.ChancedFluidOutput;
 import gregtech.api.recipes.chance.output.impl.ChancedItemOutput;
 import gregtech.api.recipes.ingredients.GTRecipeInput;
+import gregtech.api.recipes.ingredients.match.IngredientMatchHelper;
+import gregtech.api.recipes.ingredients.match.MatchCalculation;
+import gregtech.api.recipes.ingredients.match.Matcher;
+import gregtech.api.recipes.output.FluidOutputProvider;
+import gregtech.api.recipes.output.ItemOutputProvider;
+import gregtech.api.recipes.output.StandardFluidOutput;
+import gregtech.api.recipes.output.StandardItemOutput;
 import gregtech.api.recipes.properties.RecipeProperty;
 import gregtech.api.recipes.properties.RecipePropertyStorage;
 import gregtech.api.recipes.properties.RecipePropertyStorageImpl;
+import gregtech.api.recipes.roll.RollInformation;
+import gregtech.api.recipes.roll.RollInterpreter;
 import gregtech.api.util.GTUtility;
 import gregtech.api.util.ItemStackHashStrategy;
 import gregtech.integration.groovy.GroovyScriptModule;
@@ -18,10 +25,8 @@ import gregtech.integration.groovy.GroovyScriptModule;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.items.IItemHandlerModifiable;
-import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.oredict.OreDictionary;
 
-import com.google.common.collect.ImmutableList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.tuple.Pair;
@@ -32,8 +37,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -70,22 +73,47 @@ public class Recipe {
     }
 
     private final List<GTRecipeInput> inputs;
-    private final List<ItemStack> outputs;
 
     /**
-     * A chance of 10000 equals 100%
+     * This recipe's item outputs (guaranteed and chance-based alike) &mdash; the actual source of truth. Use this
+     * provider's own API ({@link ItemOutputProvider#computeOutputs}, {@link ItemOutputProvider#getCompleteOutputs},
+     * etc.) for anything that needs to read them.
      */
-    private final ChancedOutputList<ItemStack, ChancedItemOutput> chancedOutputs;
+    private final @NotNull ItemOutputProvider itemOutputProvider;
     private final List<GTRecipeInput> fluidInputs;
-    private final List<FluidStack> fluidOutputs;
-    private final ChancedOutputList<FluidStack, ChancedFluidOutput> chancedFluidOutputs;
+
+    /** As {@link #itemOutputProvider}, but for fluids. */
+    private final @NotNull FluidOutputProvider fluidOutputProvider;
 
     private final int duration;
 
     /**
-     * if > 0 means EU/t consumed, if < 0 - produced
+     * The voltage (per amp) this recipe requires or produces, always as a magnitude (see {@link #generating} for
+     * direction). GregTech recipes have always been registered with a positive value regardless of direction (e.g.
+     * fuel recipes' {@code .EUt(V[LV])}); this field's sign carries no meaning of its own.
      */
     private final long EUt;
+
+    /**
+     * The amperage this recipe requires (or, for a generating recipe, produces) at {@link #EUt}'s voltage.
+     * Defaults to {@code 1} for recipes that don't specify one, which is every recipe registered before this field
+     * was added &mdash; {@link #getEUt()}'s value and meaning are completely unchanged for those (see
+     * {@link #getVoltage()}'s JavaDoc for how the two relate once amperage is not {@code 1}).
+     * <p>
+     * Represents the recipe's amperage as a first-class value, separate from voltage (see {@link #getVoltage()}'s
+     * JavaDoc for how the two relate).
+     */
+    private final long amperage;
+
+    /**
+     * Whether this recipe produces power rather than consuming it. Deliberately independent of
+     * {@link #EUt}'s sign: GregTech's own recipe data (e.g. {@code FuelRecipes}) has always registered fuel recipes
+     * with a positive {@code EUt}, with direction carried entirely by this flag,
+     * so deriving this from {@code EUt < 0} (as an earlier, unexercised design of this field assumed) would treat
+     * every existing generating recipe as a consuming one. Set via {@link RecipeBuilder#setGenerating()}, mirroring
+     * PR's {@code FuelRecipeBuilder}'s constructor calling it unconditionally.
+     */
+    private final boolean generating;
 
     /**
      * If this Recipe is hidden from JEI
@@ -104,30 +132,26 @@ public class Recipe {
     private final int hashCode;
 
     public Recipe(@NotNull List<GTRecipeInput> inputs,
-                  List<ItemStack> outputs,
-                  @NotNull ChancedOutputList<ItemStack, ChancedItemOutput> chancedOutputs,
+                  @NotNull ItemOutputProvider itemOutputProvider,
                   List<GTRecipeInput> fluidInputs,
-                  List<FluidStack> fluidOutputs,
-                  @NotNull ChancedOutputList<FluidStack, ChancedFluidOutput> chancedFluidOutputs,
+                  @NotNull FluidOutputProvider fluidOutputProvider,
                   int duration,
                   long EUt,
+                  long amperage,
+                  boolean generating,
                   boolean hidden,
                   boolean isCTRecipe,
                   @NotNull RecipePropertyStorage recipePropertyStorage,
                   @NotNull GTRecipeCategory recipeCategory) {
         this.recipePropertyStorage = recipePropertyStorage;
         this.inputs = GTRecipeInputCache.deduplicateInputs(inputs);
-        if (outputs.isEmpty()) {
-            this.outputs = Collections.emptyList();
-        } else {
-            this.outputs = new ArrayList<>(outputs);
-        }
-        this.chancedOutputs = chancedOutputs;
-        this.chancedFluidOutputs = chancedFluidOutputs;
+        this.itemOutputProvider = itemOutputProvider;
         this.fluidInputs = GTRecipeInputCache.deduplicateInputs(fluidInputs);
-        this.fluidOutputs = fluidOutputs.isEmpty() ? Collections.emptyList() : ImmutableList.copyOf(fluidOutputs);
+        this.fluidOutputProvider = fluidOutputProvider;
         this.duration = duration;
         this.EUt = EUt;
+        this.amperage = amperage;
+        this.generating = generating;
         this.hidden = hidden;
         this.recipeCategory = recipeCategory;
         this.isCTRecipe = isCTRecipe;
@@ -137,9 +161,9 @@ public class Recipe {
 
     @NotNull
     public Recipe copy() {
-        return new Recipe(this.inputs, this.outputs, this.chancedOutputs, this.fluidInputs,
-                this.fluidOutputs, this.chancedFluidOutputs, this.duration,
-                this.EUt, this.hidden, this.isCTRecipe, this.recipePropertyStorage, this.recipeCategory);
+        return new Recipe(this.inputs, this.itemOutputProvider, this.fluidInputs, this.fluidOutputProvider,
+                this.duration, this.EUt, this.amperage, this.generating, this.hidden, this.isCTRecipe,
+                this.recipePropertyStorage, this.recipeCategory);
     }
 
     /**
@@ -158,30 +182,14 @@ public class Recipe {
             return currentRecipe;
         }
 
-        currentRecipe = currentRecipe.copy();
-        RecipeBuilder<?> builder = new RecipeBuilder<>(currentRecipe, recipeMap);
+        ItemOutputProvider items = itemTrimLimit == -1 ? currentRecipe.itemOutputProvider :
+                currentRecipe.itemOutputProvider.trim(itemTrimLimit);
+        FluidOutputProvider fluids = fluidTrimLimit == -1 ? currentRecipe.fluidOutputProvider :
+                currentRecipe.fluidOutputProvider.trim(fluidTrimLimit);
 
-        builder.clearOutputs();
-        builder.clearChancedOutput();
-        builder.clearFluidOutputs();
-        builder.clearChancedFluidOutputs();
-
-        // Chanced outputs are removed in this if they cannot fit the limit
-        Pair<List<ItemStack>, List<ChancedItemOutput>> recipeOutputs = currentRecipe
-                .getItemAndChanceOutputs(itemTrimLimit);
-
-        // Add the trimmed chanced outputs and outputs
-        builder.chancedOutputs(recipeOutputs.getRight());
-        builder.outputs(recipeOutputs.getLeft());
-
-        Pair<List<FluidStack>, List<ChancedFluidOutput>> recipeFluidOutputs = currentRecipe
-                .getFluidAndChanceOutputs(fluidTrimLimit);
-
-        // Add the trimmed fluid outputs
-        builder.chancedFluidOutputs(recipeFluidOutputs.getRight());
-        builder.fluidOutputs(recipeFluidOutputs.getLeft());
-
-        return builder.build().getResult();
+        return new Recipe(currentRecipe.inputs, items, currentRecipe.fluidInputs, fluids, currentRecipe.duration,
+                currentRecipe.EUt, currentRecipe.amperage, currentRecipe.generating, currentRecipe.hidden,
+                currentRecipe.isCTRecipe, currentRecipe.recipePropertyStorage, currentRecipe.recipeCategory);
     }
 
     public final boolean matches(boolean consumeIfSuccessful, IItemHandlerModifiable inputs,
@@ -285,66 +293,97 @@ public class Recipe {
         return true;
     }
 
+    /**
+     * Matches {@link #inputs} against {@code inputs} as a bipartite maximum-flow problem (StateMachine migration
+     * roadmap, Ingredients/Matching engine phase 2; see {@code gregtech.api.recipes.ingredients.match}'s package
+     * JavaDoc for what this solves that a naive greedy pass over the ingredient list can get wrong). Each
+     * consumable {@link GTRecipeInput} is wrapped as a {@link Matcher} inline here rather than having
+     * {@link GTRecipeInput} itself implement {@link Matcher} (a deliberately narrow adapter, not a redesign of the
+     * ingredient type hierarchy: this confines the whole migration to this file, since {@code Matcher}'s only other
+     * use today is right here and in {@link #matchesFluid}).
+     * <p>
+     * Non-consumable ingredients (see {@link GTRecipeInput#isNonConsumable()}) are deliberately excluded from the
+     * flow graph: they don't compete for exclusive claim on specific items the way a real consumption does; they
+     * only need to verify enough of a matching item is still present after every consumable ingredient's draw is
+     * accounted for, matching the legacy algorithm's own "read the running remainder, but never write it back"
+     * behavior for non-consumable entries.
+     *
+     * @return whether every ingredient (consumable and non-consumable alike) is satisfied, and if so, how much of
+     *         each slot in {@code inputs} (by position) would remain after consumption.
+     */
     private Pair<Boolean, int[]> matchesItems(List<ItemStack> inputs) {
-        int[] itemAmountInSlot = new int[inputs.size()];
-        int indexed = 0;
-
-        List<GTRecipeInput> gtRecipeInputs = this.inputs;
-        for (GTRecipeInput ingredient : gtRecipeInputs) {
-            int ingredientAmount = ingredient.getAmount();
-            for (int j = 0; j < inputs.size(); j++) {
-                ItemStack inputStack = inputs.get(j);
-
-                if (j == indexed) {
-                    itemAmountInSlot[j] = inputStack.isEmpty() ? 0 : inputStack.getCount();
-                    indexed++;
-                }
-
-                if (inputStack.isEmpty() || !ingredient.acceptsStack(inputStack))
-                    continue;
-                int itemAmountToConsume = Math.min(itemAmountInSlot[j], ingredientAmount);
-                ingredientAmount -= itemAmountToConsume;
-                if (!ingredient.isNonConsumable()) itemAmountInSlot[j] -= itemAmountToConsume;
-                if (ingredientAmount == 0) break;
-            }
-            if (ingredientAmount > 0)
-                return Pair.of(false, itemAmountInSlot);
+        List<GTRecipeInput> consumable = new ArrayList<>(this.inputs.size());
+        List<GTRecipeInput> nonConsumable = new ArrayList<>();
+        for (GTRecipeInput ingredient : this.inputs) {
+            (ingredient.isNonConsumable() ? nonConsumable : consumable).add(ingredient);
         }
-        int[] retItemAmountInSlot = new int[indexed];
-        System.arraycopy(itemAmountInSlot, 0, retItemAmountInSlot, 0, indexed);
 
-        return Pair.of(true, retItemAmountInSlot);
+        List<Matcher<ItemStack>> matchers = new ArrayList<>(consumable.size());
+        for (GTRecipeInput ingredient : consumable) {
+            matchers.add(Matcher.simpleMatcher(ingredient::acceptsStack, ingredient.getAmount()));
+        }
+
+        MatchCalculation<ItemStack> calculation = IngredientMatchHelper.matchItems(matchers, inputs);
+        long[] consumed = calculation.getMatchResultsForScale(1);
+        if (consumed == null) return Pair.of(false, new int[0]); // never read by any caller on failure
+
+        int[] remaining = new int[inputs.size()];
+        for (int i = 0; i < inputs.size(); i++) {
+            ItemStack stack = inputs.get(i);
+            int available = stack.isEmpty() ? 0 : stack.getCount();
+            long drawn = i < consumed.length ? consumed[i] : 0; // EmptyMatchCalculation returns a 0-length array
+            remaining[i] = (int) (available - drawn);
+        }
+
+        for (GTRecipeInput ingredient : nonConsumable) {
+            long needed = ingredient.getAmount();
+            for (int i = 0; i < inputs.size() && needed > 0; i++) {
+                ItemStack stack = inputs.get(i);
+                if (stack.isEmpty() || !ingredient.acceptsStack(stack)) continue;
+                needed -= Math.min(remaining[i], needed);
+            }
+            if (needed > 0) return Pair.of(false, new int[0]);
+        }
+
+        return Pair.of(true, remaining);
     }
 
+    /** As {@link #matchesItems}, but for fluids. */
     private Pair<Boolean, int[]> matchesFluid(List<FluidStack> fluidInputs) {
-        int[] fluidAmountInTank = new int[fluidInputs.size()];
-        int indexed = 0;
-
-        List<GTRecipeInput> gtRecipeInputs = this.fluidInputs;
-        for (GTRecipeInput fluid : gtRecipeInputs) {
-            int fluidAmount = fluid.getAmount();
-            for (int j = 0; j < fluidInputs.size(); j++) {
-                FluidStack tankFluid = fluidInputs.get(j);
-
-                if (j == indexed) {
-                    indexed++;
-                    fluidAmountInTank[j] = tankFluid == null ? 0 : tankFluid.amount;
-                }
-
-                if (tankFluid == null || !fluid.acceptsFluid(tankFluid))
-                    continue;
-                int fluidAmountToConsume = Math.min(fluidAmountInTank[j], fluidAmount);
-                fluidAmount -= fluidAmountToConsume;
-                if (!fluid.isNonConsumable()) fluidAmountInTank[j] -= fluidAmountToConsume;
-                if (fluidAmount == 0) break;
-            }
-            if (fluidAmount > 0)
-                return Pair.of(false, fluidAmountInTank);
+        List<GTRecipeInput> consumable = new ArrayList<>(this.fluidInputs.size());
+        List<GTRecipeInput> nonConsumable = new ArrayList<>();
+        for (GTRecipeInput ingredient : this.fluidInputs) {
+            (ingredient.isNonConsumable() ? nonConsumable : consumable).add(ingredient);
         }
-        int[] retfluidAmountInTank = new int[indexed];
-        System.arraycopy(fluidAmountInTank, 0, retfluidAmountInTank, 0, indexed);
 
-        return Pair.of(true, retfluidAmountInTank);
+        List<Matcher<FluidStack>> matchers = new ArrayList<>(consumable.size());
+        for (GTRecipeInput ingredient : consumable) {
+            matchers.add(Matcher.simpleMatcher(ingredient::acceptsFluid, ingredient.getAmount()));
+        }
+
+        MatchCalculation<FluidStack> calculation = IngredientMatchHelper.matchFluids(matchers, fluidInputs);
+        long[] consumed = calculation.getMatchResultsForScale(1);
+        if (consumed == null) return Pair.of(false, new int[0]); // never read by any caller on failure
+
+        int[] remaining = new int[fluidInputs.size()];
+        for (int i = 0; i < fluidInputs.size(); i++) {
+            FluidStack stack = fluidInputs.get(i);
+            int available = stack == null ? 0 : stack.amount;
+            long drawn = i < consumed.length ? consumed[i] : 0; // EmptyMatchCalculation returns a 0-length array
+            remaining[i] = (int) (available - drawn);
+        }
+
+        for (GTRecipeInput ingredient : nonConsumable) {
+            long needed = ingredient.getAmount();
+            for (int i = 0; i < fluidInputs.size() && needed > 0; i++) {
+                FluidStack stack = fluidInputs.get(i);
+                if (stack == null || !ingredient.acceptsFluid(stack)) continue;
+                needed -= Math.min(remaining[i], needed);
+            }
+            if (needed > 0) return Pair.of(false, new int[0]);
+        }
+
+        return Pair.of(true, remaining);
     }
 
     @Override
@@ -426,10 +465,9 @@ public class Recipe {
     public String toString() {
         return new ToStringBuilder(this)
                 .append("inputs", inputs)
-                .append("outputs", outputs)
-                .append("chancedOutputs", chancedOutputs)
+                .append("itemOutputProvider", itemOutputProvider)
                 .append("fluidInputs", fluidInputs)
-                .append("fluidOutputs", fluidOutputs)
+                .append("fluidOutputProvider", fluidOutputProvider)
                 .append("duration", duration)
                 .append("EUt", EUt)
                 .append("hidden", hidden)
@@ -446,128 +484,109 @@ public class Recipe {
         return inputs;
     }
 
-    public List<ItemStack> getOutputs() {
-        return outputs;
-    }
-
-    // All Recipes this method is called for should be already trimmed, if required
-
     /**
-     * Returns all outputs from the recipe.
-     * This is where Chanced Outputs for the recipe are calculated.
-     * The Recipe should be trimmed by calling {@link Recipe#getItemAndChanceOutputs(int)} before calling this method,
-     * if trimming is required.
-     *
-     * @param recipeTier  The Voltage Tier of the Recipe, used for chanced output calculation
-     * @param machineTier The Voltage Tier of the Machine, used for chanced output calculation
-     * @param recipeMap   The RecipeMap that the recipe is being performed upon, used for chanced output calculation
-     * @return A list of all resulting ItemStacks from the recipe, after chance has been applied to any chanced outputs
+     * @return this recipe's item outputs (guaranteed and chance-based alike), the actual source of truth. Use this
+     *         provider's own API ({@link ItemOutputProvider#computeOutputs}
+     *         to roll a run's actual outputs, {@link ItemOutputProvider#getCompleteOutputs} for a worst-case/JEI
+     *         view assuming every chance succeeds, {@link ItemOutputProvider#trim} to cap distinct output count);
+     *         those methods are gone, superseded by this provider.
      */
-    public List<ItemStack> getResultItemOutputs(int recipeTier, int machineTier, RecipeMap<?> recipeMap) {
-        List<ItemStack> outputs = new ArrayList<>(getOutputs());
-        ChanceBoostFunction function = recipeMap.getChanceFunction();
-        List<ChancedItemOutput> chancedOutputsList = getChancedOutputs().roll(function, recipeTier, machineTier);
-
-        if (chancedOutputsList == null) return outputs;
-
-        Collection<ItemStack> resultChanced = new ArrayList<>();
-        for (ChancedItemOutput chancedOutput : chancedOutputsList) {
-            ItemStack stackToAdd = chancedOutput.getIngredient().copy();
-            for (ItemStack stackInList : resultChanced) {
-                int insertable = stackInList.getMaxStackSize() - stackInList.getCount();
-                if (insertable > 0 && ItemHandlerHelper.canItemStacksStack(stackInList, stackToAdd)) {
-                    if (insertable >= stackToAdd.getCount()) {
-                        stackInList.grow(stackToAdd.getCount());
-                        stackToAdd = ItemStack.EMPTY;
-                        break;
-                    } else {
-                        stackInList.grow(insertable);
-                        stackToAdd.shrink(insertable);
-                    }
-                }
-            }
-            if (!stackToAdd.isEmpty()) {
-                resultChanced.add(stackToAdd);
-            }
-        }
-
-        outputs.addAll(resultChanced);
-
-        return outputs;
+    @NotNull
+    public ItemOutputProvider getItemOutputProvider() {
+        return itemOutputProvider;
     }
 
     /**
-     * Returns the maximum possible recipe outputs from a recipe, divided into regular and chanced outputs
-     * Takes into account any specific output limiters, ie macerator slots, to trim down the output list
-     * Trims from chanced outputs first, then regular outputs
-     *
-     * @param outputLimit The limit on the number of outputs, -1 for disabled.
-     * @return A Pair of recipe outputs and chanced outputs, limited by some factor
+     * @return this recipe's guaranteed (non-chance-based) item outputs. A convenience view onto
+     *         {@link #getItemOutputProvider()} for callers that specifically want the guaranteed/chanced
+     *         breakdown (e.g. JEI, CraftTweaker) rather than a rolled or worst-case result; prefer
+     *         {@link #getItemOutputProvider()}'s own API when a breakdown isn't what's actually needed.
      */
-    public Pair<List<ItemStack>, List<ChancedItemOutput>> getItemAndChanceOutputs(int outputLimit) {
-        List<ItemStack> outputs = new ArrayList<>();
-
-        // Create an entry for the chanced outputs, and initially populate it
-        List<ChancedItemOutput> chancedOutputs = new ArrayList<>(getChancedOutputs().getChancedEntries());
-
-        // No limiting
-        if (outputLimit == -1) {
-            outputs.addAll(GTUtility.copyStackList(getOutputs()));
-        }
-        // If just the regular outputs would satisfy the outputLimit
-        else if (getOutputs().size() >= outputLimit) {
-            outputs.addAll(
-                    GTUtility.copyStackList(getOutputs()).subList(0, Math.min(outputLimit, getOutputs().size())));
-            // clear the chanced outputs, as we are only getting regular outputs
-            chancedOutputs.clear();
-        }
-        // If the regular outputs and chanced outputs are required to satisfy the outputLimit
-        else if (!getOutputs().isEmpty() && (getOutputs().size() + chancedOutputs.size()) >= outputLimit) {
-            outputs.addAll(GTUtility.copyStackList(getOutputs()));
-
-            // Calculate the number of chanced outputs after adding all the regular outputs
-            int numChanced = outputLimit - getOutputs().size();
-
-            chancedOutputs = chancedOutputs.subList(0, Math.min(numChanced, chancedOutputs.size()));
-        }
-        // There are only chanced outputs to satisfy the outputLimit
-        else if (getOutputs().isEmpty()) {
-            chancedOutputs = chancedOutputs.subList(0, Math.min(outputLimit, chancedOutputs.size()));
-        }
-        // The number of outputs + chanced outputs is lower than the trim number, so just add everything
-        else {
-            outputs.addAll(GTUtility.copyStackList(getOutputs()));
-            // Chanced outputs are taken care of in the original copy
-        }
-
-        return Pair.of(outputs, chancedOutputs);
+    @NotNull
+    public List<ItemStack> getGuaranteedItemOutputs() {
+        return standardItemOutput().getOutputs().getUnrolled();
     }
 
     /**
-     * Returns a list of every possible ItemStack output from a recipe, including all possible chanced outputs.
-     *
-     * @return A List of ItemStack outputs from the recipe, including all chanced outputs
+     * @return this recipe's chance-based item outputs, as their own concrete entries. See
+     *         {@link #getGuaranteedItemOutputs()} for the rationale of this convenience view.
      */
-    public List<ItemStack> getAllItemOutputs() {
-        List<ItemStack> recipeOutputs = new ArrayList<>(this.outputs);
-
-        for (ChancedItemOutput entry : this.chancedOutputs.getChancedEntries()) {
-            recipeOutputs.add(entry.getIngredient().copy());
+    @NotNull
+    public List<ChancedItemOutput> getChancedItemOutputs() {
+        List<RollInformation<ItemStack>> rolled = standardItemOutput().getOutputs().recomposeRolled();
+        List<ChancedItemOutput> result = new ArrayList<>(rolled.size());
+        for (RollInformation<ItemStack> info : rolled) {
+            result.add(new ChancedItemOutput(info.value(), (int) info.rollValue(), (int) info.rollBoost()));
         }
-
-        return recipeOutputs;
+        return result;
     }
 
-    public ChancedOutputList<ItemStack, ChancedItemOutput> getChancedOutputs() {
-        return chancedOutputs;
+    /** @return how this recipe's {@link #getChancedItemOutputs()} entries correlate against each other. */
+    @NotNull
+    public ChancedOutputLogic getItemOutputChanceLogic() {
+        return standardItemOutput().getOutputs().getCorrelation();
+    }
+
+    /**
+     * @return how this recipe's {@link #getChancedItemOutputs()} entries are individually rolled (independent of
+     *         {@link #getItemOutputChanceLogic()}, which instead correlates the rolled results against each other;
+     *         see {@link RollInterpreter}'s JavaDoc for how the two compose).
+     */
+    @NotNull
+    public RollInterpreter getItemOutputRollInterpreter() {
+        return standardItemOutput().getOutputs().getInterpreter();
+    }
+
+    private @NotNull StandardItemOutput standardItemOutput() {
+        // every Recipe's provider is built by RecipeBuilder as a StandardItemOutput; see that class's JavaDoc.
+        return (StandardItemOutput) itemOutputProvider;
     }
 
     public List<GTRecipeInput> getFluidInputs() {
         return fluidInputs;
     }
 
-    public ChancedOutputList<FluidStack, ChancedFluidOutput> getChancedFluidOutputs() {
-        return chancedFluidOutputs;
+    /**
+     * @return a {@link FluidOutputProvider} view of this recipe's fluid outputs. See
+     *         {@link #getItemOutputProvider()} (its exact item counterpart) for the design rationale and which
+     *         legacy methods this supersedes.
+     */
+    @NotNull
+    public FluidOutputProvider getFluidOutputProvider() {
+        return fluidOutputProvider;
+    }
+
+    /** As {@link #getGuaranteedItemOutputs()}, but for fluids. */
+    @NotNull
+    public List<FluidStack> getGuaranteedFluidOutputs() {
+        return standardFluidOutput().getOutputs().getUnrolled();
+    }
+
+    /** As {@link #getChancedItemOutputs()}, but for fluids. */
+    @NotNull
+    public List<ChancedFluidOutput> getChancedFluidOutputs() {
+        List<RollInformation<FluidStack>> rolled = standardFluidOutput().getOutputs().recomposeRolled();
+        List<ChancedFluidOutput> result = new ArrayList<>(rolled.size());
+        for (RollInformation<FluidStack> info : rolled) {
+            result.add(new ChancedFluidOutput(info.value(), (int) info.rollValue(), (int) info.rollBoost()));
+        }
+        return result;
+    }
+
+    /** As {@link #getItemOutputChanceLogic()}, but for fluids. */
+    @NotNull
+    public ChancedOutputLogic getFluidOutputChanceLogic() {
+        return standardFluidOutput().getOutputs().getCorrelation();
+    }
+
+    /** As {@link #getItemOutputRollInterpreter()}, but for fluids. */
+    @NotNull
+    public RollInterpreter getFluidOutputRollInterpreter() {
+        return standardFluidOutput().getOutputs().getInterpreter();
+    }
+
+    private @NotNull StandardFluidOutput standardFluidOutput() {
+        return (StandardFluidOutput) fluidOutputProvider;
     }
 
     public boolean hasInputFluid(FluidStack fluid) {
@@ -580,119 +599,41 @@ public class Recipe {
         return false;
     }
 
-    public List<FluidStack> getFluidOutputs() {
-        return fluidOutputs;
-    }
-
-    /**
-     * Returns the maximum possible recipe outputs from a recipe, divided into regular and chanced outputs
-     * Takes into account any specific output limiters, ie macerator slots, to trim down the output list
-     * Trims from chanced outputs first, then regular outputs
-     *
-     * @param outputLimit The limit on the number of outputs, -1 for disabled.
-     * @return A Pair of recipe outputs and chanced outputs, limited by some factor
-     */
-    public Pair<List<FluidStack>, List<ChancedFluidOutput>> getFluidAndChanceOutputs(int outputLimit) {
-        List<FluidStack> outputs = new ArrayList<>();
-
-        // Create an entry for the chanced outputs, and initially populate it
-        List<ChancedFluidOutput> chancedOutputs = new ArrayList<>(getChancedFluidOutputs().getChancedEntries());
-
-        // No limiting
-        if (outputLimit == -1) {
-            outputs.addAll(GTUtility.copyFluidList(getFluidOutputs()));
-        }
-        // If just the regular outputs would satisfy the outputLimit
-        else if (getFluidOutputs().size() >= outputLimit) {
-            outputs.addAll(
-                    GTUtility.copyFluidList(getFluidOutputs()).subList(0,
-                            Math.min(outputLimit, getFluidOutputs().size())));
-            // clear the chanced outputs, as we are only getting regular outputs
-            chancedOutputs.clear();
-        }
-        // If the regular outputs and chanced outputs are required to satisfy the outputLimit
-        else if (!getFluidOutputs().isEmpty() && (getFluidOutputs().size() + chancedOutputs.size()) >= outputLimit) {
-            outputs.addAll(GTUtility.copyFluidList(getFluidOutputs()));
-
-            // Calculate the number of chanced outputs after adding all the regular outputs
-            int numChanced = outputLimit - getFluidOutputs().size();
-
-            chancedOutputs = chancedOutputs.subList(0, Math.min(numChanced, chancedOutputs.size()));
-        }
-        // There are only chanced outputs to satisfy the outputLimit
-        else if (getFluidOutputs().isEmpty()) {
-            chancedOutputs = chancedOutputs.subList(0, Math.min(outputLimit, chancedOutputs.size()));
-        }
-        // The number of outputs + chanced outputs is lower than the trim number, so just add everything
-        else {
-            outputs.addAll(GTUtility.copyFluidList(getFluidOutputs()));
-            // Chanced outputs are taken care of in the original copy
-        }
-
-        return Pair.of(outputs, chancedOutputs);
-    }
-
-    /**
-     * Returns a list of every possible FluidStack output from a recipe, including all possible chanced outputs.
-     *
-     * @return A List of FluidStack outputs from the recipe, including all chanced outputs
-     */
-    public List<FluidStack> getAllFluidOutputs() {
-        List<FluidStack> recipeOutputs = new ArrayList<>(this.fluidOutputs);
-
-        for (ChancedFluidOutput entry : this.chancedFluidOutputs.getChancedEntries()) {
-            recipeOutputs.add(entry.getIngredient().copy());
-        }
-
-        return recipeOutputs;
-    }
-
-    /**
-     * Returns all outputs from the recipe.
-     * This is where Chanced Outputs for the recipe are calculated.
-     * The Recipe should be trimmed by calling {@link Recipe#getFluidAndChanceOutputs(int)} before calling this method,
-     * if trimming is required.
-     *
-     * @param recipeTier  The Voltage Tier of the Recipe, used for chanced output calculation
-     * @param machineTier The Voltage Tier of the Machine, used for chanced output calculation
-     * @param recipeMap   The RecipeMap that the recipe is being performed upon, used for chanced output calculation
-     * @return A list of all resulting ItemStacks from the recipe, after chance has been applied to any chanced outputs
-     */
-    public List<FluidStack> getResultFluidOutputs(int recipeTier, int machineTier, RecipeMap<?> recipeMap) {
-        List<FluidStack> outputs = new ArrayList<>(GTUtility.copyFluidList(getFluidOutputs()));
-
-        ChanceBoostFunction function = recipeMap.getChanceFunction();
-        List<ChancedFluidOutput> chancedOutputsList = getChancedFluidOutputs().roll(function, recipeTier, machineTier);
-
-        if (chancedOutputsList == null) return outputs;
-
-        Collection<FluidStack> resultChanced = new ArrayList<>();
-        for (ChancedFluidOutput chancedOutput : chancedOutputsList) {
-            FluidStack stackToAdd = chancedOutput.getIngredient().copy();
-            for (FluidStack stackInList : resultChanced) {
-                int insertable = stackInList.amount;
-                if (insertable > 0 && stackInList.getFluid() == stackToAdd.getFluid()) {
-                    stackInList.amount += stackToAdd.amount;
-                    stackToAdd = null;
-                    break;
-                }
-            }
-            if (stackToAdd != null) {
-                resultChanced.add(stackToAdd);
-            }
-        }
-
-        outputs.addAll(resultChanced);
-
-        return outputs;
-    }
-
     public int getDuration() {
         return duration;
     }
 
     public long getEUt() {
         return EUt;
+    }
+
+    /**
+     * @return the voltage this recipe requires (or produces) per amp, i.e. exactly {@link #getEUt()}. This is the
+     *         preferred name now that {@link #EUt} no
+     *         longer necessarily means "total EU/t" for recipes with {@link #getAmperage()} {@code > 1}. Kept as a
+     *         separate method from {@link #getEUt()} (rather than replacing it) so the many existing call sites
+     *         that only ever dealt with amperage-1 recipes don't need to change: for those, voltage and EU/t are
+     *         numerically identical, as they always were.
+     */
+    public long getVoltage() {
+        return EUt;
+    }
+
+    /**
+     * @return the amperage this recipe requires (or, for a generating recipe, produces) at {@link #getVoltage()}.
+     *         {@code 1} for every recipe that doesn't specify otherwise (which, as of this field's introduction,
+     *         is all of them). Total power is {@link #getVoltage()} {@code * getAmperage()}.
+     */
+    public long getAmperage() {
+        return amperage;
+    }
+
+    /**
+     * @return whether this recipe produces power rather than consuming it. See {@link #generating}'s JavaDoc for
+     *         why this is an explicit flag rather than derived from {@link #getEUt()}'s sign.
+     */
+    public boolean isGenerating() {
+        return generating;
     }
 
     public boolean isHidden() {

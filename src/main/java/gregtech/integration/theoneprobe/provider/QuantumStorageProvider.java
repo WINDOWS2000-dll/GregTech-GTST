@@ -22,7 +22,7 @@ public class QuantumStorageProvider implements IProbeInfoProvider {
 
     @Override
     public String getID() {
-        return ":quantum_storage_provider";
+        return GTValues.MODID + ":quantum_storage_provider";
     }
 
     @Override

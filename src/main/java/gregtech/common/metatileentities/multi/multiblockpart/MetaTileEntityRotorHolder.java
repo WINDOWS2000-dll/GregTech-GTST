@@ -2,7 +2,6 @@ package gregtech.common.metatileentities.multi.multiblockpart;
 
 import gregtech.api.capability.GregtechDataCodes;
 import gregtech.api.capability.IRotorHolder;
-import gregtech.api.capability.impl.MultiblockFuelRecipeLogic;
 import gregtech.api.capability.impl.NotifiableItemStackHandler;
 import gregtech.api.damagesources.DamageSources;
 import gregtech.api.metatileentity.ITieredMetaTileEntity;
@@ -13,6 +12,7 @@ import gregtech.api.metatileentity.multiblock.IMultiblockAbilityPart;
 import gregtech.api.metatileentity.multiblock.MultiblockAbility;
 import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.mui.GTGuis;
+import gregtech.api.recipes.logic.statemachine.workable.RecipeWorkable;
 import gregtech.api.util.RelativeDirection;
 import gregtech.client.renderer.texture.Textures;
 import gregtech.common.items.behaviors.AbstractMaterialPartBehavior;
@@ -265,25 +265,32 @@ public class MetaTileEntityRotorHolder extends MetaTileEntityMultiblockNotifiabl
     @Override
     public int getHolderPowerMultiplier() {
         int tierDifference = getTierDifference();
-        if (tierDifference == -1) return -1;
+        if (tierDifference == NO_CONTROLLER_TIER_DIFFERENCE) return -1;
 
-        return (int) Math.pow(2, getTierDifference());
+        return (int) Math.pow(2, tierDifference);
     }
 
     @Override
     public int getHolderEfficiency() {
         int tierDifference = getTierDifference();
-        if (tierDifference == -1)
+        if (tierDifference == NO_CONTROLLER_TIER_DIFFERENCE)
             return -1;
 
         return 100 + 10 * tierDifference;
     }
 
+    /**
+     * Sentinel returned by {@link #getTierDifference()} when there is no tiered controller to compare against.
+     * This must not collide with any value {@code getTier() - controllerTier} can legitimately produce (unlike
+     * {@code -1}, which the rotor holder can legitimately be if it is built one tier below its controller).
+     */
+    private static final int NO_CONTROLLER_TIER_DIFFERENCE = Integer.MIN_VALUE;
+
     private int getTierDifference() {
         if (getController() instanceof ITieredMetaTileEntity) {
             return getTier() - ((ITieredMetaTileEntity) getController()).getTier();
         }
-        return -1;
+        return NO_CONTROLLER_TIER_DIFFERENCE;
     }
 
     @Override
@@ -445,9 +452,15 @@ public class MetaTileEntityRotorHolder extends MetaTileEntityMultiblockNotifiabl
 
             if (getTurbineBehavior().getPartMaxDurability(getTurbineStack()) <=
                     AbstractMaterialPartBehavior.getPartDamage(getTurbineStack()) + damageAmount) {
-                var holder = (MultiblockFuelRecipeLogic) getController().getRecipeLogic();
-                if (holder != null && holder.isWorking()) {
-                    holder.invalidate();
+                // Must read this through the controller's own RecipeWorkable trait: legacy's getRecipeLogic()
+                // accessor always returns null for Large Turbine's StateMachine-based controller, which would
+                // silently turn the rotor-durability-triggered recipe invalidation below into dead code.
+                MetaTileEntityLargeTurbine controller = (MetaTileEntityLargeTurbine) getController();
+                if (controller != null) {
+                    RecipeWorkable workable = controller.getWorkable();
+                    if (workable.isWorking()) {
+                        workable.invalidate();
+                    }
                 }
             }
 

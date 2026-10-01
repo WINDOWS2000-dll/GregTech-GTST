@@ -2,12 +2,12 @@ package gregtech.integration.theoneprobe.provider;
 
 import gregtech.api.GTValues;
 import gregtech.api.capability.GregtechTileCapabilities;
-import gregtech.api.capability.impl.AbstractRecipeLogic;
-import gregtech.api.capability.impl.PrimitiveRecipeLogic;
+import gregtech.api.capability.IRecipeLogicInfoProvider;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.SteamMetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
-import gregtech.api.metatileentity.multiblock.RecipeMapSteamMultiblockController;
+import gregtech.api.metatileentity.multiblock.RecipeWorkablePrimitiveMultiblockController;
+import gregtech.api.metatileentity.multiblock.RecipeWorkableSteamMultiblockController;
 import gregtech.api.unification.material.Materials;
 import gregtech.api.util.GTUtility;
 import gregtech.api.util.TextFormattingUtil;
@@ -23,7 +23,12 @@ import mcjty.theoneprobe.api.IProbeInfo;
 import mcjty.theoneprobe.api.TextStyleClass;
 import org.jetbrains.annotations.NotNull;
 
-public class RecipeLogicInfoProvider extends CapabilityInfoProvider<AbstractRecipeLogic> {
+/**
+ * Generalized from {@code CapabilityInfoProvider<AbstractRecipeLogic>}
+ * to {@link IRecipeLogicInfoProvider} -- see that interface's own JavaDoc for why (hover info would otherwise be
+ * missing for a StateMachine-migrated machine).
+ */
+public class RecipeLogicInfoProvider extends CapabilityInfoProvider<IRecipeLogicInfoProvider> {
 
     @Override
     public String getID() {
@@ -32,18 +37,22 @@ public class RecipeLogicInfoProvider extends CapabilityInfoProvider<AbstractReci
 
     @NotNull
     @Override
-    protected Capability<AbstractRecipeLogic> getCapability() {
+    protected Capability<IRecipeLogicInfoProvider> getCapability() {
         return GregtechTileCapabilities.CAPABILITY_RECIPE_LOGIC;
     }
 
     @Override
-    protected void addProbeInfo(@NotNull AbstractRecipeLogic capability, @NotNull IProbeInfo probeInfo,
+    protected void addProbeInfo(@NotNull IRecipeLogicInfoProvider capability, @NotNull IProbeInfo probeInfo,
                                 @NotNull EntityPlayer player, @NotNull TileEntity tileEntity,
                                 @NotNull IProbeHitData data) {
         // do not show energy usage on machines that do not use energy
         if (capability.isWorking()) {
-            if (capability instanceof PrimitiveRecipeLogic) {
-                return; // do not show info for primitive machines, as they are supposed to appear powerless
+            // "free power" primitive machines (Primitive Blast Furnace/Coke Oven) are supposed to appear
+            // powerless -- the new engine's shared RecipeWorkable trait has no per-instance flag equivalent to
+            // legacy's PrimitiveRecipeLogic subclass, hence checking by MTE type instead.
+            if (tileEntity instanceof IGregTechTileEntity gtte &&
+                    gtte.getMetaTileEntity() instanceof RecipeWorkablePrimitiveMultiblockController) {
+                return;
             }
             long eut = capability.getInfoProviderEUt();
             String text = null;
@@ -52,7 +61,7 @@ public class RecipeLogicInfoProvider extends CapabilityInfoProvider<AbstractReci
                 IGregTechTileEntity gtTileEntity = (IGregTechTileEntity) tileEntity;
                 MetaTileEntity mte = gtTileEntity.getMetaTileEntity();
                 if (mte instanceof SteamMetaTileEntity || mte instanceof MetaTileEntityLargeBoiler ||
-                        mte instanceof RecipeMapSteamMultiblockController) {
+                        mte instanceof RecipeWorkableSteamMultiblockController) {
                     text = TextFormatting.AQUA + TextFormattingUtil.formatNumbers(eut) +
                             TextStyleClass.INFO + " L/t {*" +
                             Materials.Steam.getUnlocalizedName() + "*}";

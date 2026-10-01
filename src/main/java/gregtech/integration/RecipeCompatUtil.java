@@ -40,11 +40,11 @@ public final class RecipeCompatUtil {
     @NotNull
     public static String getFirstOutputString(@NotNull Recipe recipe) {
         String output = "";
-        if (!recipe.getOutputs().isEmpty()) {
-            ItemStack item = recipe.getOutputs().get(0);
+        if (!recipe.getGuaranteedItemOutputs().isEmpty()) {
+            ItemStack item = recipe.getGuaranteedItemOutputs().get(0);
             output = item.getDisplayName() + " * " + item.getCount();
-        } else if (!recipe.getFluidOutputs().isEmpty()) {
-            FluidStack fluid = recipe.getFluidOutputs().get(0);
+        } else if (!recipe.getGuaranteedFluidOutputs().isEmpty()) {
+            FluidStack fluid = recipe.getGuaranteedFluidOutputs().get(0);
             output = fluid.getLocalizedName() + " * " + fluid.amount;
         }
         return output;

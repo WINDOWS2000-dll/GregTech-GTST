@@ -323,8 +323,8 @@ public class MetaTileEntityWorldAccelerator extends TieredMetaTileEntity impleme
 
     @Override
     public void setWorkingEnabled(boolean isWorkingEnabled) {
-        if (this.isPaused != isWorkingEnabled) {
-            this.isPaused = isWorkingEnabled;
+        if (this.isPaused == isWorkingEnabled) {
+            this.isPaused = !isWorkingEnabled;
             notifyBlockUpdate();
         }
     }

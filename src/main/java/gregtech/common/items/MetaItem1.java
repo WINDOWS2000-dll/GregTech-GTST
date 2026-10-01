@@ -45,7 +45,9 @@ import gregtech.common.items.behaviors.ItemMagnetBehavior;
 import gregtech.common.items.behaviors.LighterBehaviour;
 import gregtech.common.items.behaviors.MultiblockBuilderBehavior;
 import gregtech.common.items.behaviors.NanoSaberBehavior;
+import gregtech.common.items.behaviors.PipeNetTraceBehavior;
 import gregtech.common.items.behaviors.ProspectorScannerBehavior;
+import gregtech.common.items.behaviors.StateMachineTraceBehavior;
 import gregtech.common.items.behaviors.TooltipBehavior;
 import gregtech.common.items.behaviors.TricorderBehavior;
 import gregtech.common.items.behaviors.TurbineRotorBehavior;
@@ -1197,6 +1199,9 @@ public class MetaItem1 extends StandardMetaItem {
         MULTIBLOCK_BUILDER = addItem(1004, "tool.multiblock_builder").addComponents(new MultiblockBuilderBehavior())
                 .setMaxStackSize(1);
 
+        STATE_MACHINE_TRACER = addItem(1005, "tool.state_machine_tracer")
+                .addComponents(new StateMachineTraceBehavior()).setMaxStackSize(1);
+
         // Extra molds 1006-1010
         SHAPE_MOLDS[18] = SHAPE_MOLD_PIPE_TINY = addItem(1006, "shape.mold.pipe.tiny")
                 .setRecyclingData(new RecyclingData(new MaterialStack(Materials.Steel, M * 4)));
@@ -1208,5 +1213,8 @@ public class MetaItem1 extends StandardMetaItem {
                 .setRecyclingData(new RecyclingData(new MaterialStack(Materials.Steel, M * 4)));
         SHAPE_MOLDS[22] = SHAPE_MOLD_PIPE_HUGE = addItem(1010, "shape.mold.pipe.huge")
                 .setRecyclingData(new RecyclingData(new MaterialStack(Materials.Steel, M * 4)));
+
+        PIPE_NET_TRACER = addItem(1011, "tool.pipe_net_tracer")
+                .addComponents(new PipeNetTraceBehavior()).setMaxStackSize(1);
     }
 }

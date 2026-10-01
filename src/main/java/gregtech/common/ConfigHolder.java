@@ -42,6 +42,10 @@ public class ConfigHolder {
     @Config.RequiresMcRestart
     public static WorldGenOptions worldgen = new WorldGenOptions();
 
+    @Config.Comment("Config options for developer-only debugging tools (StateMachine graph dump/trace, etc).")
+    @Config.Name("Developer Options")
+    public static DevOptions dev = new DevOptions();
+
     public static class MachineOptions {
 
         @Config.Comment({ "Whether insufficient energy supply should reset Machine recipe progress to zero.",
@@ -369,6 +373,42 @@ public class ConfigHolder {
 
         @Config.Comment({ "Whether to give the terminal to new players on login", "Default: true" })
         public boolean spawnTerminal = true;
+    }
+
+    /**
+     * Gates the StateMachine graph-dump command and execution-trace
+     * item entirely, independent of {@link MiscOptions#debug} (a general-purpose verbose logging switch unrelated
+     * to these tools). Deliberately a single master switch rather than one flag per tool: finer granularity isn't
+     * worth the config surface for two closely related dev tools.
+     */
+    public static class DevOptions {
+
+        @Config.Comment({ "Whether the StateMachine graph-dump command (/gtst dumpstatemachine) and execution-trace " +
+                "item are enabled at all. Both are developer-only debugging tools with no gameplay effect.",
+                "Default: false" })
+        public boolean enableStateMachineDebugTools = false;
+
+        @Config.Comment({ "Whether the PipeNet graph-dump command (/gtst dumppipenet) and execution-trace item " +
+                "(right-click a pipe to toggle tracing its network's TPS/CPU/memory load, search overhead, and " +
+                "cache hit rate) are enabled at all. Both are developer-only debugging tools with no gameplay " +
+                "effect.",
+                "Default: false" })
+        public boolean enablePipeNetDebugTools = false;
+
+        @Config.Comment({ "Master switch for gregtech.api.recipes.logic.statemachine.experimental's addon " +
+                "extension registry. This is an explicitly unstable, unsupported API surface with no compatibility " +
+                "guarantee across versions -- see that package's own JavaDoc before enabling this. Both this switch " +
+                "AND listing a modid in experimentalAddonExtensionsAllowlist below are required for that modid's " +
+                "registrations to take effect; this alone does nothing.",
+                "Default: false" })
+        public boolean enableExperimentalAddonExtensions = false;
+
+        @Config.Comment({ "Which modids are allowed to register experimental addon extensions, once " +
+                "enableExperimentalAddonExtensions above is also true. Deliberately strict: an empty list permits " +
+                "nobody, even with the master switch on -- there is no \"allow everyone\" shortcut, since this " +
+                "governs access to an unstable API that can corrupt a machine's recipe logic graph if misused.",
+                "Default: empty (nobody permitted)" })
+        public String[] experimentalAddonExtensionsAllowlist = new String[0];
     }
 
     public static class ClientOptions {

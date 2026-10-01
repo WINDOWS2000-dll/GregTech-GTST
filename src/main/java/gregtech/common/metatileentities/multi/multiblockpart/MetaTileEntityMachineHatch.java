@@ -8,7 +8,7 @@ import gregtech.api.metatileentity.multiblock.AbilityInstances;
 import gregtech.api.metatileentity.multiblock.IMultiblockAbilityPart;
 import gregtech.api.metatileentity.multiblock.MultiblockAbility;
 import gregtech.api.metatileentity.multiblock.MultiblockControllerBase;
-import gregtech.api.metatileentity.multiblock.RecipeMapMultiblockController;
+import gregtech.api.metatileentity.multiblock.RecipeWorkableMultiblockController;
 import gregtech.api.mui.GTGuis;
 import gregtech.api.util.GTUtility;
 import gregtech.api.util.ItemStackHashStrategy;
@@ -129,10 +129,10 @@ public class MetaTileEntityMachineHatch extends MetaTileEntityMultiblockNotifiab
     }
 
     private boolean isSlotBlocked() {
-        if (getController() instanceof RecipeMapMultiblockController controller) {
-            return controller.isActive();
-        }
-        return false;
+        // Processing Array (this part's only host) is a RecipeWorkableMultiblockController; must check
+        // that type here, not legacy RecipeMapMultiblockController, or this hatch never blocks its slot while
+        // the array is active.
+        return getController() instanceof RecipeWorkableMultiblockController controller && controller.isActive();
     }
 
     private class LimitedImportHandler extends NotifiableItemStackHandler {

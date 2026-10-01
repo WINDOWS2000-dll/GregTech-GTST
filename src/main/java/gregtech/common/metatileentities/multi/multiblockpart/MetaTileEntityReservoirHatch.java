@@ -54,6 +54,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class MetaTileEntityReservoirHatch extends MetaTileEntityMultiblockNotifiablePart
@@ -132,6 +133,14 @@ public class MetaTileEntityReservoirHatch extends MetaTileEntityMultiblockNotifi
     @Override
     public @NotNull List<MultiblockAbility<?>> getAbilities() {
         return Arrays.asList(MultiblockAbility.IMPORT_FLUIDS, MultiblockAbility.IMPORT_ITEMS);
+    }
+
+    /**
+     * @see gregtech.common.metatileentities.multi.multiblockpart.MetaTileEntityFluidHatch#getPatternAbilities()
+     */
+    @Override
+    public @NotNull List<MultiblockAbility<?>> getPatternAbilities() {
+        return Collections.singletonList(MultiblockAbility.IMPORT_FLUIDS);
     }
 
     @Override

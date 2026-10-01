@@ -81,7 +81,11 @@ public class GTLaserBeamParticle extends GTParticle {
     }
 
     public GTLaserBeamParticle setStartPos(@NotNull Vector3 startPos) {
+        // recompute the direction (end - start) using the current absolute end point before moving the origin
         this.direction.add(posX, posY, posZ).subtract(startPos);
+        this.posX = startPos.x;
+        this.posY = startPos.y;
+        this.posZ = startPos.z;
         return this;
     }
 

@@ -110,6 +110,6 @@ public enum GTCombType {
     }
 
     public static GTCombType getComb(int meta) {
-        return meta < 0 || meta > VALUES.length ? VALUES[0] : VALUES[meta];
+        return meta < 0 || meta >= VALUES.length ? VALUES[0] : VALUES[meta];
     }
 }

@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Allows hatchscan behavior to be used on fluid outputs. Not a child of {@link AbstractRecipeLogic}
+ * Allows hatchscan behavior to be used on fluid outputs. Not a child of {@code AbstractRecipeLogic}
  * for compatibility with other children.
  */
 public class DistillationTowerLogicHandler {

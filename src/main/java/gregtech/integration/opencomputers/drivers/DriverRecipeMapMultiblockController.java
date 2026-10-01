@@ -2,9 +2,8 @@ package gregtech.integration.opencomputers.drivers;
 
 import gregtech.api.capability.GregtechTileCapabilities;
 import gregtech.api.capability.IMultipleTankHandler;
-import gregtech.api.capability.impl.MultiblockRecipeLogic;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
-import gregtech.api.metatileentity.multiblock.RecipeMapMultiblockController;
+import gregtech.api.metatileentity.multiblock.IMultiblockRecipeLogicInfoProvider;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
@@ -26,11 +25,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Generalized from {@code RecipeMapMultiblockController} to
+ * {@link IMultiblockRecipeLogicInfoProvider} -- see that interface's own JavaDoc for why (this driver's
+ * {@code gt_multiblockRecipeLogic} OpenComputers component would otherwise not be
+ * created for a multiblock using {@code RecipeWorkableMultiblockController}).
+ */
 public class DriverRecipeMapMultiblockController extends DriverSidedTileEntity {
 
     @Override
     public Class<?> getTileEntityClass() {
-        return MultiblockRecipeLogic.class;
+        return IMultiblockRecipeLogicInfoProvider.class;
     }
 
     @Override
@@ -46,17 +51,18 @@ public class DriverRecipeMapMultiblockController extends DriverSidedTileEntity {
     public ManagedEnvironment createEnvironment(World world, BlockPos pos, EnumFacing side) {
         TileEntity tileEntity = world.getTileEntity(pos);
         if (tileEntity instanceof IGregTechTileEntity) {
-            if (((IGregTechTileEntity) tileEntity).getMetaTileEntity() instanceof RecipeMapMultiblockController)
+            if (((IGregTechTileEntity) tileEntity).getMetaTileEntity() instanceof IMultiblockRecipeLogicInfoProvider)
                 return new EnvironmentMultiblockRecipeLogic((IGregTechTileEntity) tileEntity,
-                        (RecipeMapMultiblockController) ((IGregTechTileEntity) tileEntity).getMetaTileEntity());
+                        (IMultiblockRecipeLogicInfoProvider) ((IGregTechTileEntity) tileEntity).getMetaTileEntity());
         }
         return null;
     }
 
     public final static class EnvironmentMultiblockRecipeLogic extends
-                                                               EnvironmentMetaTileEntity<RecipeMapMultiblockController> {
+                                                               EnvironmentMetaTileEntity<IMultiblockRecipeLogicInfoProvider> {
 
-        public EnvironmentMultiblockRecipeLogic(IGregTechTileEntity holder, RecipeMapMultiblockController capability) {
+        public EnvironmentMultiblockRecipeLogic(IGregTechTileEntity holder,
+                                                IMultiblockRecipeLogicInfoProvider capability) {
             super(holder, capability, "gt_multiblockRecipeLogic");
         }
 

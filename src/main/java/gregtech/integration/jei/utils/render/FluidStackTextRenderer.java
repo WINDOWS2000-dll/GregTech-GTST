@@ -36,6 +36,7 @@ public class FluidStackTextRenderer extends FluidStackRenderer {
     public FluidStackTextRenderer(int capacityMb, boolean showCapacity, int width, int height,
                                   @Nullable IDrawable overlay,
                                   BoostableChanceEntry<FluidStack> chance, ChancedOutputLogic chanceLogic) {
+        super(capacityMb, showCapacity, width, height, overlay);
         if (chance != null) {
             this.chanceBase = chance.getChance();
             this.chanceBoost = chance.getChanceBoost();

@@ -1,6 +1,5 @@
 package gregtech.api.capability;
 
-import gregtech.api.capability.impl.AbstractRecipeLogic;
 import gregtech.api.cover.CoverHolder;
 import gregtech.api.metatileentity.multiblock.IMaintenance;
 
@@ -21,8 +20,11 @@ public class GregtechTileCapabilities {
     @CapabilityInject(IActiveOutputSide.class)
     public static Capability<IActiveOutputSide> CAPABILITY_ACTIVE_OUTPUT_SIDE = null;
 
-    @CapabilityInject(AbstractRecipeLogic.class)
-    public static Capability<AbstractRecipeLogic> CAPABILITY_RECIPE_LOGIC = null;
+    // Generalized to IRecipeLogicInfoProvider (rather than Capability<AbstractRecipeLogic>) so both legacy
+    // AbstractRecipeLogic and the new engine's RecipeWorkable can expose this same capability -- see
+    // IRecipeLogicInfoProvider's own JavaDoc for why.
+    @CapabilityInject(IRecipeLogicInfoProvider.class)
+    public static Capability<IRecipeLogicInfoProvider> CAPABILITY_RECIPE_LOGIC = null;
 
     @CapabilityInject(IMultipleRecipeMaps.class)
     public static Capability<IMultipleRecipeMaps> CAPABILITY_MULTIPLE_RECIPEMAPS = null;

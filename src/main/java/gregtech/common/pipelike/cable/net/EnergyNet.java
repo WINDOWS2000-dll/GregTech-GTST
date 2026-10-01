@@ -2,6 +2,7 @@ package gregtech.common.pipelike.cable.net;
 
 import gregtech.api.pipenet.Node;
 import gregtech.api.pipenet.PipeNet;
+import gregtech.api.pipenet.PipeNetTraceLog;
 import gregtech.api.pipenet.WorldPipeNet;
 import gregtech.api.unification.material.properties.WireProperties;
 
@@ -31,13 +32,24 @@ public class EnergyNet extends PipeNet<WireProperties> {
     public List<EnergyRoutePath> getNetData(BlockPos pipePos) {
         List<EnergyRoutePath> data = NET_DATA.get(pipePos);
         if (data == null) {
+            boolean traced = isTraceEnabled();
+            if (traced) getTraceStats().recordCacheMiss();
+            long start = traced ? System.nanoTime() : 0;
             data = EnergyNetWalker.createNetData(getWorldData(), pipePos);
+            if (traced) {
+                // like ItemNetWalker, EnergyNetWalker never stops early -- it enumerates every reachable
+                // handler -- so getAllNodes().size() (not the result list's size) is the actual work performed
+                getTraceStats().recordWalkerTraversal(System.nanoTime() - start, getAllNodes().size());
+                PipeNetTraceLog.log(getTraceLabel(), "getNetData(" + pipePos + "): cache miss, walker traversal");
+            }
             if (data == null) {
                 // walker failed, don't cache so it tries again on next insertion
                 return Collections.emptyList();
             }
             data.sort(Comparator.comparingInt(EnergyRoutePath::getDistance));
             NET_DATA.put(pipePos, data);
+        } else if (isTraceEnabled()) {
+            getTraceStats().recordCacheHit();
         }
         return data;
     }
@@ -66,12 +78,12 @@ public class EnergyNet extends PipeNet<WireProperties> {
     }
 
     @Override
-    public void onPipeConnectionsUpdate() {
+    public void onPipeConnectionsUpdate(BlockPos pos) {
         NET_DATA.clear();
     }
 
     @Override
-    public void onChunkUnload() {
+    public void onChunkUnload(BlockPos pos) {
         NET_DATA.clear();
     }
 

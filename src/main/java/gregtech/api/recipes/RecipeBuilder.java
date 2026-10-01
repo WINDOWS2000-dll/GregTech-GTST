@@ -7,7 +7,6 @@ import gregtech.api.items.metaitem.MetaItem;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.multiblock.CleanroomType;
 import gregtech.api.recipes.category.GTRecipeCategory;
-import gregtech.api.recipes.chance.output.ChancedOutputList;
 import gregtech.api.recipes.chance.output.ChancedOutputLogic;
 import gregtech.api.recipes.chance.output.impl.ChancedFluidOutput;
 import gregtech.api.recipes.chance.output.impl.ChancedItemOutput;
@@ -18,11 +17,17 @@ import gregtech.api.recipes.ingredients.GTRecipeOreInput;
 import gregtech.api.recipes.ingredients.IntCircuitIngredient;
 import gregtech.api.recipes.ingredients.nbtmatch.NBTCondition;
 import gregtech.api.recipes.ingredients.nbtmatch.NBTMatcher;
+import gregtech.api.recipes.output.StandardFluidOutput;
+import gregtech.api.recipes.output.StandardItemOutput;
 import gregtech.api.recipes.properties.RecipeProperty;
 import gregtech.api.recipes.properties.RecipePropertyStorage;
 import gregtech.api.recipes.properties.RecipePropertyStorageImpl;
 import gregtech.api.recipes.properties.impl.CleanroomProperty;
 import gregtech.api.recipes.properties.impl.DimensionProperty;
+import gregtech.api.recipes.roll.IndependentRollInterpreter;
+import gregtech.api.recipes.roll.RollInformation;
+import gregtech.api.recipes.roll.RollInterpreter;
+import gregtech.api.recipes.roll.RollableOutputList;
 import gregtech.api.unification.OreDictUnifier;
 import gregtech.api.unification.material.Material;
 import gregtech.api.unification.ore.OrePrefix;
@@ -82,8 +87,17 @@ public class RecipeBuilder<R extends RecipeBuilder<R>> {
     protected ChancedOutputLogic chancedOutputLogic = ChancedOutputLogic.OR;
     protected ChancedOutputLogic chancedFluidOutputLogic = ChancedOutputLogic.OR;
 
+    /** How each entry in {@link #chancedOutputs} is individually rolled; see {@link RollInterpreter}. */
+    protected RollInterpreter chancedOutputRollInterpreter = IndependentRollInterpreter.INSTANCE;
+    /** As {@link #chancedOutputRollInterpreter}, but for {@link #chancedFluidOutputs}. */
+    protected RollInterpreter chancedFluidOutputRollInterpreter = IndependentRollInterpreter.INSTANCE;
+
     protected int duration;
     protected long EUt;
+    /** See {@link Recipe#getAmperage()}. */
+    protected long amperage = 1;
+    /** See {@link Recipe#isGenerating()}; set via {@link #setGenerating()}. */
+    protected boolean generating = false;
     protected boolean hidden = false;
     protected GTRecipeCategory category;
     protected boolean isCTRecipe = false;
@@ -109,13 +123,19 @@ public class RecipeBuilder<R extends RecipeBuilder<R>> {
     public RecipeBuilder(Recipe recipe, RecipeMap<R> recipeMap) {
         this.recipeMap = recipeMap;
         this.inputs = new ArrayList<>(recipe.getInputs());
-        this.outputs = new ArrayList<>(recipe.getOutputs());
-        this.chancedOutputs = new ArrayList<>(recipe.getChancedOutputs().getChancedEntries());
+        this.outputs = new ArrayList<>(recipe.getGuaranteedItemOutputs());
+        this.chancedOutputs = new ArrayList<>(recipe.getChancedItemOutputs());
         this.fluidInputs = new ArrayList<>(recipe.getFluidInputs());
-        this.fluidOutputs = GTUtility.copyFluidList(recipe.getFluidOutputs());
-        this.chancedFluidOutputs = new ArrayList<>(recipe.getChancedFluidOutputs().getChancedEntries());
+        this.fluidOutputs = GTUtility.copyFluidList(recipe.getGuaranteedFluidOutputs());
+        this.chancedFluidOutputs = new ArrayList<>(recipe.getChancedFluidOutputs());
+        this.chancedOutputLogic = recipe.getItemOutputChanceLogic();
+        this.chancedFluidOutputLogic = recipe.getFluidOutputChanceLogic();
+        this.chancedOutputRollInterpreter = recipe.getItemOutputRollInterpreter();
+        this.chancedFluidOutputRollInterpreter = recipe.getFluidOutputRollInterpreter();
         this.duration = recipe.getDuration();
         this.EUt = recipe.getEUt();
+        this.amperage = recipe.getAmperage();
+        this.generating = recipe.isGenerating();
         this.hidden = recipe.isHidden();
         this.category = recipe.getRecipeCategory();
         this.recipePropertyStorage = recipe.propertyStorage().copy();
@@ -132,8 +152,12 @@ public class RecipeBuilder<R extends RecipeBuilder<R>> {
         this.chancedFluidOutputs = new ArrayList<>(recipeBuilder.chancedFluidOutputs);
         this.chancedOutputLogic = recipeBuilder.chancedOutputLogic;
         this.chancedFluidOutputLogic = recipeBuilder.chancedFluidOutputLogic;
+        this.chancedOutputRollInterpreter = recipeBuilder.chancedOutputRollInterpreter;
+        this.chancedFluidOutputRollInterpreter = recipeBuilder.chancedFluidOutputRollInterpreter;
         this.duration = recipeBuilder.duration;
         this.EUt = recipeBuilder.EUt;
+        this.amperage = recipeBuilder.amperage;
+        this.generating = recipeBuilder.generating;
         this.hidden = recipeBuilder.hidden;
         this.category = recipeBuilder.category;
         this.recipePropertyStorage = recipeBuilder.recipePropertyStorage.copy();
@@ -714,6 +738,17 @@ public class RecipeBuilder<R extends RecipeBuilder<R>> {
         return (R) this;
     }
 
+    /**
+     * Selects how {@link #chancedOutputs} entries are individually rolled (independent of
+     * {@link #chancedOutputLogic}, which instead correlates the rolled results against each other). Defaults to
+     * {@link IndependentRollInterpreter}, matching every recipe registered before this method existed; use e.g.
+     * {@code WeightedRollInterpreter}/{@code RangedRollInterpreter} for richer chance-output behavior.
+     */
+    public R chancedOutputRollInterpreter(@NotNull RollInterpreter interpreter) {
+        this.chancedOutputRollInterpreter = interpreter;
+        return (R) this;
+    }
+
     public R chancedFluidOutput(FluidStack stack, int chance, int tierChanceBoost) {
         if (stack == null || stack.amount == 0) {
             return (R) this;
@@ -742,6 +777,12 @@ public class RecipeBuilder<R extends RecipeBuilder<R>> {
 
     public R chancedFluidOutputLogic(@NotNull ChancedOutputLogic logic) {
         this.chancedFluidOutputLogic = logic;
+        return (R) this;
+    }
+
+    /** As {@link #chancedOutputRollInterpreter(RollInterpreter)}, but for {@link #chancedFluidOutputs}. */
+    public R chancedFluidOutputRollInterpreter(@NotNull RollInterpreter interpreter) {
+        this.chancedFluidOutputRollInterpreter = interpreter;
         return (R) this;
     }
 
@@ -795,7 +836,7 @@ public class RecipeBuilder<R extends RecipeBuilder<R>> {
      */
 
     public void chancedOutputsMultiply(Recipe chancedOutputsFrom, int numberOfOperations) {
-        for (ChancedItemOutput entry : chancedOutputsFrom.getChancedOutputs().getChancedEntries()) {
+        for (ChancedItemOutput entry : chancedOutputsFrom.getChancedItemOutputs()) {
             int chance = entry.getChance();
             int boost = entry.getChanceBoost();
 
@@ -806,7 +847,7 @@ public class RecipeBuilder<R extends RecipeBuilder<R>> {
                 this.chancedOutput(entry.getIngredient().copy(), chance, boost);
             }
         }
-        for (ChancedFluidOutput entry : chancedOutputsFrom.getChancedFluidOutputs().getChancedEntries()) {
+        for (ChancedFluidOutput entry : chancedOutputsFrom.getChancedFluidOutputs()) {
             int chance = entry.getChance();
             int boost = entry.getChanceBoost();
 
@@ -887,10 +928,10 @@ public class RecipeBuilder<R extends RecipeBuilder<R>> {
             }
         });
 
-        recipe.getOutputs().forEach(itemStack -> outputItems.add(copyItemStackWithCount(itemStack,
+        recipe.getGuaranteedItemOutputs().forEach(itemStack -> outputItems.add(copyItemStackWithCount(itemStack,
                 itemStack.getCount() * numberOfOperations)));
 
-        recipe.getFluidOutputs().forEach(fluidStack -> outputFluids.add(copyFluidStackWithAmount(fluidStack,
+        recipe.getGuaranteedFluidOutputs().forEach(fluidStack -> outputFluids.add(copyFluidStackWithAmount(fluidStack,
                 fluidStack.amount * numberOfOperations)));
     }
 
@@ -917,6 +958,22 @@ public class RecipeBuilder<R extends RecipeBuilder<R>> {
 
     public R EUt(long EUt) {
         this.EUt = EUt;
+        return (R) this;
+    }
+
+    /** See {@link Recipe#getAmperage()}. Must be {@code >= 1}. */
+    public R amperage(long amperage) {
+        this.amperage = amperage;
+        return (R) this;
+    }
+
+    /**
+     * Marks this recipe as producing power rather than consuming it.
+     * {@link gregtech.api.recipes.builders.FuelRecipeBuilder}'s constructor calls this
+     * unconditionally; {@link #EUt} itself stays a plain positive magnitude either way.
+     */
+    public R setGenerating() {
+        this.generating = true;
         return (R) this;
     }
 
@@ -979,11 +1036,24 @@ public class RecipeBuilder<R extends RecipeBuilder<R>> {
 
     public ValidationResult<Recipe> build() {
         EnumValidationResult result = recipePropertyStorageErrored ? EnumValidationResult.INVALID : validate();
-        return ValidationResult.newResult(result, new Recipe(inputs, outputs,
-                new ChancedOutputList<>(this.chancedOutputLogic, chancedOutputs),
-                fluidInputs, fluidOutputs,
-                new ChancedOutputList<>(this.chancedFluidOutputLogic, chancedFluidOutputs),
-                duration, EUt, hidden, isCTRecipe, recipePropertyStorage, category));
+
+        List<RollInformation<ItemStack>> rolledItems = new ArrayList<>(chancedOutputs.size());
+        for (ChancedItemOutput entry : chancedOutputs) {
+            rolledItems.add(new RollInformation<>(entry.getIngredient(), entry.getChance(), entry.getChanceBoost()));
+        }
+        RollableOutputList<ItemStack> itemOutputs = new RollableOutputList<>(ItemStack::getCount, outputs,
+                rolledItems, chancedOutputRollInterpreter, chancedOutputLogic);
+
+        List<RollInformation<FluidStack>> rolledFluids = new ArrayList<>(chancedFluidOutputs.size());
+        for (ChancedFluidOutput entry : chancedFluidOutputs) {
+            rolledFluids.add(new RollInformation<>(entry.getIngredient(), entry.getChance(), entry.getChanceBoost()));
+        }
+        RollableOutputList<FluidStack> fluidOutputList = new RollableOutputList<>(stack -> stack.amount, fluidOutputs,
+                rolledFluids, chancedFluidOutputRollInterpreter, chancedFluidOutputLogic);
+
+        return ValidationResult.newResult(result, new Recipe(inputs, new StandardItemOutput(itemOutputs),
+                fluidInputs, new StandardFluidOutput(fluidOutputList),
+                duration, EUt, amperage, generating, hidden, isCTRecipe, recipePropertyStorage, category));
     }
 
     protected EnumValidationResult validate() {
@@ -1118,7 +1188,7 @@ public class RecipeBuilder<R extends RecipeBuilder<R>> {
     }
 
     /**
-     * Similar to {@link Recipe#getAllItemOutputs()}, returns the recipe outputs and all chanced outputs
+     * Similar to {@code Recipe#getAllItemOutputs()}, returns the recipe outputs and all chanced outputs
      *
      * @return A List of ItemStacks composed of the recipe outputs and chanced outputs
      */

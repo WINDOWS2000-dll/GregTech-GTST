@@ -712,13 +712,13 @@ public final class ToolHelper {
                     drops.clear();
                     OrePrefix prefix = OreDictUnifier.getPrefix(silktouchDrop);
                     if (prefix == null) {
-                        for (ItemStack output : hammerRecipe.getOutputs()) {
+                        for (ItemStack output : hammerRecipe.getGuaranteedItemOutputs()) {
                             if (dropChance == 1.0F || random.nextFloat() <= dropChance) {
                                 drops.add(output.copy());
                             }
                         }
                     } else if (prefix.name.startsWith("ore")) {
-                        for (ItemStack output : hammerRecipe.getOutputs()) {
+                        for (ItemStack output : hammerRecipe.getGuaranteedItemOutputs()) {
                             if (dropChance == 1.0F || random.nextFloat() <= dropChance) {
                                 // Only apply fortune on ore -> crushed forge hammer recipes
                                 if (OreDictUnifier.getPrefix(output) == OrePrefix.crushed) {

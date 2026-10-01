@@ -96,10 +96,10 @@ public class CTRecipeHelper {
                     .append("])");
         }
 
-        if (recipe.getOutputs().size() > 0) {
+        if (recipe.getGuaranteedItemOutputs().size() > 0) {
             builder.append(".outputs(");
             builder.append("[");
-            for (ItemStack itemStack : recipe.getOutputs()) {
+            for (ItemStack itemStack : recipe.getGuaranteedItemOutputs()) {
                 String itemId = RecipeCompatUtil.getMetaItemId(itemStack);
                 if (itemId != null) {
                     builder.append("<metaitem:")
@@ -122,15 +122,17 @@ public class CTRecipeHelper {
                         builder.append(".withTag(").append(nbt).append(")");
                     }
                 }
+
+                builder.append(", ");
             }
             builder.delete(builder.length() - 2, builder.length())
                     .append("])");
         }
 
-        if (recipe.getFluidOutputs().size() > 0) {
+        if (recipe.getGuaranteedFluidOutputs().size() > 0) {
             builder.append(".fluidOutputs(");
             builder.append("[");
-            for (FluidStack fluidStack : recipe.getFluidOutputs()) {
+            for (FluidStack fluidStack : recipe.getGuaranteedFluidOutputs()) {
                 builder.append("<liquid:")
                         .append(fluidStack.getFluid().getName())
                         .append(">");
@@ -138,6 +140,8 @@ public class CTRecipeHelper {
                     builder.append(" * ")
                             .append(fluidStack.amount);
                 }
+
+                builder.append(", ");
             }
             builder.delete(builder.length() - 2, builder.length())
                     .append("])");

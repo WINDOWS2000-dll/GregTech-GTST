@@ -15,6 +15,9 @@ import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.MetaTileEntityHolder;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.pipenet.tile.IPipeTile;
+import gregtech.api.recipes.logic.statemachine.property.RecipePropertySet;
+import gregtech.api.recipes.logic.statemachine.property.impl.PowerSupplyProperty;
+import gregtech.api.recipes.logic.statemachine.workable.RecipeWorkable;
 import gregtech.api.util.GTUtility;
 import gregtech.api.util.LocalizationUtils;
 import gregtech.api.util.TextFormattingUtil;
@@ -237,6 +240,81 @@ public class TricorderBehavior implements IItemBehaviour {
                                     .setStyle(new Style().setColor(TextFormatting.GREEN)),
                             new TextComponentTranslation(TextFormattingUtil.formatNumbers(workable.getMaxProgress()))
                                     .setStyle(new Style().setColor(TextFormatting.YELLOW))));
+                }
+
+                // Currently-required EU/t (Dev tooling, added 2026-09-01: investigating downTransformForParallels-
+                // driven parallel count instability on Multi Smelter when raising hatch voltage tier -- see
+                // RecipeWorkable#getTotalRequiredEUt's JavaDoc). Only meaningful for the new StateMachine engine
+                // (RecipeWorkable); legacy AbstractRecipeLogic-based machines don't expose this per-recipe.
+                if (workable instanceof RecipeWorkable recipeWorkable) {
+                    int activeCount = recipeWorkable.getActiveRecipeCount();
+                    if (activeCount > 0) {
+                        list.add(new TextComponentTranslation("behavior.tricorder.machine_eut_required",
+                                new TextComponentTranslation(
+                                        TextFormattingUtil.formatNumbers(recipeWorkable.getTotalRequiredEUt()))
+                                                .setStyle(new Style().setColor(TextFormatting.RED))));
+                        for (int i = 0; i < activeCount; i++) {
+                            list.add(new TextComponentTranslation("behavior.tricorder.machine_eut_required_detail",
+                                    i,
+                                    new TextComponentTranslation(
+                                            TextFormattingUtil.formatNumbers(recipeWorkable.getVoltage(i)))
+                                                    .setStyle(new Style().setColor(TextFormatting.YELLOW)),
+                                    new TextComponentTranslation(
+                                            TextFormattingUtil.formatNumbers(recipeWorkable.getAmperage(i)))
+                                                    .setStyle(new Style().setColor(TextFormatting.YELLOW)),
+                                    new TextComponentTranslation(
+                                            TextFormattingUtil.formatNumbers(recipeWorkable.getRequiredEUt(i)))
+                                                    .setStyle(new Style().setColor(TextFormatting.GOLD))));
+                        }
+                    }
+
+                    // Dev tooling (added 2026-09-04): investigating a real-machine bug where committed parallel
+                    // climbed past what a machine's own real energy supply amperage should allow (Processing
+                    // Array). Shows the raw PowerSupplyProperty this logic is currently advertising to the search
+                    // (RecipeLogicConfig#power's properties supplier) -- this is the value RecipeParallelOperator's
+                    // amperage budget check (RecipePowerConfig#getAvailableAmperage) actually reads, as opposed to
+                    // whatever the energy container's own getInputVoltage()/getInputAmperage() report (which a
+                    // machine like Processing Array deliberately clamps/rewraps before advertising -- see its own
+                    // createConfig()).
+                    if (recipeWorkable.getConfig().power.properties != null) {
+                        RecipePropertySet supplyProps = recipeWorkable.getConfig().power.properties.get();
+                        PowerSupplyProperty supply = supplyProps.getOrDefault(PowerSupplyProperty.EMPTY);
+                        list.add(new TextComponentTranslation("behavior.tricorder.machine_power_supply_debug",
+                                new TextComponentTranslation(TextFormattingUtil.formatNumbers(supply.voltage()))
+                                        .setStyle(new Style().setColor(TextFormatting.AQUA)),
+                                new TextComponentTranslation(TextFormattingUtil.formatNumbers(supply.amperage()))
+                                        .setStyle(new Style().setColor(TextFormatting.AQUA))));
+                    }
+
+                    // Dev tooling (added 2026-09-02): investigating a real-machine bug where the front overlay got
+                    // stuck showing "active" after a Multi Smelter genuinely finished processing. Shows both sides
+                    // of RecipeWorkable#update()'s debounce (see its JavaDoc) so a stuck overlay can be told apart
+                    // as either "the server's own debounce never flipped back to false" (both read true here even
+                    // though the machine is genuinely idle) or "the server is correct but the client never got/
+                    // applied the sync" (isActive() reads false here, on the server, while the client's overlay
+                    // still shows active).
+                    list.add(new TextComponentTranslation("behavior.tricorder.machine_active_debug",
+                            new TextComponentTranslation(String.valueOf(recipeWorkable.isActive()))
+                                    .setStyle(new Style().setColor(TextFormatting.AQUA)),
+                            new TextComponentTranslation(String.valueOf(recipeWorkable.isReportedActive()))
+                                    .setStyle(new Style().setColor(TextFormatting.AQUA))));
+                }
+
+                // Dev tooling (added 2026-09-04): investigating a real-machine report that Assembly Line never
+                // starts with orderedAssembly enabled, despite items/fluids being (reportedly) placed in the
+                // correct order. Shows getAbilities(IMPORT_ITEMS)'s actual order and held item per bus -- exactly
+                // what config.hooks.recipeSearchPredicate (MetaTileEntityAssemblyLine#isRecipeAcceptable) reads --
+                // so a mismatch between "what the player believes is bus 0" and what multiblockPartSorter() actually
+                // orders first can be told apart from a genuine engine bug.
+                if (metaTileEntity instanceof gregtech.common.metatileentities.multi.electric.MetaTileEntityAssemblyLine assemblyLine) {
+                    var buses = assemblyLine
+                            .getAbilities(gregtech.api.metatileentity.multiblock.MultiblockAbility.IMPORT_ITEMS);
+                    for (int i = 0; i < buses.size(); i++) {
+                        ItemStack held = buses.get(i).getStackInSlot(0);
+                        list.add(new TextComponentTranslation("behavior.tricorder.assembly_line_bus_debug", i,
+                                new TextComponentTranslation(held.isEmpty() ? "-" : held.getDisplayName())
+                                        .setStyle(new Style().setColor(TextFormatting.AQUA))));
+                    }
                 }
             }
 

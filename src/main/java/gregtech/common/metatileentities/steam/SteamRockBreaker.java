@@ -1,13 +1,13 @@
 package gregtech.common.metatileentities.steam;
 
 import gregtech.api.capability.impl.NotifiableItemStackHandler;
-import gregtech.api.capability.impl.RecipeLogicSteam;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.SteamMetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.recipes.RecipeMap;
 import gregtech.api.recipes.RecipeMaps;
+import gregtech.api.recipes.logic.statemachine.RecipeLogicConfig;
 import gregtech.client.particle.VanillaParticleEffects;
 import gregtech.client.renderer.texture.Textures;
 
@@ -17,7 +17,6 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.fluids.IFluidTank;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.items.IItemHandlerModifiable;
@@ -30,18 +29,33 @@ import com.cleanroommc.modularui.value.sync.PanelSyncManager;
 import com.cleanroommc.modularui.widgets.ProgressWidget;
 import com.cleanroommc.modularui.widgets.slot.ItemSlot;
 import com.cleanroommc.modularui.widgets.slot.ModularSlot;
+import org.jetbrains.annotations.NotNull;
 
+import java.util.function.Predicate;
+
+/**
+ * The adjacent-lava/water gate (legacy's inner
+ * {@code SteamRockBreakerRecipeLogic#shouldSearchForRecipes} override) is just an extra AND'd condition on
+ * {@code config.hooks.shouldStartRecipeLookup}, matching the established pattern from the EU Rock Breaker
+ * ({@code AdjacentBlockGate}) rather than a dedicated recipe-logic subclass.
+ */
 public class SteamRockBreaker extends SteamMetaTileEntity {
 
     private boolean hasValidFluids;
 
     public SteamRockBreaker(ResourceLocation metaTileEntityId, boolean isHighPressure) {
         super(metaTileEntityId, RecipeMaps.ROCK_BREAKER_RECIPES, Textures.ROCK_BREAKER_OVERLAY, isHighPressure);
-        this.workableHandler = new SteamRockBreakerRecipeLogic(this,
-                workableHandler.getRecipeMap(), isHighPressure, steamFluidTank, 1.0);
         if (getWorld() != null && !getWorld().isRemote) {
             checkAdjacentFluids();
         }
+    }
+
+    @Override
+    protected @NotNull RecipeLogicConfig createConfig(@NotNull RecipeMap<?> recipeMap) {
+        RecipeLogicConfig config = super.createConfig(recipeMap);
+        Predicate<NBTTagCompound> standard = config.hooks.shouldStartRecipeLookup;
+        config.hooks.shouldStartRecipeLookup = data -> hasValidFluids && standard.test(data);
+        return config;
     }
 
     @Override
@@ -96,8 +110,8 @@ public class SteamRockBreaker extends SteamMetaTileEntity {
                         .pos(53, 34)
                         .background(slotBase, GTGuiTextures.DUST_OVERLAY_STEAM.get(isHighPressure))
                         .slot(new ModularSlot(importItems, 0).accessibility(true, true)))
-                .child(workableHandler.getRecipeMap().getRecipeMapUI()
-                        .createJeiProgressWidget(workableHandler::getProgressPercent)
+                .child(recipeMap.getRecipeMapUI()
+                        .createJeiProgressWidget(this::getProgressPercent)
                         .pos(79, 35)
                         .size(21, 18)
                         .texture(GTGuiTextures.PROGRESS_BAR_MACERATE_STEAM.get(isHighPressure), 21)
@@ -140,19 +154,6 @@ public class SteamRockBreaker extends SteamMetaTileEntity {
     public void randomDisplayTick() {
         if (isActive()) {
             VanillaParticleEffects.defaultFrontEffect(this, 0.4F, EnumParticleTypes.SMOKE_NORMAL);
-        }
-    }
-
-    protected class SteamRockBreakerRecipeLogic extends RecipeLogicSteam {
-
-        public SteamRockBreakerRecipeLogic(MetaTileEntity tileEntity, RecipeMap<?> recipeMap, boolean isHighPressure,
-                                           IFluidTank steamFluidTank, double conversionRate) {
-            super(tileEntity, recipeMap, isHighPressure, steamFluidTank, conversionRate);
-        }
-
-        @Override
-        protected boolean shouldSearchForRecipes() {
-            return hasValidFluids && super.shouldSearchForRecipes();
         }
     }
 }

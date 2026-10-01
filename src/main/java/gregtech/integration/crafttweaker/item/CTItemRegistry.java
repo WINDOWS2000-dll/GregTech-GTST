@@ -20,6 +20,6 @@ public class CTItemRegistry {
                                     @Optional String chemicalFormula) {
         CT_OREDICT_ITEM.addOreDictItem(
                 id, name, rgb, MaterialIconSet.ICON_SETS.get(materialIconSet), OrePrefix.getPrefix(orePrefix),
-                chemicalFormula.isEmpty() ? null : chemicalFormula);
+                chemicalFormula == null || chemicalFormula.isEmpty() ? null : chemicalFormula);
     }
 }

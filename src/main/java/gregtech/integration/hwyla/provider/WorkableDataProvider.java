@@ -3,12 +3,16 @@ package gregtech.integration.hwyla.provider;
 import gregtech.api.GTValues;
 import gregtech.api.capability.GregtechTileCapabilities;
 import gregtech.api.capability.IWorkable;
-import gregtech.api.capability.impl.ComputationRecipeLogic;
+import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
+import gregtech.common.metatileentities.multi.electric.MetaTileEntityResearchStation;
 
 import net.minecraft.client.resources.I18n;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
 
 import mcp.mobius.waila.api.IWailaConfigHandler;
@@ -34,13 +38,29 @@ public class WorkableDataProvider extends CapabilityDataProvider<IWorkable> {
         return GregtechTileCapabilities.CAPABILITY_WORKABLE;
     }
 
+    /**
+     * Overrides the framework-level method (not just {@link #getNBTData(IWorkable, NBTTagCompound)}) so
+     * {@code ShowAsComputation} can be set by MTE type. Legacy checked
+     * {@code capability instanceof ComputationRecipeLogic} --
+     * Research Station is this provider's only "show as total computation" consumer and is StateMachine-based
+     * ({@code RecipeWorkable}, which carries no per-instance flag equivalent to that legacy subclass).
+     */
+    @Override
+    public @NotNull NBTTagCompound getNBTData(EntityPlayerMP player, TileEntity te, NBTTagCompound tag, World world,
+                                              BlockPos pos) {
+        tag = super.getNBTData(player, te, tag, world, pos);
+        if (te instanceof IGregTechTileEntity gtte &&
+                gtte.getMetaTileEntity() instanceof MetaTileEntityResearchStation) {
+            tag.getCompoundTag("gregtech.IWorkable").setBoolean("ShowAsComputation", true);
+        }
+        return tag;
+    }
+
     @Override
     protected NBTTagCompound getNBTData(IWorkable capability, NBTTagCompound tag) {
         NBTTagCompound subTag = new NBTTagCompound();
         subTag.setBoolean("Active", capability.isActive());
         if (capability.isActive()) {
-            subTag.setBoolean("ShowAsComputation",
-                    capability instanceof ComputationRecipeLogic logic && !logic.shouldShowDuration());
             subTag.setInteger("Progress", capability.getProgress());
             subTag.setInteger("MaxProgress", capability.getMaxProgress());
         }

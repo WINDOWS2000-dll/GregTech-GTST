@@ -2,6 +2,8 @@ package gregtech.integration.crafttweaker.recipe;
 
 import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeMap;
+import gregtech.api.recipes.logic.statemachine.property.RecipePropertySet;
+import gregtech.api.recipes.roll.OverclockRollBoost;
 import gregtech.api.util.GTUtility;
 
 import crafttweaker.annotations.ZenRegister;
@@ -15,6 +17,7 @@ import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenGetter;
 import stanhebben.zenscript.annotations.ZenMethod;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -42,14 +45,18 @@ public class CTRecipe {
 
     @ZenGetter("outputs")
     public List<IItemStack> getOutputs() {
-        return this.backingRecipe.getOutputs().stream()
+        return this.backingRecipe.getGuaranteedItemOutputs().stream()
                 .map(MCItemStack::new)
                 .collect(Collectors.toList());
     }
 
     @ZenMethod
     public List<IItemStack> getResultItemOutputs(@Optional(valueLong = 1) int tier) {
-        return this.backingRecipe.getResultItemOutputs(GTUtility.getTierByVoltage(getEUt()), tier, recipeMap)
+        int recipeTier = GTUtility.getTierByVoltage(getEUt());
+        int boostStrength = OverclockRollBoost.boostStrength(recipeMap.getChanceFunction(), recipeTier, tier);
+        return this.backingRecipe.getItemOutputProvider()
+                .computeOutputsWithBoost(Collections.emptyList(), Collections.emptyList(), RecipePropertySet.empty(),
+                        boostStrength, 1, Integer.MAX_VALUE)
                 .stream()
                 .map(MCItemStack::new)
                 .collect(Collectors.toList());
@@ -69,7 +76,7 @@ public class CTRecipe {
 
     @ZenGetter("fluidOutputs")
     public List<ILiquidStack> getFluidOutputs() {
-        return this.backingRecipe.getFluidOutputs().stream()
+        return this.backingRecipe.getGuaranteedFluidOutputs().stream()
                 .map(MCLiquidStack::new)
                 .collect(Collectors.toList());
     }

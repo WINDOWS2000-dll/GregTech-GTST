@@ -1,5 +1,6 @@
 package gregtech.common.pipelike.fluidpipe;
 
+import gregtech.api.fluids.attribute.FluidAttribute;
 import gregtech.api.pipenet.block.material.IMaterialPipeType;
 import gregtech.api.unification.material.properties.FluidPipeProperties;
 import gregtech.api.unification.ore.OrePrefix;
@@ -58,7 +59,7 @@ public enum FluidPipeType implements IMaterialPipeType<FluidPipeProperties> {
 
     @Override
     public FluidPipeProperties modifyProperties(FluidPipeProperties baseProperties) {
-        return new FluidPipeProperties(
+        FluidPipeProperties properties = new FluidPipeProperties(
                 baseProperties.getMaxFluidTemperature(),
                 baseProperties.getThroughput() * capacityMultiplier,
                 baseProperties.isGasProof(),
@@ -66,6 +67,17 @@ public enum FluidPipeType implements IMaterialPipeType<FluidPipeProperties> {
                 baseProperties.isCryoProof(),
                 baseProperties.isPlasmaProof(),
                 channels);
+        // The constructor above only threads through the handful of attributes with a dedicated boolean parameter
+        // (acidProof -> FluidAttributes.ACID); any other FluidAttribute a material's own properties were marked
+        // to contain via setCanContain (e.g. an addon's custom coolant/reagent attribute) would otherwise be
+        // silently dropped here, since per-size pipe properties are a fresh object, not the same instance the
+        // material's own setCanContain calls mutated -- causing every actual placed pipe block to treat that
+        // fluid as unsupported (corroding/destroying the pipe on contact) regardless of what the material was
+        // configured to allow.
+        for (FluidAttribute attribute : baseProperties.getContainedAttributes()) {
+            properties.setCanContain(attribute, true);
+        }
+        return properties;
     }
 
     @Override

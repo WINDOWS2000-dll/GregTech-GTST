@@ -2,22 +2,25 @@ package gregtech.integration.hwyla.provider;
 
 import gregtech.api.GTValues;
 import gregtech.api.capability.GregtechTileCapabilities;
-import gregtech.api.capability.impl.AbstractRecipeLogic;
-import gregtech.api.capability.impl.PrimitiveRecipeLogic;
+import gregtech.api.capability.IRecipeLogicInfoProvider;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.SteamMetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
-import gregtech.api.metatileentity.multiblock.RecipeMapSteamMultiblockController;
+import gregtech.api.metatileentity.multiblock.RecipeWorkablePrimitiveMultiblockController;
+import gregtech.api.metatileentity.multiblock.RecipeWorkableSteamMultiblockController;
 import gregtech.api.unification.material.Materials;
 import gregtech.api.util.GTUtility;
 import gregtech.api.util.TextFormattingUtil;
 import gregtech.common.metatileentities.multi.MetaTileEntityLargeBoiler;
 
 import net.minecraft.client.resources.I18n;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextFormatting;
+import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
 
 import mcp.mobius.waila.api.IWailaConfigHandler;
@@ -27,7 +30,12 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public class RecipeLogicDataProvider extends CapabilityDataProvider<AbstractRecipeLogic> {
+/**
+ * Generalized from {@code CapabilityDataProvider<AbstractRecipeLogic>}
+ * to {@link IRecipeLogicInfoProvider} -- see that interface's own JavaDoc for why (hover info would otherwise be
+ * missing for a StateMachine-migrated machine).
+ */
+public class RecipeLogicDataProvider extends CapabilityDataProvider<IRecipeLogicInfoProvider> {
 
     public static final RecipeLogicDataProvider INSTANCE = new RecipeLogicDataProvider();
 
@@ -39,15 +47,34 @@ public class RecipeLogicDataProvider extends CapabilityDataProvider<AbstractReci
     }
 
     @Override
-    protected @NotNull Capability<AbstractRecipeLogic> getCapability() {
+    protected @NotNull Capability<IRecipeLogicInfoProvider> getCapability() {
         return GregtechTileCapabilities.CAPABILITY_RECIPE_LOGIC;
     }
 
+    /**
+     * Overrides the framework-level method (not just {@link #getNBTData(IRecipeLogicInfoProvider, NBTTagCompound)})
+     * so a "free power" primitive machine (Primitive Blast Furnace/Coke Oven,
+     * {@link RecipeWorkablePrimitiveMultiblockController}) can be excluded by MTE type before any capability lookup
+     * happens -- legacy's equivalent {@code capability instanceof PrimitiveRecipeLogic} guard (checked directly on
+     * the capability, since {@code AbstractRecipeLogic}'s own subclass hierarchy had one) has no equivalent here:
+     * the new engine's shared, per-machine-agnostic
+     * {@code RecipeWorkable} trait never had an equivalent instance flag, hence checking by MTE type instead.
+     */
     @Override
-    protected NBTTagCompound getNBTData(AbstractRecipeLogic capability, NBTTagCompound tag) {
+    public @NotNull NBTTagCompound getNBTData(EntityPlayerMP player, TileEntity te, NBTTagCompound tag, World world,
+                                              BlockPos pos) {
+        if (te instanceof IGregTechTileEntity gtte &&
+                gtte.getMetaTileEntity() instanceof RecipeWorkablePrimitiveMultiblockController) {
+            return tag;
+        }
+        return super.getNBTData(player, te, tag, world, pos);
+    }
+
+    @Override
+    protected NBTTagCompound getNBTData(IRecipeLogicInfoProvider capability, NBTTagCompound tag) {
         NBTTagCompound subTag = new NBTTagCompound();
         subTag.setBoolean("Working", capability.isWorking());
-        if (capability.isWorking() && !(capability instanceof PrimitiveRecipeLogic)) {
+        if (capability.isWorking()) {
             subTag.setLong("RecipeEUt", capability.getInfoProviderEUt());
         }
         tag.setTag("gregtech.AbstractRecipeLogic", subTag);
@@ -72,13 +99,18 @@ public class RecipeLogicDataProvider extends CapabilityDataProvider<AbstractReci
                 if (accessor.getTileEntity() instanceof IGregTechTileEntity gtte) {
                     MetaTileEntity mte = gtte.getMetaTileEntity();
                     if (mte instanceof SteamMetaTileEntity || mte instanceof MetaTileEntityLargeBoiler ||
-                            mte instanceof RecipeMapSteamMultiblockController) {
+                            mte instanceof RecipeWorkableSteamMultiblockController) {
                         endText = ": " + TextFormattingUtil.formatNumbers(eut) + TextFormatting.RESET + " L/t " +
                                 I18n.format(Materials.Steam.getUnlocalizedName());
                     }
-                    AbstractRecipeLogic arl = mte.getRecipeLogic();
-                    if (arl != null) {
-                        consumer = arl.consumesEnergy();
+                    // Reads through the same generalized capability as getNBTData() above (not
+                    // MetaTileEntity#getRecipeLogic(), which only ever finds a legacy AbstractRecipeLogic trait --
+                    // that would silently miss every StateMachine-migrated machine here too, specific to HWYLA's
+                    // own client-side re-derivation of "consumer vs. generator").
+                    IRecipeLogicInfoProvider logic = mte.getCapability(GregtechTileCapabilities.CAPABILITY_RECIPE_LOGIC,
+                            null);
+                    if (logic != null) {
+                        consumer = logic.consumesEnergy();
                     }
                 }
                 if (endText == null) {

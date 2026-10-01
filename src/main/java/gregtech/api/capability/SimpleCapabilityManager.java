@@ -1,6 +1,5 @@
 package gregtech.api.capability;
 
-import gregtech.api.capability.impl.AbstractRecipeLogic;
 import gregtech.api.cover.CoverHolder;
 import gregtech.api.items.toolitem.ItemGTToolbelt;
 import gregtech.api.metatileentity.multiblock.IMaintenance;
@@ -46,7 +45,7 @@ public class SimpleCapabilityManager {
         registerCapabilityWithNoDefault(IMultiblockController.class);
         registerCapabilityWithNoDefault(IMaintenance.class);
         registerCapabilityWithNoDefault(IMultipleRecipeMaps.class);
-        registerCapabilityWithNoDefault(AbstractRecipeLogic.class);
+        registerCapabilityWithNoDefault(IRecipeLogicInfoProvider.class);
         registerCapabilityWithNoDefault(IDataAccessHatch.class);
         registerCapabilityWithNoDefault(IOpticalComputationProvider.class);
         registerCapabilityWithNoDefault(ConverterTrait.class);

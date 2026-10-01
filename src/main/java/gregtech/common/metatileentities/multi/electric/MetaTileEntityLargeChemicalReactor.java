@@ -1,15 +1,16 @@
 package gregtech.common.metatileentities.multi.electric;
 
-import gregtech.api.capability.impl.MultiblockRecipeLogic;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.metatileentity.multiblock.IMultiblockPart;
-import gregtech.api.metatileentity.multiblock.RecipeMapMultiblockController;
+import gregtech.api.metatileentity.multiblock.RecipeWorkableMultiblockController;
 import gregtech.api.pattern.BlockPattern;
 import gregtech.api.pattern.FactoryBlockPattern;
 import gregtech.api.pattern.MultiblockShapeInfo;
 import gregtech.api.pattern.TraceabilityPredicate;
 import gregtech.api.recipes.RecipeMaps;
+import gregtech.api.recipes.logic.OverclockingLogic;
+import gregtech.api.recipes.logic.statemachine.RecipeLogicConfig;
 import gregtech.client.renderer.ICubeRenderer;
 import gregtech.client.renderer.texture.Textures;
 import gregtech.client.utils.TooltipHelper;
@@ -39,16 +40,29 @@ import java.util.List;
 
 import static gregtech.api.util.RelativeDirection.*;
 
-public class MetaTileEntityLargeChemicalReactor extends RecipeMapMultiblockController {
+public class MetaTileEntityLargeChemicalReactor extends RecipeWorkableMultiblockController {
 
     public MetaTileEntityLargeChemicalReactor(ResourceLocation metaTileEntityId) {
         super(metaTileEntityId, RecipeMaps.LARGE_CHEMICAL_RECIPES);
-        this.recipeMapWorkable = new MultiblockRecipeLogic(this, true);
     }
 
     @Override
     public MetaTileEntity createMetaTileEntity(IGregTechTileEntity tileEntity) {
         return new MetaTileEntityLargeChemicalReactor(metaTileEntityId);
+    }
+
+    /**
+     * "Perfect" overclocking: legacy used
+     * {@code new MultiblockRecipeLogic(this, true)} ({@code hasPerfectOC=true}), which swaps
+     * {@link OverclockingLogic#STD_DURATION_FACTOR_INV} for {@link OverclockingLogic#PERFECT_DURATION_FACTOR_INV}
+     * (4x speed instead of 2x per overclock) while leaving the voltage cost at the standard
+     * {@link OverclockingLogic#STD_VOLTAGE_FACTOR}.
+     */
+    @Override
+    protected @NotNull RecipeLogicConfig createConfig() {
+        RecipeLogicConfig config = super.createConfig();
+        config.overclock.speedFactor = OverclockingLogic.PERFECT_DURATION_FACTOR_INV;
+        return config;
     }
 
     @Override

@@ -12,10 +12,9 @@ import gregtech.api.capability.impl.CleanroomLogic;
 import gregtech.api.capability.impl.EnergyContainerList;
 import gregtech.api.metatileentity.IDataInfoProvider;
 import gregtech.api.metatileentity.MetaTileEntity;
-import gregtech.api.metatileentity.SimpleGeneratorMetaTileEntity;
+import gregtech.api.metatileentity.RecipeWorkableGeneratorMetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.metatileentity.multiblock.CleanroomType;
-import gregtech.api.metatileentity.multiblock.FuelMultiblockController;
 import gregtech.api.metatileentity.multiblock.ICleanroomProvider;
 import gregtech.api.metatileentity.multiblock.ICleanroomReceiver;
 import gregtech.api.metatileentity.multiblock.IMultiblockPart;
@@ -44,6 +43,8 @@ import gregtech.common.metatileentities.multi.MetaTileEntityCokeOven;
 import gregtech.common.metatileentities.multi.MetaTileEntityPrimitiveBlastFurnace;
 import gregtech.common.metatileentities.multi.MetaTileEntityPrimitiveWaterPump;
 import gregtech.common.metatileentities.multi.electric.centralmonitor.MetaTileEntityCentralMonitor;
+import gregtech.common.metatileentities.multi.electric.generator.MetaTileEntityLargeCombustionEngine;
+import gregtech.common.metatileentities.multi.electric.generator.MetaTileEntityLargeTurbine;
 import gregtech.core.sound.GTSoundEvents;
 
 import net.minecraft.block.BlockDoor;
@@ -472,8 +473,15 @@ public class MetaTileEntityCleanroom extends MultiblockWithDisplayBase
     protected boolean isMachineBanned(MetaTileEntity metaTileEntity) {
         // blacklisted machines: mufflers and all generators, miners/drills, primitives
         if (metaTileEntity instanceof IMufflerHatch) return true;
-        if (metaTileEntity instanceof SimpleGeneratorMetaTileEntity) return true;
-        if (metaTileEntity instanceof FuelMultiblockController) return true;
+        // Single-block generators (Combustion Generator/Steam Turbine/Gas Turbine)
+        // are RecipeWorkableGeneratorMetaTileEntity; the two multiblock generators (Large Combustion Engine/Large
+        // Turbine) are checked by concrete class below since
+        // both extend RecipeWorkableMultiblockController directly, same as every
+        // other (non-generator) migrated multiblock, so no shared marker type distinguishes them from those.
+        if (metaTileEntity instanceof RecipeWorkableGeneratorMetaTileEntity) return true;
+        if (metaTileEntity instanceof MetaTileEntityLargeCombustionEngine ||
+                metaTileEntity instanceof MetaTileEntityLargeTurbine)
+            return true;
         if (metaTileEntity instanceof MetaTileEntityLargeMiner) return true;
         if (metaTileEntity instanceof MetaTileEntityFluidDrill) return true;
         if (metaTileEntity instanceof MetaTileEntityCentralMonitor) return true;
@@ -686,8 +694,8 @@ public class MetaTileEntityCleanroom extends MultiblockWithDisplayBase
         super.writeToNBT(data);
         data.setInteger("lDist", this.lDist);
         data.setInteger("rDist", this.rDist);
-        data.setInteger("bDist", this.fDist);
-        data.setInteger("fDist", this.bDist);
+        data.setInteger("bDist", this.bDist);
+        data.setInteger("fDist", this.fDist);
         data.setInteger("hDist", this.hDist);
         data.setInteger("cleanAmount", this.cleanAmount);
         return this.cleanroomLogic.writeToNBT(data);

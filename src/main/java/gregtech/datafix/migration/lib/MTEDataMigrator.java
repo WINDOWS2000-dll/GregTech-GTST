@@ -121,7 +121,7 @@ public final class MTEDataMigrator extends AbstractMTEMigrator {
         Short2ShortMap map = itemBlockMeta.get(itemName.getNamespace());
         if (map != null) {
             short newMeta = map.get(meta);
-            if (newMeta > 0) {
+            if (newMeta >= 0) {
                 return newMeta;
             }
         }

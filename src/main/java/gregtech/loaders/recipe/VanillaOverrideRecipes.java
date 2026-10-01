@@ -209,13 +209,13 @@ public class VanillaOverrideRecipes {
                 'L', new UnificationEntry(OrePrefix.plate, Materials.Wood),
                 'C', new UnificationEntry(OrePrefix.spring, Materials.Iron));
 
-        ModHandler.addShapedRecipe("heavy_weighted_pressure_plate", new ItemStack(Blocks.LIGHT_WEIGHTED_PRESSURE_PLATE),
+        ModHandler.addShapedRecipe("light_weighted_pressure_plate", new ItemStack(Blocks.LIGHT_WEIGHTED_PRESSURE_PLATE),
                 "ShS", "LCL", "SdS",
                 'S', new UnificationEntry(OrePrefix.screw, Materials.Steel),
                 'L', new UnificationEntry(OrePrefix.plate, Materials.Gold),
                 'C', new UnificationEntry(OrePrefix.spring, Materials.Steel));
 
-        ModHandler.addShapedRecipe("light_weighted_pressure_plate", new ItemStack(Blocks.HEAVY_WEIGHTED_PRESSURE_PLATE),
+        ModHandler.addShapedRecipe("heavy_weighted_pressure_plate", new ItemStack(Blocks.HEAVY_WEIGHTED_PRESSURE_PLATE),
                 "ShS", "LCL", "SdS",
                 'S', new UnificationEntry(OrePrefix.screw, Materials.Steel),
                 'L', new UnificationEntry(OrePrefix.plate, Materials.Iron),

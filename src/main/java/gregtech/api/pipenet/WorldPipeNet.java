@@ -72,7 +72,11 @@ public abstract class WorldPipeNet<NodeDataType, T extends PipeNet<NodeDataType>
                     myPipeNet = pipeNet;
                     myPipeNet.addNode(nodePos, node);
                 } else if (myPipeNet != pipeNet) {
-                    myPipeNet.uniteNetworks(pipeNet);
+                    // size-ordered merge (see PipeNet#mergeWithSizeOrdering) may pick either side as the
+                    // survivor, so myPipeNet must be reassigned -- a later facing in this same loop could find
+                    // yet another distinct net to merge, and must merge into whichever one actually survived
+                    // noinspection unchecked
+                    myPipeNet = (T) myPipeNet.mergeWithSizeOrdering(pipeNet);
                 }
             }
 
@@ -110,7 +114,13 @@ public abstract class WorldPipeNet<NodeDataType, T extends PipeNet<NodeDataType>
         T pipeNet = getNetFromPos(nodePos);
         if (pipeNet != null) {
             pipeNet.updateBlockedConnections(nodePos, side, isBlocked);
-            pipeNet.onPipeConnectionsUpdate();
+            // re-fetch: a size-ordered merge inside updateBlockedConnections (see PipeNet#mergeWithSizeOrdering)
+            // may have made `pipeNet` no longer the net that owns nodePos, so the captured reference above
+            // can't be reused here -- ask the authoritative chunk index again instead.
+            T currentPipeNet = getNetFromPos(nodePos);
+            if (currentPipeNet != null) {
+                currentPipeNet.onPipeConnectionsUpdate(nodePos);
+            }
         }
     }
 

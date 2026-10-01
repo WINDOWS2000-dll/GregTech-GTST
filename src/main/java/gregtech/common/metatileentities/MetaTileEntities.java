@@ -3,8 +3,9 @@ package gregtech.common.metatileentities;
 import gregtech.api.GTValues;
 import gregtech.api.GregTechAPI;
 import gregtech.api.metatileentity.MetaTileEntity;
-import gregtech.api.metatileentity.SimpleGeneratorMetaTileEntity;
-import gregtech.api.metatileentity.SimpleMachineMetaTileEntity;
+import gregtech.api.metatileentity.RecipeWorkableGeneratorMetaTileEntity;
+import gregtech.api.metatileentity.RecipeWorkableSimpleMachineMetaTileEntity;
+import gregtech.api.metatileentity.RecipeWorkableSimpleMachineMetaTileEntityResizable;
 import gregtech.api.metatileentity.multiblock.IMultiblockAbilityPart;
 import gregtech.api.metatileentity.multiblock.MultiblockAbility;
 import gregtech.api.metatileentity.multiblock.MultiblockControllerBase;
@@ -20,15 +21,14 @@ import gregtech.common.metatileentities.electric.MetaTileEntityBlockBreaker;
 import gregtech.common.metatileentities.electric.MetaTileEntityCharger;
 import gregtech.common.metatileentities.electric.MetaTileEntityDiode;
 import gregtech.common.metatileentities.electric.MetaTileEntityFisher;
-import gregtech.common.metatileentities.electric.MetaTileEntityGasCollector;
 import gregtech.common.metatileentities.electric.MetaTileEntityHull;
 import gregtech.common.metatileentities.electric.MetaTileEntityItemCollector;
 import gregtech.common.metatileentities.electric.MetaTileEntityMagicEnergyAbsorber;
 import gregtech.common.metatileentities.electric.MetaTileEntityMiner;
 import gregtech.common.metatileentities.electric.MetaTileEntityPump;
-import gregtech.common.metatileentities.electric.MetaTileEntityRockBreaker;
 import gregtech.common.metatileentities.electric.MetaTileEntityTransformer;
 import gregtech.common.metatileentities.electric.MetaTileEntityWorldAccelerator;
+import gregtech.common.metatileentities.electric.RecipeWorkableRockBreakerMetaTileEntity;
 import gregtech.common.metatileentities.multi.MetaTileEntityCokeOven;
 import gregtech.common.metatileentities.multi.MetaTileEntityCokeOvenHatch;
 import gregtech.common.metatileentities.multi.MetaTileEntityLargeBoiler;
@@ -141,51 +141,51 @@ public final class MetaTileEntities {
     public static final MetaTileEntityCharger[] CHARGER = new MetaTileEntityCharger[GTValues.V.length];
 
     // SIMPLE MACHINES SECTION
-    public static final SimpleMachineMetaTileEntity[] ELECTRIC_FURNACE = new SimpleMachineMetaTileEntity[GTValues.V.length - 1];
-    public static final SimpleMachineMetaTileEntity[] MACERATOR = new SimpleMachineMetaTileEntity[GTValues.V.length - 1];
-    public static final SimpleMachineMetaTileEntity[] ALLOY_SMELTER = new SimpleMachineMetaTileEntity[GTValues.V.length - 1];
-    public static final SimpleMachineMetaTileEntity[] ARC_FURNACE = new SimpleMachineMetaTileEntity[GTValues.V.length - 1];
-    public static final SimpleMachineMetaTileEntity[] ASSEMBLER = new SimpleMachineMetaTileEntity[GTValues.V.length - 1];
-    public static final SimpleMachineMetaTileEntity[] AUTOCLAVE = new SimpleMachineMetaTileEntity[GTValues.V.length - 1];
-    public static final SimpleMachineMetaTileEntity[] BENDER = new SimpleMachineMetaTileEntity[GTValues.V.length - 1];
-    public static final SimpleMachineMetaTileEntity[] BREWERY = new SimpleMachineMetaTileEntity[GTValues.V.length - 1];
-    public static final SimpleMachineMetaTileEntity[] CANNER = new SimpleMachineMetaTileEntity[GTValues.V.length - 1];
-    public static final SimpleMachineMetaTileEntity[] CENTRIFUGE = new SimpleMachineMetaTileEntity[GTValues.V.length - 1];
-    public static final SimpleMachineMetaTileEntity[] CHEMICAL_BATH = new SimpleMachineMetaTileEntity[GTValues.V.length - 1];
-    public static final SimpleMachineMetaTileEntity[] CHEMICAL_REACTOR = new SimpleMachineMetaTileEntity[GTValues.V.length - 1];
-    public static final SimpleMachineMetaTileEntity[] COMPRESSOR = new SimpleMachineMetaTileEntity[GTValues.V.length - 1];
-    public static final SimpleMachineMetaTileEntity[] CUTTER = new SimpleMachineMetaTileEntity[GTValues.V.length - 1];
-    public static final SimpleMachineMetaTileEntity[] DISTILLERY = new SimpleMachineMetaTileEntity[GTValues.V.length - 1];
-    public static final SimpleMachineMetaTileEntity[] ELECTROLYZER = new SimpleMachineMetaTileEntity[GTValues.V.length - 1];
-    public static final SimpleMachineMetaTileEntity[] ELECTROMAGNETIC_SEPARATOR = new SimpleMachineMetaTileEntity[GTValues.V.length - 1];
-    public static final SimpleMachineMetaTileEntity[] EXTRACTOR = new SimpleMachineMetaTileEntity[GTValues.V.length - 1];
-    public static final SimpleMachineMetaTileEntity[] EXTRUDER = new SimpleMachineMetaTileEntity[GTValues.V.length - 1];
-    public static final SimpleMachineMetaTileEntity[] FERMENTER = new SimpleMachineMetaTileEntity[GTValues.V.length - 1];
-    public static final SimpleMachineMetaTileEntity[] FLUID_HEATER = new SimpleMachineMetaTileEntity[GTValues.V.length - 1];
-    public static final SimpleMachineMetaTileEntity[] FLUID_SOLIDIFIER = new SimpleMachineMetaTileEntity[GTValues.V.length - 1];
-    public static final SimpleMachineMetaTileEntity[] FORGE_HAMMER = new SimpleMachineMetaTileEntity[GTValues.V.length - 1];
-    public static final SimpleMachineMetaTileEntity[] FORMING_PRESS = new SimpleMachineMetaTileEntity[GTValues.V.length - 1];
-    public static final SimpleMachineMetaTileEntity[] LATHE = new SimpleMachineMetaTileEntity[GTValues.V.length - 1];
-    public static final SimpleMachineMetaTileEntity[] MIXER = new SimpleMachineMetaTileEntity[GTValues.V.length - 1];
-    public static final SimpleMachineMetaTileEntity[] ORE_WASHER = new SimpleMachineMetaTileEntity[GTValues.V.length - 1];
-    public static final SimpleMachineMetaTileEntity[] PACKER = new SimpleMachineMetaTileEntity[GTValues.V.length - 1];
-    public static final SimpleMachineMetaTileEntity[] POLARIZER = new SimpleMachineMetaTileEntity[GTValues.V.length - 1];
-    public static final SimpleMachineMetaTileEntity[] LASER_ENGRAVER = new SimpleMachineMetaTileEntity[GTValues.V.length - 1];
-    public static final SimpleMachineMetaTileEntity[] SIFTER = new SimpleMachineMetaTileEntity[GTValues.V.length - 1];
-    public static final SimpleMachineMetaTileEntity[] THERMAL_CENTRIFUGE = new SimpleMachineMetaTileEntity[GTValues.V.length - 1];
-    public static final SimpleMachineMetaTileEntity[] WIREMILL = new SimpleMachineMetaTileEntity[GTValues.V.length - 1];
-    public static final SimpleMachineMetaTileEntity[] CIRCUIT_ASSEMBLER = new SimpleMachineMetaTileEntity[GTValues.V.length - 1];
+    public static final RecipeWorkableSimpleMachineMetaTileEntity[] ELECTRIC_FURNACE = new RecipeWorkableSimpleMachineMetaTileEntity[GTValues.V.length - 1];
+    public static final RecipeWorkableSimpleMachineMetaTileEntityResizable[] MACERATOR = new RecipeWorkableSimpleMachineMetaTileEntityResizable[GTValues.V.length - 1];
+    public static final RecipeWorkableSimpleMachineMetaTileEntity[] ALLOY_SMELTER = new RecipeWorkableSimpleMachineMetaTileEntity[GTValues.V.length - 1];
+    public static final RecipeWorkableSimpleMachineMetaTileEntityResizable[] ARC_FURNACE = new RecipeWorkableSimpleMachineMetaTileEntityResizable[GTValues.V.length - 1];
+    public static final RecipeWorkableSimpleMachineMetaTileEntity[] ASSEMBLER = new RecipeWorkableSimpleMachineMetaTileEntity[GTValues.V.length - 1];
+    public static final RecipeWorkableSimpleMachineMetaTileEntity[] AUTOCLAVE = new RecipeWorkableSimpleMachineMetaTileEntity[GTValues.V.length - 1];
+    public static final RecipeWorkableSimpleMachineMetaTileEntity[] BENDER = new RecipeWorkableSimpleMachineMetaTileEntity[GTValues.V.length - 1];
+    public static final RecipeWorkableSimpleMachineMetaTileEntity[] BREWERY = new RecipeWorkableSimpleMachineMetaTileEntity[GTValues.V.length - 1];
+    public static final RecipeWorkableSimpleMachineMetaTileEntity[] CANNER = new RecipeWorkableSimpleMachineMetaTileEntity[GTValues.V.length - 1];
+    public static final RecipeWorkableSimpleMachineMetaTileEntity[] CENTRIFUGE = new RecipeWorkableSimpleMachineMetaTileEntity[GTValues.V.length - 1];
+    public static final RecipeWorkableSimpleMachineMetaTileEntity[] CHEMICAL_BATH = new RecipeWorkableSimpleMachineMetaTileEntity[GTValues.V.length - 1];
+    public static final RecipeWorkableSimpleMachineMetaTileEntity[] CHEMICAL_REACTOR = new RecipeWorkableSimpleMachineMetaTileEntity[GTValues.V.length - 1];
+    public static final RecipeWorkableSimpleMachineMetaTileEntity[] COMPRESSOR = new RecipeWorkableSimpleMachineMetaTileEntity[GTValues.V.length - 1];
+    public static final RecipeWorkableSimpleMachineMetaTileEntity[] CUTTER = new RecipeWorkableSimpleMachineMetaTileEntity[GTValues.V.length - 1];
+    public static final RecipeWorkableSimpleMachineMetaTileEntity[] DISTILLERY = new RecipeWorkableSimpleMachineMetaTileEntity[GTValues.V.length - 1];
+    public static final RecipeWorkableSimpleMachineMetaTileEntity[] ELECTROLYZER = new RecipeWorkableSimpleMachineMetaTileEntity[GTValues.V.length - 1];
+    public static final RecipeWorkableSimpleMachineMetaTileEntity[] ELECTROMAGNETIC_SEPARATOR = new RecipeWorkableSimpleMachineMetaTileEntity[GTValues.V.length - 1];
+    public static final RecipeWorkableSimpleMachineMetaTileEntity[] EXTRACTOR = new RecipeWorkableSimpleMachineMetaTileEntity[GTValues.V.length - 1];
+    public static final RecipeWorkableSimpleMachineMetaTileEntity[] EXTRUDER = new RecipeWorkableSimpleMachineMetaTileEntity[GTValues.V.length - 1];
+    public static final RecipeWorkableSimpleMachineMetaTileEntity[] FERMENTER = new RecipeWorkableSimpleMachineMetaTileEntity[GTValues.V.length - 1];
+    public static final RecipeWorkableSimpleMachineMetaTileEntity[] FLUID_HEATER = new RecipeWorkableSimpleMachineMetaTileEntity[GTValues.V.length - 1];
+    public static final RecipeWorkableSimpleMachineMetaTileEntity[] FLUID_SOLIDIFIER = new RecipeWorkableSimpleMachineMetaTileEntity[GTValues.V.length - 1];
+    public static final RecipeWorkableSimpleMachineMetaTileEntity[] FORGE_HAMMER = new RecipeWorkableSimpleMachineMetaTileEntity[GTValues.V.length - 1];
+    public static final RecipeWorkableSimpleMachineMetaTileEntity[] FORMING_PRESS = new RecipeWorkableSimpleMachineMetaTileEntity[GTValues.V.length - 1];
+    public static final RecipeWorkableSimpleMachineMetaTileEntity[] LATHE = new RecipeWorkableSimpleMachineMetaTileEntity[GTValues.V.length - 1];
+    public static final RecipeWorkableSimpleMachineMetaTileEntity[] MIXER = new RecipeWorkableSimpleMachineMetaTileEntity[GTValues.V.length - 1];
+    public static final RecipeWorkableSimpleMachineMetaTileEntity[] ORE_WASHER = new RecipeWorkableSimpleMachineMetaTileEntity[GTValues.V.length - 1];
+    public static final RecipeWorkableSimpleMachineMetaTileEntity[] PACKER = new RecipeWorkableSimpleMachineMetaTileEntity[GTValues.V.length - 1];
+    public static final RecipeWorkableSimpleMachineMetaTileEntity[] POLARIZER = new RecipeWorkableSimpleMachineMetaTileEntity[GTValues.V.length - 1];
+    public static final RecipeWorkableSimpleMachineMetaTileEntity[] LASER_ENGRAVER = new RecipeWorkableSimpleMachineMetaTileEntity[GTValues.V.length - 1];
+    public static final RecipeWorkableSimpleMachineMetaTileEntity[] SIFTER = new RecipeWorkableSimpleMachineMetaTileEntity[GTValues.V.length - 1];
+    public static final RecipeWorkableSimpleMachineMetaTileEntity[] THERMAL_CENTRIFUGE = new RecipeWorkableSimpleMachineMetaTileEntity[GTValues.V.length - 1];
+    public static final RecipeWorkableSimpleMachineMetaTileEntity[] WIREMILL = new RecipeWorkableSimpleMachineMetaTileEntity[GTValues.V.length - 1];
+    public static final RecipeWorkableSimpleMachineMetaTileEntity[] CIRCUIT_ASSEMBLER = new RecipeWorkableSimpleMachineMetaTileEntity[GTValues.V.length - 1];
     // public static final SimpleMachineMetaTileEntity[] MASS_FABRICATOR = new SimpleMachineMetaTileEntity[GTValues.V.length - 1]; // TODO Replication
     // public static final SimpleMachineMetaTileEntity[] REPLICATOR = new SimpleMachineMetaTileEntity[GTValues.V.length - 1]; // TODO Replication
-    public static final SimpleMachineMetaTileEntity[] SCANNER = new SimpleMachineMetaTileEntity[GTValues.V.length - 1];
-    public static final SimpleMachineMetaTileEntity[] GAS_COLLECTOR = new MetaTileEntityGasCollector[GTValues.V.length - 1];
-    public static final MetaTileEntityRockBreaker[] ROCK_BREAKER = new MetaTileEntityRockBreaker[GTValues.V.length - 1];
+    public static final RecipeWorkableSimpleMachineMetaTileEntity[] SCANNER = new RecipeWorkableSimpleMachineMetaTileEntity[GTValues.V.length - 1];
+    public static final RecipeWorkableSimpleMachineMetaTileEntity[] GAS_COLLECTOR = new RecipeWorkableSimpleMachineMetaTileEntity[GTValues.V.length - 1];
+    public static final RecipeWorkableRockBreakerMetaTileEntity[] ROCK_BREAKER = new RecipeWorkableRockBreakerMetaTileEntity[GTValues.V.length - 1];
     public static final MetaTileEntityMiner[] MINER = new MetaTileEntityMiner[GTValues.V.length - 1];
 
     // GENERATORS SECTION
-    public static final SimpleGeneratorMetaTileEntity[] COMBUSTION_GENERATOR = new SimpleGeneratorMetaTileEntity[4];
-    public static final SimpleGeneratorMetaTileEntity[] STEAM_TURBINE = new SimpleGeneratorMetaTileEntity[4];
-    public static final SimpleGeneratorMetaTileEntity[] GAS_TURBINE = new SimpleGeneratorMetaTileEntity[4];
+    public static final RecipeWorkableGeneratorMetaTileEntity[] COMBUSTION_GENERATOR = new RecipeWorkableGeneratorMetaTileEntity[4];
+    public static final RecipeWorkableGeneratorMetaTileEntity[] STEAM_TURBINE = new RecipeWorkableGeneratorMetaTileEntity[4];
+    public static final RecipeWorkableGeneratorMetaTileEntity[] GAS_TURBINE = new RecipeWorkableGeneratorMetaTileEntity[4];
 
     // MULTIBLOCK PARTS SECTION
     public static final MetaTileEntityItemBus[] ITEM_IMPORT_BUS = new MetaTileEntityItemBus[GTValues.V.length - 1]; // All tiers but MAX
@@ -370,7 +370,10 @@ public final class MetaTileEntities {
         GTLog.logger.info("Completed MetaTileEntity registration.");
     }
 
-    static void registerSimpleMetaTileEntity(SimpleMachineMetaTileEntity[] machines,
+    // Builds RecipeWorkableSimpleMachineMetaTileEntity, not legacy SimpleMachineMetaTileEntity.
+    // Every caller of this helper is switched over in one place; see MetaTileEntityRegistration.java's "Basic single
+    // block machines" section, whose call sites are unchanged.
+    static void registerSimpleMetaTileEntity(RecipeWorkableSimpleMachineMetaTileEntity[] machines,
                                              int startId,
                                              String name,
                                              RecipeMap<?> map,
@@ -381,7 +384,7 @@ public final class MetaTileEntities {
                 tankScalingFunction);
     }
 
-    static void registerSimpleMetaTileEntity(SimpleMachineMetaTileEntity[] machines,
+    static void registerSimpleMetaTileEntity(RecipeWorkableSimpleMachineMetaTileEntity[] machines,
                                              int startId,
                                              String name,
                                              RecipeMap<?> map,
@@ -391,7 +394,7 @@ public final class MetaTileEntities {
                 GTUtility.defaultTankSizeFunction);
     }
 
-    public static void registerSimpleMetaTileEntity(SimpleMachineMetaTileEntity[] machines,
+    public static void registerSimpleMetaTileEntity(RecipeWorkableSimpleMachineMetaTileEntity[] machines,
                                                     int startId,
                                                     String name,
                                                     RecipeMap<?> map,
@@ -400,7 +403,7 @@ public final class MetaTileEntities {
                                                     Function<String, ResourceLocation> resourceId,
                                                     Function<Integer, Integer> tankScalingFunction) {
         registerMetaTileEntities(machines, startId, name,
-                (tier, voltageName) -> new SimpleMachineMetaTileEntity(
+                (tier, voltageName) -> new RecipeWorkableSimpleMachineMetaTileEntity(
                         resourceId.apply(String.format("%s.%s", name, voltageName)), map, texture, tier, hasFrontFacing,
                         tankScalingFunction));
     }

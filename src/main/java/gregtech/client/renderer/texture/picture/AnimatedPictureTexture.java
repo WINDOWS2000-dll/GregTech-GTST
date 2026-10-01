@@ -40,10 +40,13 @@ public class AnimatedPictureTexture extends PictureTexture {
     @Override
     public int getTextureID() {
         long time = duration > 0 ? System.currentTimeMillis() % duration : 0;
+        // delay[i] holds each frame's cumulative start time, so the frame currently playing is the
+        // last one whose start time has already passed (not the first one that hasn't started yet).
         int index = 0;
         for (int i = 0; i < delay.length; i++) {
-            if (delay[i] >= time) {
+            if (delay[i] <= time) {
                 index = i;
+            } else {
                 break;
             }
         }
