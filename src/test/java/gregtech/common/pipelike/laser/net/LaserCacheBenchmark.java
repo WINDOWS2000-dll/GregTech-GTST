@@ -9,21 +9,6 @@ import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
 
-/**
- * Manual before/after microbenchmark for {@link LaserPipeNet}'s fine-grained cache invalidation (phase 1b; see
- * {@code GTST-pipenet-optimization-design/README.md}). Unlike {@code PipeNetBenchmark}, this scenario's driving
- * API itself changed shape between trees ({@code onPipeConnectionsUpdate} gained a {@code BlockPos} parameter,
- * {@code LaserRoutePath}'s constructor gained a traversed-positions parameter, and {@code netData}'s key type
- * changed from {@code BlockPos} to {@code long}), so this file is intentionally tree-specific rather than
- * shared -- see the parallel, differently-implemented copy of this same scenario kept for the pre-optimization
- * tree.
- * <p>
- * The metric that actually matters here isn't the raw call time of the invalidation method itself (a plain
- * {@code Map.clear()} can easily be *faster* in isolation than a {@code removeIf} scan -- that's not the
- * point). It's how many cache entries survive an update that's only actually relevant to one of them: every
- * survivor is a full walker re-traversal avoided the next time that source is queried. This is what's
- * reported here, alongside the call time for reference.
- */
 class LaserCacheBenchmark {
 
     @Test

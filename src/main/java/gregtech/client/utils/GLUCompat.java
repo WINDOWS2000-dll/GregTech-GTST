@@ -17,7 +17,7 @@ public final class GLUCompat {
     }
 
     public static void gluLookAt(float eyeX, float eyeY, float eyeZ, float centerX, float centerY, float centerZ,
-                                  float upX, float upY, float upZ) {
+                                 float upX, float upY, float upZ) {
         float[] f = normalize(centerX - eyeX, centerY - eyeY, centerZ - eyeZ);
         float[] s = normalize(cross(f, new float[] { upX, upY, upZ }));
         float[] u = cross(s, f);
@@ -34,7 +34,7 @@ public final class GLUCompat {
     }
 
     public static boolean gluProject(float objx, float objy, float objz, FloatBuffer model, FloatBuffer proj,
-                                      IntBuffer viewport, FloatBuffer win) {
+                                     IntBuffer viewport, FloatBuffer win) {
         float[] m = toArray(model, 16);
         float[] p = toArray(proj, 16);
 
@@ -59,7 +59,7 @@ public final class GLUCompat {
     }
 
     public static boolean gluUnProject(float winx, float winy, float winz, FloatBuffer model, FloatBuffer proj,
-                                        IntBuffer viewport, FloatBuffer obj) {
+                                       IntBuffer viewport, FloatBuffer obj) {
         float[] m = toArray(model, 16);
         float[] p = toArray(proj, 16);
         float[] a = multiplyMatrices(p, m);

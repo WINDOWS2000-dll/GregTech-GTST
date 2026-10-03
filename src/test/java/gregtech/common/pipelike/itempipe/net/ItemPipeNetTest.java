@@ -15,18 +15,6 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
-/**
- * Regression coverage for a self-audit finding: {@link ItemPipeNet#NET_DATA} must be keyed by {@code
- * (pipePos, facing)}, not {@code pipePos} alone -- {@code TileEntityItemPipe} exposes one independent {@code
- * ItemNetHandler} per face, and the computed route list actually depends on which face is asking (see {@link
- * ItemPipeNet#NET_DATA}'s own note: {@link ItemNetWalker} excludes whichever neighbour lies back through the
- * calling face itself, to avoid immediately routing an inserted item back out the side it just came in from).
- * A junction pipe fed from two different faces at once would otherwise have the second face silently reuse the
- * first face's cache entry, computed with the wrong exclusion.
- * <p>
- * This populates the cache directly (bypassing {@link ItemNetWalker}, which needs a real world) to isolate and
- * verify just the cache-key behaviour.
- */
 class ItemPipeNetTest {
 
     @SuppressWarnings("unchecked")

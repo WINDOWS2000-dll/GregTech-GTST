@@ -29,12 +29,7 @@ public class Elements {
     private Elements() {}
 
     public static final Element H = add(1, 0, "Hydrogen", "H");
-    // Stable -- the old "H"/"D"/"H&D" decayTo strings here were vestigial/never-consumed placeholder data and
-    // physically inconsistent with halfLifeSeconds=-1 (stable); dropped rather than migrated.
     public static final Element D = add(1, 1, "Deuterium", "D", true);
-    // Real physics: beta-minus decay to He-3, half-life ~12.32y (388,781,000s), 18.6 keV decay energy. The old
-    // entry here ("D" -> Deuterium, halfLifeSeconds=-1/stable) was physically wrong; corrected during the
-    // decayTo -> DecayMode migration (2026-09-16).
     public static final Element T = add(1, 2, 388781000.0,
             Collections.singletonList(new DecayMode(DecayType.BETA_MINUS, 1.0, "He-3", 0.0186)), "Tritium", "T",
             true);

@@ -9,21 +9,6 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 
-/**
- * Spot-check microbenchmark confirming {@code FluidPipeNet} gets the same phase 1a/2 topology-management
- * improvements as the generic harness in {@code PipeNetBenchmark} -- it has no route-caching walker of its own
- * (see {@code GTST-pipenet-optimization-design/README.md}: fluid transport is tick-based hop relay, a
- * fundamentally different model with no {@code PipeNetWalker} subclass at all), but it still extends {@code
- * PipeNet<FluidPipeProperties>} directly for its own connectivity/split/merge bookkeeping (node add/remove,
- * {@code findAllConnectedBlocks}, {@code uniteNetworks}), which is exactly the shared code
- * {@code PipeNetBenchmark}'s scenarios B and D already exercise through a generic fake. This file re-runs
- * those same two scenarios through the *real* {@code FluidPipeNet}/{@code WorldFluidPipeNet} classes instead,
- * to confirm the numbers land in the same range rather than assume it from the shared code path alone. There
- * is no scenario A (no walker to benchmark) and no scenario C (no cache to invalidate).
- * <p>
- * Written to compile and run unchanged against both the pre-optimization tree and the current tree, same as
- * {@code PipeNetBenchmark}.
- */
 class FluidPipeNetBenchmark {
 
     private static void report(String label, long[] samplesNanos) {

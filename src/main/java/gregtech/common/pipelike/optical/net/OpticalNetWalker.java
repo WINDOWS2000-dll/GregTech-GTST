@@ -33,10 +33,6 @@ public class OpticalNetWalker extends PipeNetWalker<TileEntityOpticalPipe> {
     private OpticalRoutePath routePath;
     private BlockPos sourcePipe;
     private EnumFacing facingToHandler;
-    /**
-     * Positions visited by this walker's own lineage so far (root-to-current), used to build the eventual
-     * {@link OpticalRoutePath}'s dependency set -- see {@link #checkPipe}.
-     */
     private final LongSet path;
 
     protected OpticalNetWalker(World world, BlockPos sourcePipe, int distance, LongSet path) {
@@ -73,11 +69,6 @@ public class OpticalNetWalker extends PipeNetWalker<TileEntityOpticalPipe> {
         }
     }
 
-    /**
-     * True if {@code neighbourTile} exposes one of the two built-in capability types, or one registered via
-     * {@link BlockOpticalPipe#registerConnectableCapability} -- see that registry's own JavaDoc for why both
-     * this check and {@link BlockOpticalPipe#canPipeConnectToBlock} need to agree on what counts as connectable.
-     */
     private static boolean isValidRouteTarget(TileEntity neighbourTile, EnumFacing faceToNeighbour) {
         EnumFacing side = faceToNeighbour.getOpposite();
         if (neighbourTile.hasCapability(GregtechTileCapabilities.CAPABILITY_DATA_ACCESS, side) ||

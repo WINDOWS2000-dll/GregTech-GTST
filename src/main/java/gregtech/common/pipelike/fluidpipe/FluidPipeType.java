@@ -67,13 +67,6 @@ public enum FluidPipeType implements IMaterialPipeType<FluidPipeProperties> {
                 baseProperties.isCryoProof(),
                 baseProperties.isPlasmaProof(),
                 channels);
-        // The constructor above only threads through the handful of attributes with a dedicated boolean parameter
-        // (acidProof -> FluidAttributes.ACID); any other FluidAttribute a material's own properties were marked
-        // to contain via setCanContain (e.g. an addon's custom coolant/reagent attribute) would otherwise be
-        // silently dropped here, since per-size pipe properties are a fresh object, not the same instance the
-        // material's own setCanContain calls mutated -- causing every actual placed pipe block to treat that
-        // fluid as unsupported (corroding/destroying the pipe on contact) regardless of what the material was
-        // configured to allow.
         for (FluidAttribute attribute : baseProperties.getContainedAttributes()) {
             properties.setCanContain(attribute, true);
         }

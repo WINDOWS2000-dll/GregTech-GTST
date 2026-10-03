@@ -15,24 +15,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 
-/**
- * Drives the PipeNet execution-trace dev tool's periodic summary lines (see {@link PipeNet#setTraceEnabled}):
- * every {@link #SUMMARY_INTERVAL_TICKS} server ticks, every currently-traced net gets one aggregated
- * {@link PipeNetTraceLog} line covering everything it did since the previous summary (a single per-operation
- * trace line per merge/split/traversal is useful for drilling into one specific event, but doesn't by itself
- * answer "how much load is this net putting on the server right now" -- that needs an interval aggregate).
- * <p>
- * A {@link WeakHashMap}-backed registry, not a normal one: a traced net that's since been discarded (e.g. fully
- * absorbed into another net via a merge, or unloaded) should simply stop appearing in summaries on its own,
- * without needing an explicit unregister call from every one of {@link PipeNet}'s removal paths.
- */
 @EventBusSubscriber(modid = GTValues.MODID)
 public final class PipeNetTraceTickHandler {
 
-    /**
-     * 100 ticks = 5 seconds at a healthy 20 TPS -- frequent enough to see load trends develop, infrequent
-     * enough that the summary lines themselves stay a rounding error next to whatever they're measuring.
-     */
     private static final int SUMMARY_INTERVAL_TICKS = 100;
 
     private static final Set<PipeNet<?>> tracedNets = Collections.newSetFromMap(new WeakHashMap<>());
@@ -56,7 +41,6 @@ public final class PipeNetTraceTickHandler {
         lastSummaryNanos.remove(net);
     }
 
-    /** @return a snapshot of every currently-traced net, for {@code /gt dumppipenet list}. */
     @NotNull
     public static List<PipeNet<?>> getTracedNets() {
         return new ArrayList<>(tracedNets);
@@ -70,8 +54,6 @@ public final class PipeNetTraceTickHandler {
         tickCounter = 0;
 
         long now = System.nanoTime();
-        // copy first: flushing can run arbitrary PipeNet#getTraceLabel/getTraceStats/describeMemoryProxy code,
-        // and a traced net could in principle be GC'd out of the weak set mid-iteration otherwise
         List<PipeNet<?>> snapshot = new ArrayList<>(tracedNets);
         for (PipeNet<?> net : snapshot) {
             PipeNetTraceStats.Snapshot current = net.getTraceStats().snapshot();

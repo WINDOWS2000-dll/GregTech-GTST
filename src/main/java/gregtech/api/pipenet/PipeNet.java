@@ -32,12 +32,6 @@ public abstract class PipeNet<NodeDataType> implements INBTSerializable<NBTTagCo
     private long lastUpdate;
     boolean isValid = false;
 
-    /**
-     * Whether this net's operations are logged to {@link PipeNetTraceLog} (the PipeNet execution-trace dev
-     * tool; see {@code PipeNetTraceBehavior}, the right-click-a-pipe dev item that toggles this). Off by
-     * default and costs nothing beyond a boolean check when disabled -- mirrors {@code
-     * RecipeWorkable#traceEnabled}'s established pattern exactly.
-     */
     private boolean traceEnabled = false;
     /** A human-readable identifier prefixed onto this net's trace log lines; see {@link #setTraceEnabled}. */
     private String traceLabel;
@@ -69,16 +63,6 @@ public abstract class PipeNet<NodeDataType> implements INBTSerializable<NBTTagCo
         setTraceEnabled(traceEnabled, traceLabel);
     }
 
-    /**
-     * Enables or disables execution tracing for this net, tagging any resulting log lines with {@code label}
-     * (e.g. a traced pipe's position). Intended to be called by the trace item's server-side handler when it
-     * selects/deselects the net a right-clicked pipe currently belongs to.
-     * <p>
-     * Tracing follows the <em>network</em>, not the specific Java object that happens to represent it at any
-     * given moment: {@link #uniteNetworks} propagates an absorbed net's trace state onto whichever net
-     * survives the merge (see its own note), so a traced net staying traced doesn't depend on it never being
-     * on the losing side of a future merge.
-     */
     public void setTraceEnabled(boolean traceEnabled, String label) {
         boolean wasEnabled = this.traceEnabled;
         this.traceEnabled = traceEnabled;
@@ -90,15 +74,6 @@ public abstract class PipeNet<NodeDataType> implements INBTSerializable<NBTTagCo
         }
     }
 
-    /**
-     * A memory-load proxy for this net, expressed as structural counts (node/edge/owned-chunk/persistent-data
-     * counts) plus a very rough estimated byte footprint. This is NOT measured via {@code
-     * java.lang.instrument.Instrumentation} -- an exact-bytes approach would need a Java agent, disproportionate
-     * for a dev tool -- it is simply {@code nodeCount * ~150 bytes + edgeCount * ~80 bytes}, ballpark figures for
-     * a {@code HashMap<BlockPos, Node>} entry plus one counted edge on a typical 64-bit JVM with compressed
-     * oops. Treat the byte figure as an order-of-magnitude indicator, not a measurement; the structural counts
-     * alongside it are the reliable part.
-     */
     public String describeMemoryProxy() {
         int nodeCount = getAllNodes().size();
         int edgeCount = countEdges();
@@ -108,16 +83,6 @@ public abstract class PipeNet<NodeDataType> implements INBTSerializable<NBTTagCo
                 nodeCount, edgeCount, chunkCount, formatBytes(estimatedBytes));
     }
 
-    /**
-     * Counts this net's edges (pairs of adjacent nodes that currently satisfy {@link #canNodesConnect}) by
-     * scanning every node's 6 neighbours -- O(node count), computed on demand rather than incrementally
-     * maintained. {@link #describeMemoryProxy} is this method's only caller, and that in turn is only invoked
-     * by the rarely-run PipeNet execution-trace dev tool (the periodic summary and the {@code /gt dumppipenet}
-     * command) -- paying an O(node count) scan there is far cheaper overall than maintaining a persistent edge
-     * count (or a full graph structure) on every add/remove/connection-change call PipeNet makes on behalf of
-     * every pipe in the world, which is what an earlier version of this class did (see {@link
-     * #findAllConnectedBlocks}'s own note).
-     */
     private int countEdges() {
         int doubleCounted = 0;
         for (Entry<BlockPos, Node<NodeDataType>> entry : nodeByBlockPos.entrySet()) {
@@ -191,13 +156,6 @@ public abstract class PipeNet<NodeDataType> implements INBTSerializable<NBTTagCo
         return nodeByBlockPos.containsKey(blockPos);
     }
 
-    /**
-     * Registers {@code nodePos} in {@link #nodeByBlockPos} and this net's owned-chunk bookkeeping. Neighbour
-     * connectivity itself is never precomputed or cached here -- see {@link #findAllConnectedBlocks}'s own
-     * note on why PipeNet doesn't maintain a persistent adjacency structure at all; every consumer that needs
-     * to know which neighbours a node actually connects to (a split/merge check, a route walk) computes it
-     * fresh via {@link #canNodesConnect} against whatever is in {@link #nodeByBlockPos} at that moment.
-     */
     protected void addNodeSilently(BlockPos nodePos, Node<NodeDataType> node) {
         this.nodeByBlockPos.put(nodePos, node);
         checkAddedInChunk(nodePos);
@@ -225,18 +183,10 @@ public abstract class PipeNet<NodeDataType> implements INBTSerializable<NBTTagCo
         if (nodeByBlockPos.containsKey(nodePos)) {
             boolean traced = traceEnabled;
             long start = traced ? System.nanoTime() : 0;
-            // rebuildNetworkOnNodeRemoval's own split-check can call findAllConnectedBlocks, which records
-            // its own findConnected stats -- snapshot that counter here so its nested time can be subtracted
-            // back out below, instead of being counted twice (once under findConnected, once again as part
-            // of this method's own wrapping duration) in Snapshot#totalNanos().
             long findConnectedNanosBefore = traced ? traceStats.findConnectedNanosSoFar() : 0;
             Node<NodeDataType> selfNode = removeNodeWithoutRebuilding(nodePos);
             rebuildNetworkOnNodeRemoval(nodePos, selfNode);
             if (traced) {
-                // note: traceLabel is read again (not a captured pre-call label) since rebuildNetworkOnNodeRemoval
-                // can remove this net entirely (worldData.removePipeNet) if it ends up empty -- that path also
-                // disables tracing itself (see the isEmpty() check below), so by the time we get here traceLabel
-                // may already be null; that's fine, it just means this line logs under a null label.
                 long elapsedNanos = System.nanoTime() - start;
                 long nestedFindConnectedNanos = traceStats.findConnectedNanosSoFar() - findConnectedNanosBefore;
                 traceStats.recordRemoveNode(Math.max(0, elapsedNanos - nestedFindConnectedNanos));
@@ -290,9 +240,6 @@ public abstract class PipeNet<NodeDataType> implements INBTSerializable<NBTTagCo
                 // need to unblock node before doing canNodesConnectCheck
                 setBlocked(selfNode, facing, false);
                 if (canNodesConnect(selfNode, facing, neighbourNode, this)) {
-                    // now block again to call findAllConnectedBlocks -- findAllConnectedBlocks itself always
-                    // re-checks canNodesConnect fresh against this now-reblocked state, so there is no separate
-                    // adjacency structure that needs to be kept in sync here (see that method's own note)
                     setBlocked(selfNode, facing, true);
                     HashMap<BlockPos, Node<NodeDataType>> thisENet = findAllConnectedBlocks(nodePos);
                     if (!getAllNodes().equals(thisENet)) {
@@ -312,9 +259,6 @@ public abstract class PipeNet<NodeDataType> implements INBTSerializable<NBTTagCo
             // if this is an unblock, and we can connect with their node, merge them
 
         }
-        // The net that currently owns nodePos -- reassigned below if a size-ordered merge (see
-        // mergeWithSizeOrdering) causes *this* object itself to be the one absorbed, so that the trailing
-        // onNodeConnectionsUpdate() below always fires on whichever object actually survived.
         PipeNet<NodeDataType> selfNet = this;
         if (pipeNetAtOffset != this && !isBlocked) {
             Node<NodeDataType> neighbourNode = pipeNetAtOffset.getNodeAt(offsetPos);
@@ -337,12 +281,6 @@ public abstract class PipeNet<NodeDataType> implements INBTSerializable<NBTTagCo
         Node<NodeDataType> selfNode = getNodeAt(nodePos);
         int oldMark = selfNode.mark;
         selfNode.mark = newMark;
-        // The net that currently owns nodePos. A single call can merge across multiple facings (each qualifying
-        // neighbour is its own potential merge), and mergeWithSizeOrdering may pick *either* side as the
-        // survivor -- so this is reassigned after every merge below, and used everywhere `this` was previously
-        // used for identity comparisons or net-level operations, instead of `this` directly. See
-        // mergeWithSizeOrdering's own doc for why relying on `this` staying valid is unsafe once size-ordering
-        // can flip which object survives.
         PipeNet<NodeDataType> selfNet = this;
         for (EnumFacing facing : EnumFacing.VALUES) {
             BlockPos offsetPos = nodePos.offset(facing);
@@ -361,16 +299,10 @@ public abstract class PipeNet<NodeDataType> implements INBTSerializable<NBTTagCo
                 // to keep in sync -- findAllConnectedBlocks always re-checks canNodesConnect fresh)
                 if (otherPipeNet != selfNet) {
                     selfNet = selfNet.mergeWithSizeOrdering(otherPipeNet);
-                    // a merge changes selfNet's node membership, so any previously-memoized reachable-set
-                    // snapshot (computed before the merge) is stale and must be recomputed if needed again below
                     selfConnectedBlocks = null;
                 }
                 // marks are incompatible now, and this net is connected with it
             } else if (otherPipeNet == selfNet) {
-                // search connected nodes from newly marked node (selfNode.mark is already updated above, so
-                // this naturally no longer traverses the nodePos<->offsetPos edge -- there is no separate
-                // adjacency structure that needs an explicit edge removal here)
-                // populate self connected blocks lazily only once
                 if (selfConnectedBlocks == null) {
                     selfConnectedBlocks = selfNet.findAllConnectedBlocks(nodePos);
                 }
@@ -439,25 +371,6 @@ public abstract class PipeNet<NodeDataType> implements INBTSerializable<NBTTagCo
         }
     }
 
-    /**
-     * Merges {@code this} and {@code other}, choosing the merge direction so that the <em>smaller</em> net's
-     * nodes are the ones copied -- the same union-by-size idea classic Union-Find uses to bound the amortized
-     * cost of a long sequence of merges. Without this, a small net repeatedly bridged onto an ever-growing
-     * large one (a common real layout: a small connector segment whose cover/mark gets toggled to link it into
-     * a big trunk line, over and over) would copy the *entire* large net on every single merge, which is the
-     * O(n^2)-worst-case pattern union-by-size specifically exists to avoid.
-     * <p>
-     * Unlike {@link #uniteNetworks}, which always keeps {@code this} as the survivor, this method may return
-     * {@code other} instead. Callers MUST use the returned value in place of any reference to either net they
-     * held before calling this -- see the callers in {@link #updateBlockedConnections} and {@link #updateMark}
-     * for the pattern (a local "current net" variable, reassigned from this method's return value, used for
-     * everything from this point on instead of {@code this}). This is necessary because {@code this} is a
-     * plain object reference, not an indirection layer: once it stops being the survivor, calling any
-     * instance method on it (or comparing it for identity against a freshly-looked-up net) silently operates
-     * on a net that's no longer registered in {@link #worldData} at all.
-     *
-     * @return the surviving net (either {@code this} or {@code other})
-     */
     protected final PipeNet<NodeDataType> mergeWithSizeOrdering(PipeNet<NodeDataType> other) {
         if (this.getAllNodes().size() >= other.getAllNodes().size()) {
             this.uniteNetworks(other);
@@ -489,33 +402,6 @@ public abstract class PipeNet<NodeDataType> implements INBTSerializable<NBTTagCo
                 areNodesCustomContactable(first.data, second.data, secondPipeNet);
     }
 
-    /**
-     * Returns every node reachable from {@code startPos} within this net -- i.e. {@code startPos}'s connected
-     * component, computed by a plain iterative breadth-first search directly over {@link #nodeByBlockPos} and
-     * {@link #canNodesConnect} (a small explicit queue plus the {@code observedSet} map doubling as the
-     * visited set -- the same shape {@link PipeNetWalker} already uses to walk the real world). {@code
-     * startPos} must already be a member of this net (matching the previous implementation's own implicit
-     * precondition, which would likewise fail if given a non-member position).
-     * <p>
-     * This net does NOT maintain any persistent graph/adjacency structure for this query to consult. An
-     * earlier version of this class did (first a hand-rolled depth-first search directly on {@code
-     * nodeByBlockPos} like this one, then later a JGraphT {@code Graph<Long, DefaultEdge>} kept in sync on
-     * every {@link #addNodeSilently}/{@link #removeNodeWithoutRebuilding}/{@link
-     * #updateBlockedConnections}/{@link #updateMark} call) -- but this method was, and remains, the *only*
-     * caller that ever read that graph (besides {@link #describeMemoryProxy}'s edge count, itself computed
-     * on demand now too). Maintaining a persistent structure across PipeNet's hottest paths, purely to speed
-     * up one comparatively infrequent, already-cheap-on-its-own query, was backwards: this BFS costs exactly
-     * what a graph-library traversal would (both are O(component size)), just without paying any per-hop
-     * maintenance cost on every add/remove/connection-change PipeNet makes for every pipe in the world, and
-     * without a boxed-{@code Long}-keyed graph library's own bookkeeping overhead on top.
-     * <p>
-     * (A JGraphT-backed version briefly existed between these two states, first via {@code
-     * ConnectivityInspector} -- discovered via a real playtest with the PipeNet execution-trace dev tool, see
-     * {@link #setTraceEnabled}, to have been misused: it partitions and caches the *entire* graph on first
-     * query, so a fresh instance per call re-paid that whole-net cost every time -- then via {@link
-     * org.jgrapht.traverse.BreadthFirstIterator}, which fixed that specific bug but not the underlying
-     * per-hot-path maintenance cost the graph itself added; this version removes the graph entirely instead.)
-     */
     protected HashMap<BlockPos, Node<NodeDataType>> findAllConnectedBlocks(BlockPos startPos) {
         long start = traceEnabled ? System.nanoTime() : 0;
         HashMap<BlockPos, Node<NodeDataType>> observedSet = new HashMap<>();
@@ -545,14 +431,6 @@ public abstract class PipeNet<NodeDataType> implements INBTSerializable<NBTTagCo
 
     // called when node is removed to rebuild network
     protected void rebuildNetworkOnNodeRemoval(BlockPos nodePos, Node<NodeDataType> selfNode) {
-        // The removed node's entry is already gone from nodeByBlockPos by this point (see
-        // removeNodeWithoutRebuilding), so its former degree is recomputed here from scratch via
-        // canNodesConnect against whichever neighbours are still present. This is the *true* degree (an
-        // actual edge existed), not just "a node happens to occupy this
-        // neighbouring position" (which the original implementation counted, and which could overcount when
-        // an adjacent same-net member wasn't actually directly connected via canNodesConnect, e.g. blocked or
-        // mark-incompatible but still reachable some other way) -- only ever making this fast path skip the
-        // full check *more* often, which is safe: a vertex of true degree <=1 can never be a cut vertex.
         int trueDegree = 0;
         for (EnumFacing facing : EnumFacing.VALUES) {
             BlockPos offsetPos = nodePos.offset(facing);
@@ -591,11 +469,6 @@ public abstract class PipeNet<NodeDataType> implements INBTSerializable<NBTTagCo
             // if this energy net is empty now, remove it
             worldData.removePipeNet(this);
             if (traceEnabled) {
-                // there's nothing left to track -- without this, a traced net that gets fully torn down keeps
-                // reporting itself (as "nodes=0") in the periodic summary forever, since nothing else ever turns
-                // tracing back off for it and PipeNetTraceTickHandler's WeakHashMap-backed registry only drops an
-                // entry once the object itself becomes unreachable and gets garbage-collected, which can take an
-                // arbitrarily long time (or never happen at all, if something incidental still holds a reference).
                 setTraceEnabled(false, null);
             }
         }

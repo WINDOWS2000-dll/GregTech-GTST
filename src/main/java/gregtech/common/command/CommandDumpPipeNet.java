@@ -27,14 +27,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
-/**
- * {@code /gt dumppipenet <list|x> [y] [z]}: a PipeNet dev-tool snapshot command, complementary to the
- * execution-trace item ({@code PipeNetTraceBehavior}). Unlike {@code CommandDumpStateMachine}'s target (a
- * machine <i>class</i>, whose graph is identical for every instance), a PipeNet is inherently a specific
- * in-world runtime object, so this command's target is a position, not a resource ID.
- * <p>
- * Gated entirely behind {@link ConfigHolder.DevOptions#enablePipeNetDebugTools} (default {@code false}).
- */
 public class CommandDumpPipeNet extends CommandBase {
 
     @NotNull

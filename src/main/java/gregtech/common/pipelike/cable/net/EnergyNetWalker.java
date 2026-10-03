@@ -33,7 +33,7 @@ public class EnergyNetWalker extends PipeNetWalker<TileEntityCable> {
      * capacity (like {@link ArrayList}'s own doubling strategy) via {@link #checkPipe} instead of being
      * recreated at exact size on every single hop -- the previous implementation used {@code
      * ArrayUtils.add(pipes, pipeTile)}, which allocates a new array and copies every existing element on
-     * *every* hop, costing O(distance walked so far) per hop and therefore O(distance²) in total for a single
+     * *every* hop, costing O(distance walked so far) per hop and therefore O(distance^2) in total for a single
      * straight run (the common case for cable networks in real bases). Only {@link #pipeCount} elements
      * (indices {@code [0, pipeCount)}) are valid; anything beyond that is unused spare capacity.
      */

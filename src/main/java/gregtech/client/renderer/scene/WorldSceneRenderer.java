@@ -3,6 +3,7 @@ package gregtech.client.renderer.scene;
 import gregtech.api.util.Position;
 import gregtech.api.util.PositionedRect;
 import gregtech.api.util.Size;
+import gregtech.client.utils.GLUCompat;
 import gregtech.client.utils.RenderUtil;
 
 import net.minecraft.block.Block;
@@ -25,7 +26,6 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 import codechicken.lib.vec.Vector3;
-import gregtech.client.utils.GLUCompat;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11;
@@ -191,7 +191,8 @@ public abstract class WorldSceneRenderer {
         GlStateManager.matrixMode(GL11.GL_MODELVIEW);
         GlStateManager.pushMatrix();
         GlStateManager.loadIdentity();
-        GLUCompat.gluLookAt(eyePos.x, eyePos.y, eyePos.z, lookAt.x, lookAt.y, lookAt.z, worldUp.x, worldUp.y, worldUp.z);
+        GLUCompat.gluLookAt(eyePos.x, eyePos.y, eyePos.z, lookAt.x, lookAt.y, lookAt.z, worldUp.x, worldUp.y,
+                worldUp.z);
     }
 
     protected void clearView(int x, int y, int width, int height) {
@@ -366,7 +367,8 @@ public abstract class WorldSceneRenderer {
         VIEWPORT_BUFFER.rewind();
 
         // call gluUnProject with retrieved parameters
-        GLUCompat.gluUnProject(mouseX, mouseY, pixelDepth, MODELVIEW_MATRIX_BUFFER, PROJECTION_MATRIX_BUFFER, VIEWPORT_BUFFER,
+        GLUCompat.gluUnProject(mouseX, mouseY, pixelDepth, MODELVIEW_MATRIX_BUFFER, PROJECTION_MATRIX_BUFFER,
+                VIEWPORT_BUFFER,
                 OBJECT_POS_BUFFER);
 
         // rewind buffers after read by gluUnProject

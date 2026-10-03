@@ -27,14 +27,6 @@ import java.util.function.Consumer;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-/**
- * Regression coverage for {@link PipeNetWalker}'s iterative frontier-based traversal (see that class's own
- * JavaDoc): a "trunk line with a branch tap at every block" topology -- an ordinary, realistic pipe layout --
- * used to make the previous recursive-descent implementation grow one call-stack frame per branch point,
- * proportional to the trunk's length. These tests build exactly that topology and confirm it traverses
- * correctly (and without a {@link StackOverflowError}) at a scale well beyond anything the old implementation
- * could have survived.
- */
 class PipeNetWalkerTest {
 
     @BeforeAll
@@ -42,12 +34,6 @@ class PipeNetWalkerTest {
         Bootstrap.perform();
     }
 
-    /**
-     * A {@link DummyWorld} that looks tile entities up from a plain map instead of going through real chunk
-     * storage (which requires a matching {@code ITileEntityProvider} block state at that position -- more
-     * setup than this pure walker-logic test needs). A fresh instance per test avoids any shared state with
-     * {@link DummyWorld#INSTANCE}, which other test classes use.
-     */
     private static final class TestWorld extends DummyWorld {
 
         private final Map<BlockPos, TileEntity> tiles = new HashMap<>();
@@ -83,12 +69,6 @@ class PipeNetWalkerTest {
         }
     }
 
-    /**
-     * The minimal {@link IPipeTile} double needed to drive {@link PipeNetWalker}: only {@link #isConnected},
-     * {@link #getNeighbor}, and {@link #isFaceBlocked} are ever called by the base class itself. Neighbor
-     * lookup goes through a directly-supplied position map rather than {@link #getPipeWorld()}, so this
-     * doesn't depend on {@link TestWorld} at all except for the walker's own initial root lookup.
-     */
     private static final class FakePipeTile extends TileEntity
                                             implements IPipeTile<FakePipeType, Object> {
 
@@ -289,11 +269,6 @@ class PipeNetWalkerTest {
         }
     }
 
-    /**
-     * Builds a trunk of {@code trunkLength} blocks along the X axis, with a single-block dead-end stub
-     * branching south off every trunk block -- i.e. every trunk block (bar the two ends) has 3 valid pipe
-     * neighbors, so walking the trunk encounters a branch point at every single step.
-     */
     private static Map<BlockPos, FakePipeTile> buildCombTopology(BlockPos base, int trunkLength) {
         Map<BlockPos, FakePipeTile> tiles = new HashMap<>();
         for (int i = 0; i < trunkLength; i++) {
@@ -321,9 +296,6 @@ class PipeNetWalkerTest {
 
     @Test
     void combTopologyTraversesFullyWithoutStackOverflow() {
-        // Far larger than any real trunk line could plausibly be, and well beyond what the old recursive
-        // descent (one call-stack frame per branch point, i.e. per trunk block) could have survived on a
-        // default JVM thread stack.
         int trunkLength = 5000;
         BlockPos base = new BlockPos(0, 200, 0);
         Map<BlockPos, FakePipeTile> tiles = buildCombTopology(base, trunkLength);

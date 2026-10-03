@@ -18,13 +18,6 @@ public class LaserRoutePath implements IRoutePath<TileEntityLaserPipe> {
     private final TileEntityLaserPipe targetPipe;
     private final EnumFacing faceToHandler;
     private final int distance;
-    /**
-     * Every pipe position the walk actually traversed to reach {@link #targetPipe}, from the source pipe
-     * (inclusive) to {@link #targetPipe} (inclusive), encoded via {@link BlockPos#toLong()} to avoid one
-     * {@code BlockPos} allocation per visited position. Used by {@link LaserPipeNet} (via {@link
-     * #passesThrough}) to invalidate only the cache entries whose route is actually affected by a given
-     * position change, instead of clearing the whole net's cache on every connection/unload event.
-     */
     private final LongSet traversedPositions;
 
     public LaserRoutePath(TileEntityLaserPipe targetPipe, EnumFacing faceToHandler, int distance,
@@ -35,10 +28,6 @@ public class LaserRoutePath implements IRoutePath<TileEntityLaserPipe> {
         this.traversedPositions = traversedPositions;
     }
 
-    /**
-     * @param pos the position to check
-     * @return whether the walk that produced this route actually passed through {@code pos}
-     */
     public boolean passesThrough(@NotNull BlockPos pos) {
         return traversedPositions.contains(pos.toLong());
     }

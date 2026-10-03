@@ -19,16 +19,6 @@ import java.util.Map;
 
 public class ItemPipeNet extends PipeNet<ItemPipeProperties> {
 
-    /**
-     * Keyed by {@code (pipePos, facing)}, NOT {@code pipePos} alone: a single item pipe exposes one independent
-     * {@code ItemNetHandler} per face (see {@code TileEntityItemPipe}'s {@code handlers} map), and the computed
-     * route list actually depends on {@code facing} too -- {@link ItemNetWalker} excludes whichever neighbour
-     * lies back through {@code facing} itself, to avoid immediately routing an inserted item back out the side
-     * it just came in from. A junction pipe with items being pushed in from two different faces at once (a
-     * common real-base pattern) would otherwise have the second face's insertion silently reuse the first
-     * face's cached route list -- computed with the wrong exclusion -- and could route items back out the face
-     * they just arrived from.
-     */
     private final Map<FacingPos, List<ItemRoutePath>> NET_DATA = new HashMap<>();
 
     public ItemPipeNet(WorldPipeNet<ItemPipeProperties, ? extends PipeNet<ItemPipeProperties>> world) {
@@ -44,10 +34,6 @@ public class ItemPipeNet extends PipeNet<ItemPipeProperties> {
             long start = traced ? System.nanoTime() : 0;
             data = ItemNetWalker.createNetData(getWorldData(), pipePos, facing);
             if (traced) {
-                // unlike Laser/Optical, ItemNetWalker never stops early -- it always walks every reachable node
-                // in the net to enumerate all destinations (see GTST-pipenet-optimization-design/README.md's
-                // "今後の検討課題" section on why fine-grained cache invalidation doesn't help here), so
-                // getAllNodes().size() (not the result list's size) is the actual work performed.
                 getTraceStats().recordWalkerTraversal(System.nanoTime() - start, getAllNodes().size());
                 PipeNetTraceLog.log(getTraceLabel(),
                         "getNetData(" + pipePos + "," + facing + "): cache miss, walker traversal");

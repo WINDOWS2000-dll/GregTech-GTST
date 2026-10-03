@@ -12,19 +12,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Confirmatory microbenchmark for {@link ItemPipeNet}'s cache invalidation. As {@code EnergyCacheBenchmark},
- * this is NOT expected to show any improvement -- {@code ItemNetWalker} explores the entire connected
- * component exhaustively with no early termination (needed to enumerate every reachable inventory with its
- * accumulated priority/filters), so a route's dependency set is always the whole net; fine-grained
- * invalidation would provide no benefit here even if implemented (see {@code
- * GTST-pipenet-optimization-design/README.md}'s "今後の検討課題" section). This benchmark exists to confirm
- * that expectation empirically.
- * <p>
- * {@code NET_DATA} is keyed by {@link FacingPos} (pos+facing), not {@code BlockPos} alone -- see {@link
- * ItemPipeNet#NET_DATA}'s own note on why a single face's cache miss must not be satisfied by another face's
- * stale entry. This benchmark mirrors that key shape so it stays representative of the real map.
- */
 class ItemCacheBenchmark {
 
     @Test

@@ -18,9 +18,10 @@ import com.google.common.collect.MultimapBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
+
 import javax.vecmath.Vector2f;
 import javax.vecmath.Vector3f;
-import java.util.List;
 
 @SideOnly(Side.CLIENT)
 public class CustomTexture {

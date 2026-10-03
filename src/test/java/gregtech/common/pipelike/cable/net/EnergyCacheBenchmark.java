@@ -12,16 +12,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Confirmatory microbenchmark for {@link EnergyNet}'s cache invalidation. Unlike {@code LaserCacheBenchmark},
- * this is NOT expected to show any improvement -- Energy/Item were deliberately left with whole-cache
- * invalidation (see {@code GTST-pipenet-optimization-design/README.md}'s "今後の検討課題" section: {@code
- * EnergyNetWalker}/{@code ItemNetWalker} explore the entire connected component exhaustively with no early
- * termination, so a route's dependency set is always the whole net -- fine-grained invalidation would provide
- * no benefit here even if implemented). This benchmark exists to confirm that expectation empirically: {@code
- * onPipeConnectionsUpdate} gained a {@code BlockPos} parameter (phase 1b's shared signature change, applied
- * uniformly across all 5 pipe types), but the body still unconditionally clears {@code NET_DATA} either way.
- */
 class EnergyCacheBenchmark {
 
     @Test

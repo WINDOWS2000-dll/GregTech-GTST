@@ -5,13 +5,6 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * Regression coverage for {@link PipeNetTraceStats}' snapshot-and-diff shape (see its own JavaDoc): confirms
- * that recording operations, taking a snapshot, recording more, then diffing against the first snapshot yields
- * exactly the second batch of activity -- not the cumulative lifetime total -- and that {@link
- * PipeNetTraceStats.Snapshot#describe} produces a readable summary without throwing, including in the
- * brand-new (all-zero, {@code periodNanos == 0}) case a one-shot dump (not a periodic summary) would use.
- */
 class PipeNetTraceStatsTest {
 
     @Test
@@ -62,29 +55,14 @@ class PipeNetTraceStatsTest {
     void describeReportsPercentOfIntervalForANonZeroPeriod() {
         PipeNetTraceStats stats = new PipeNetTraceStats();
         stats.recordAddNode(1_000_000); // 1ms
-        // a 100ms interval -> 1ms/100ms = 1%
         String description = stats.snapshot().describe(100_000_000L);
         assertTrue(description.contains("1.0000% of interval"), description);
     }
 
-    /**
-     * Regression coverage for the {@code findConnectedNanosSoFar()} accounting seam {@link PipeNet#removeNode}
-     * uses to avoid double-counting: {@code rebuildNetworkOnNodeRemoval}'s own split-check can call {@link
-     * PipeNet#findAllConnectedBlocks} (recorded under {@code findConnected}), *nested inside* the very call
-     * {@code removeNode} is itself timing (recorded under {@code removeNode}). Without subtracting that nested
-     * time back out before calling {@code #recordRemoveNode}, {@link
-     * PipeNetTraceStats.Snapshot#totalNanos()} would count it twice -- once under each category -- overstating
-     * the periodic summary's headline "cpu=X% of interval" figure. This test reproduces {@code removeNode}'s
-     * exact bookkeeping sequence (snapshot {@code findConnectedNanosSoFar()} before and after the nested call,
-     * subtract the delta) directly against {@link PipeNetTraceStats}, without relying on real wall-clock timing.
-     */
     @Test
     void removeNodeAccountingExcludesNestedFindConnectedTimeFromTheTotal() {
         PipeNetTraceStats stats = new PipeNetTraceStats();
 
-        // simulate removeNode's own bookkeeping around a call to rebuildNetworkOnNodeRemoval that happens to
-        // trigger one nested findAllConnectedBlocks call (a split-check), out of a 1.5ms total wall-clock cost
-        // for the whole removeNode() call, of which 1ms was spent inside that nested call.
         long findConnectedBefore = stats.findConnectedNanosSoFar();
         stats.recordFindConnected(1_000_000, 5); // the nested findAllConnectedBlocks call
         long nestedNanos = stats.findConnectedNanosSoFar() - findConnectedBefore;

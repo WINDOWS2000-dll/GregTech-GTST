@@ -27,17 +27,6 @@ import java.util.*;
  * <b>Do not walk a walker more than once</b>
  * <p>
  * For example implementations look at {@link ItemNetWalker}
- * <p>
- * <b>Implementation note:</b> the traversal itself is a breadth-first search driven entirely by
- * {@link #traversePipeNet(int)}'s own loop: every tick, every currently active walker is advanced by exactly
- * one hop via {@link #step(List)}, and whatever it produces (itself, if it has a single successor; new
- * sub-walkers, if it just branched) becomes next tick's frontier. No walker ever calls another walker's step
- * directly -- this bounds the call stack to a small constant depth regardless of how many consecutive branch
- * points a pipe network has (a "trunk line with a branch tap at every block" topology, common in real builds,
- * previously produced a recursive descent one stack frame per branch point, i.e. proportional to the trunk's
- * length). {@link #walkedBlocks} (and therefore every recorded distance) is unaffected by this: it is
- * incremented exactly once per hop regardless of how many ticks that takes to schedule, so this is purely an
- * internal scheduling change, not a behavioral one.
  */
 public abstract class PipeNetWalker<T extends IPipeTile<?, ?>> {
 
@@ -164,13 +153,6 @@ public abstract class PipeNetWalker<T extends IPipeTile<?, ?>> {
         invalid = true;
     }
 
-    /**
-     * Advances this walker by exactly one hop. Appends whatever should be processed next tick to
-     * {@code nextFrontier}: this same walker again (if it has exactly one valid successor and is still
-     * running), or the new sub-walkers spawned for each branch (if it has multiple). Adds nothing, and bubbles
-     * completion up to {@link #parentWalker} via {@link #finish()}, on a dead end, a failed
-     * {@link #checkPos()}, or being told to stop.
-     */
     private void step(List<PipeNetWalker<T>> nextFrontier) {
         if (!checkPos()) {
             root.failed = true;
@@ -209,11 +191,6 @@ public abstract class PipeNetWalker<T extends IPipeTile<?, ?>> {
         }
     }
 
-    /**
-     * Marks this walker as finished and bubbles completion up through {@link #parentWalker}, calling
-     * {@link #onRemoveSubWalker} on each ancestor for which this was (transitively) the last remaining active
-     * descendant -- exactly where the original recursive implementation would have.
-     */
     private void finish() {
         PipeNetWalker<T> child = this;
         PipeNetWalker<T> parent = child.parentWalker;

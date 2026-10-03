@@ -16,14 +16,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * Regression coverage for {@link PipeNet#findAllConnectedBlocks} (see that method's own JavaDoc for why it is
- * a plain iterative breadth-first search over {@link PipeNet}'s own node map, with no persistent
- * graph/adjacency structure backing it). Confirms these connectivity queries agree with the network's actual
- * split/merge behaviour across a straight line, a cyclic topology (a redundant path, which stresses branching
- * during the search differently than a simple tree-shaped walk), and node removal that either does or does not
- * sever the network.
- */
 class PipeNetTest {
 
     private static final class TestPipeNet extends PipeNet<Object> {
@@ -165,12 +157,6 @@ class PipeNetTest {
         assertEquals(3, net.findAllConnectedBlocks(left).size());
     }
 
-    /**
-     * Regression coverage for {@link PipeNet#mergeWithSizeOrdering}: confirms that bridging two pre-existing,
-     * differently-sized nets via {@link WorldPipeNet#addNode} always leaves the <em>larger</em> net's object as
-     * the survivor, regardless of which side of the bridge happens to be discovered first (see the {@code
-     * EnumFacing.VALUES} iteration order in {@link WorldPipeNet#addNode}).
-     */
     @Test
     void bridgingViaAddNodePicksLargerNetAsSurvivor() {
         BlockPos largeBase = new BlockPos(0, 0, 0);
@@ -194,17 +180,6 @@ class PipeNetTest {
         assertEquals(13, survivor.findAllConnectedBlocks(largeBase).size());
     }
 
-    /**
-     * As {@link #bridgingViaAddNodePicksLargerNetAsSurvivor}, but triggering the merge through {@link
-     * PipeNet#updateMark} instead of {@link WorldPipeNet#addNode}: an isolated single-node "net" (mark
-     * incompatible with its neighbour, so it didn't already merge when placed) is made compatible by changing
-     * its own mark. {@code updateMark} is called on this smaller net's own (only) node, so without
-     * size-ordering, the smaller net would always be the one absorbing (since {@code uniteNetworks} always
-     * kept the caller as survivor) -- this confirms the size comparison overrides that and the larger net
-     * survives instead. (Deliberately a single-node "small" net, not two: {@code updateMark} only changes the
-     * mark of the node it's called on, not every node in its net, so a multi-node small net would have its own
-     * internal edge broken by the same mark change instead of testing the merge in isolation.)
-     */
     @Test
     void bridgingViaUpdateMarkPicksLargerNetAsSurvivor() {
         BlockPos largeBase = new BlockPos(0, 0, 0);
@@ -227,19 +202,6 @@ class PipeNetTest {
         assertEquals(11, survivor.findAllConnectedBlocks(largeBase).size());
     }
 
-    /**
-     * Regression coverage for the specific hazard {@link PipeNet#mergeWithSizeOrdering}'s doc warns about:
-     * a single {@link PipeNet#updateMark} call can trigger more than one merge (one per qualifying facing), and
-     * if an earlier merge flips which object survives, later iterations comparing against a stale {@code this}
-     * (instead of the refreshed current net) would wrongly treat an already-merged neighbour as a different
-     * net. This builds a 5-node ring that already surrounds a single isolated node ({@code A}) on both sides,
-     * so a mark change on {@code A} merges it into the ring via one facing (a reversal, since the ring is
-     * larger) and then must recognise the *other* facing's neighbour as already part of the same, just-merged
-     * net (rather than attempting a second, corrupting merge against a now-dead {@code this}). If the second
-     * facing's edge sync were skipped instead (the bug this guards against), the ring would silently degrade
-     * into a tree, which the final assertion (connectivity survives removing one of the two connecting nodes)
-     * would then fail.
-     */
     @Test
     void multipleMergesInOneUpdateMarkCallKeepGraphConsistent() {
         BlockPos a = new BlockPos(10, 0, 0);
@@ -280,12 +242,6 @@ class PipeNetTest {
         assertEquals(5, afterRemoval.findAllConnectedBlocks(a).size());
     }
 
-    /**
-     * Regression coverage for the PipeNet execution-trace dev tool (see {@link PipeNet#setTraceEnabled}):
-     * confirms that enabling tracing actually causes {@link PipeNet#addNode}/{@link
-     * PipeNet#findAllConnectedBlocks} to record into {@link PipeNetTraceStats}, and that stats stay untouched
-     * (all zero) while tracing is off.
-     */
     @Test
     void enablingTraceRecordsStatsForAddNodeAndFindConnected() {
         BlockPos base = new BlockPos(0, 0, 0);
@@ -310,13 +266,6 @@ class PipeNetTest {
                 "no further recording should happen once tracing is off again");
     }
 
-    /**
-     * Regression coverage for {@link PipeNet#uniteNetworks}' trace-following behaviour: confirms tracing
-     * transfers onto whichever net survives a merge (see that method's own note on why tracing follows the
-     * network's identity, not a specific Java object), even when the traced net is the one absorbed (the
-     * common case here, since {@link PipeNet#mergeWithSizeOrdering} keeps the *larger* net, and the smaller
-     * one is what a player would realistically have started tracing first).
-     */
     @Test
     void tracingFollowsTheSurvivingNetThroughAMerge() {
         BlockPos largeBase = new BlockPos(0, 0, 0);
@@ -350,14 +299,6 @@ class PipeNetTest {
         assertFalse(smallNetBefore.isTraceEnabled(), "the absorbed (discarded) net's own trace state is cleared");
     }
 
-    /**
-     * Regression coverage for a self-audit finding: a traced net that gets torn down entirely (its last node
-     * removed, triggering {@code rebuildNetworkOnNodeRemoval}'s {@code worldData.removePipeNet(this)} path) must
-     * stop tracing itself. Without this, the net object keeps being registered with the periodic-summary tick
-     * handler indefinitely (or until it happens to be garbage-collected, which is not guaranteed to happen
-     * promptly, or at all, if something incidental still references it), spamming meaningless "nodes=0"
-     * summaries forever -- exactly what was observed at the tail of a real playtest's trace log.
-     */
     @Test
     void tracingIsAutomaticallyDisabledWhenTheTracedNetBecomesEmpty() {
         BlockPos pos = new BlockPos(0, 0, 0);
@@ -373,12 +314,6 @@ class PipeNetTest {
         assertNull(net.getTraceLabel());
     }
 
-    /**
-     * Regression coverage for {@link PipeNet#describeMemoryProxy}'s edge count, computed on demand by scanning
-     * every node's neighbours (see that method's own note on why there is no persistent structure to just read
-     * a count from). A 3-node straight line has exactly 2 edges; a 4-node cycle (see {@link
-     * #cyclicTopologyIsOneConnectedComponentDespiteRedundantPath}'s topology) has exactly 4.
-     */
     @Test
     void describeMemoryProxyReportsTheActualEdgeCount() {
         for (int i = 0; i < 3; i++) {

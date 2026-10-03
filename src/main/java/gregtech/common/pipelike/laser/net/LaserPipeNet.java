@@ -18,10 +18,6 @@ import java.util.Map;
 
 public class LaserPipeNet extends PipeNet<LaserPipeProperties> {
 
-    /**
-     * Keyed by {@link BlockPos#toLong()} rather than {@code BlockPos} itself, to avoid one {@code BlockPos}
-     * allocation and its (comparatively expensive) hash/equals per lookup.
-     */
     private final Long2ObjectMap<LaserRoutePath> netData = new Long2ObjectOpenHashMap<>();
 
     public LaserPipeNet(WorldPipeNet<LaserPipeProperties, ? extends PipeNet<LaserPipeProperties>> world) {
@@ -40,9 +36,6 @@ public class LaserPipeNet extends PipeNet<LaserPipeProperties> {
         long start = traced ? System.nanoTime() : 0;
         LaserRoutePath data = LaserNetWalker.createNetData(getWorldData(), pipePos, facing);
         if (traced) {
-            // the distance walked to the found target approximates nodes visited (LaserNetWalker traverses a
-            // single axis and stops at the first match, so this is a close bound, not an exact count -- see
-            // PipeNetTraceStats' own JavaDoc on why exactness isn't the point of this dev tool)
             int nodesVisited = (data != null && data != LaserNetWalker.FAILED_MARKER) ? data.getDistance() : 0;
             getTraceStats().recordWalkerTraversal(System.nanoTime() - start, nodesVisited);
             PipeNetTraceLog.log(getTraceLabel(),
@@ -71,15 +64,6 @@ public class LaserPipeNet extends PipeNet<LaserPipeProperties> {
         invalidateRoutesThrough(pos);
     }
 
-    /**
-     * Removes only the cached routes whose walk actually passed through {@code pos}, instead of clearing the
-     * whole net's cache -- {@code netData} is typically keyed by every laser-emitting source in the net, and a
-     * single pipe's connection changing or unloading only invalidates the (usually much smaller) subset of
-     * routes that ran through it. A cached "no target found" entry (a {@code null} value; see {@link
-     * #getNetData}) has no recorded path to check against -- the walker exhausted the whole reachable net
-     * without success, so any change anywhere in it could newly expose a target -- and is conservatively
-     * invalidated unconditionally.
-     */
     private void invalidateRoutesThrough(BlockPos pos) {
         netData.values().removeIf(route -> route == null || route.passesThrough(pos));
     }

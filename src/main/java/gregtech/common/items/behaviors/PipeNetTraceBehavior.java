@@ -19,17 +19,6 @@ import net.minecraft.world.World;
 
 import java.util.List;
 
-/**
- * The PipeNet execution-trace dev tool. Right-click any pipe (cable, item pipe, fluid pipe, laser pipe, or
- * optical pipe -- anything implementing {@link IPipeTile}) to toggle tracing for the {@link PipeNet} it
- * currently belongs to; right-click it again to turn tracing back off. Mirrors {@link StateMachineTraceBehavior}
- * exactly: each net's trace state is independent, so multiple networks can be traced at once, and tracing
- * follows the network's identity through merges (see {@link PipeNet#setTraceEnabled}'s own note), not the
- * specific pipe originally clicked.
- * <p>
- * Gated entirely behind {@link ConfigHolder.DevOptions#enablePipeNetDebugTools}; does nothing (passes through)
- * when that's off, so the item is inert in a normal (non-debugging) install.
- */
 public class PipeNetTraceBehavior implements IItemBehaviour {
 
     @Override

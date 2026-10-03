@@ -13,14 +13,6 @@ import java.lang.reflect.Field;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * Regression coverage for {@link LaserPipeNet}'s dependency-set-based fine-grained cache invalidation (see
- * {@link LaserPipeNet#onPipeConnectionsUpdate} and {@link LaserRoutePath#passesThrough}): confirms only the
- * cached routes whose recorded walk actually passed through the changed position are dropped, rather than the
- * whole net's cache being cleared on every connection/unload event. Cache entries are seeded directly (via
- * reflection into the private {@code netData} map) rather than through a real {@code LaserNetWalker}, since the
- * invalidation logic under test only ever consults the recorded {@link LaserRoutePath}, not how it was built.
- */
 class LaserPipeNetTest {
 
     private LaserPipeNet net;
@@ -82,8 +74,6 @@ class LaserPipeNetTest {
     @Test
     void cachedFailureIsAlwaysInvalidatedConservatively() throws Exception {
         BlockPos source = new BlockPos(0, 0, 0);
-        // a null value represents a cached "no target found" result -- see LaserPipeNet#getNetData -- which
-        // has no recorded path to bound its invalidation, so it must always be dropped.
         netData().put(source.toLong(), null);
 
         net.onPipeConnectionsUpdate(new BlockPos(999, 0, 0));

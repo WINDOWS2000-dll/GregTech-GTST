@@ -15,13 +15,6 @@ import java.util.Date;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-/**
- * The PipeNet execution-trace dev tool's log sink. Mirrors {@link gregtech.api.statemachine.GTStateMachineTraceLog}
- * exactly, including the dedicated writer thread + blocking queue: PipeNet operations (merges, splits, BFS
- * traversals) can happen on the server tick thread from ordinary block-update event handling, so -- exactly as
- * with the StateMachine trace log this is copied from -- logging must never block that thread on file I/O.
- * See {@link PipeNet#setTraceEnabled} for how a specific net opts into tracing.
- */
 public final class PipeNetTraceLog {
 
     private static final String LAUNCH_TIMESTAMP = new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date());
@@ -33,10 +26,6 @@ public final class PipeNetTraceLog {
 
     private PipeNetTraceLog() {}
 
-    /**
-     * Logs one traced PipeNet event, prefixed with a caller-supplied label distinguishing multiple traced
-     * networks.
-     */
     public static void log(@NotNull String label, @NotNull String message) {
         String line = "[" + label + "] " + message;
         logger.info(line);

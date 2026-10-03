@@ -26,32 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-/**
- * Manual before/after microbenchmark for the PipeNet optimization work (see
- * {@code GTST-pipenet-optimization-design/README.md}). This is deliberately NOT a correctness test -- every
- * method here always "passes" as long as it doesn't throw; its only job is to print timing numbers to stdout
- * (visible via Gradle's {@code showStandardStreams}) for manual comparison between two checkouts.
- * <p>
- * This file is written to compile and run <b>unchanged</b> against both the pre-optimization commit
- * ({@code eeb73b945}) and the current tree: it only calls the stable, unchanged-signature outward APIs
- * ({@link WorldPipeNet#addNode}, {@link WorldPipeNet#removeNode}, {@link PipeNetWalker#traversePipeNet()}, ...),
- * never the internals that actually changed shape (e.g. {@code PipeNet#onPipeConnectionsUpdate} gained a
- * {@code BlockPos} parameter -- see {@code LaserCacheBenchmark} in the laser package for that axis, which
- * needed two small tree-specific variants instead).
- * <p>
- * Scenarios, each targeting one specific optimization:
- * <ul>
- * <li>{@link #bfsTraversalBenchmark()} -- {@code PipeNetWalker}'s iterative rewrite (phase 1a)</li>
- * <li>{@link #nodeRemovalChurnBenchmark()}/{@link #trimmingALeafFromAHugeNetBenchmark()} -- {@code
- * PipeNet#findAllConnectedBlocks}'s split-detection cost, across three successive implementations: a
- * JGraphT {@code ConnectivityInspector} misuse (phase 1a; paid the whole net's vertex count on every call --
- * see {@code GTST-pipenet-optimization-design/README.md}), then a JGraphT {@code BreadthFirstIterator} fix for
- * that specific bug (phase 4, found via a real playtest using the execution-trace dev tool), then the current
- * plain hand-rolled BFS with no persistent graph structure at all (phase 6 -- the graph itself turned out to be
- * pure overhead, see {@code PipeNet#findAllConnectedBlocks}'s own note)</li>
- * <li>{@link #unionBySizeBenchmark()} -- {@code mergeWithSizeOrdering} (phase 2)</li>
- * </ul>
- */
 class PipeNetBenchmark {
 
     @BeforeAll
@@ -320,11 +294,6 @@ class PipeNetBenchmark {
         return tiles;
     }
 
-    /**
-     * As {@code PipeNetWalkerTest}'s comb topology: a trunk with a single-block dead-end stub off every
-     * trunk block, so every trunk block is a branch point -- the pathological case for the old recursive
-     * walker (see {@link PipeNetWalker}'s own class doc).
-     */
     private static Map<BlockPos, FakePipeTile> buildComb(BlockPos base, int trunkLength) {
         Map<BlockPos, FakePipeTile> tiles = new HashMap<>();
         for (int i = 0; i < trunkLength; i++) {
@@ -371,18 +340,12 @@ class PipeNetBenchmark {
             report("straight line, length=" + length, samples);
         }
 
-        // the comb topology is where the OLD recursive walker risks StackOverflowError (one call-stack frame
-        // per trunk block, since every block is a branch point) -- keep this at a size safe for both trees so
-        // we get an actual timing comparison, rather than a crash on the old tree.
         int combTrunkLength = 1_500;
         TestWorld combWorld = new TestWorld();
         combWorld.tiles.putAll(buildComb(new BlockPos(0, 210, 0), combTrunkLength));
         long[] combSamples = timeTraversals(combWorld, new BlockPos(0, 210, 0), trials);
         report("comb, trunkLength=" + combTrunkLength, combSamples);
 
-        // now push the comb topology to a size the OLD implementation cannot survive at all, to quantify the
-        // robustness improvement itself (not just speed). Catches StackOverflowError so this file still runs
-        // to completion, unmodified, against the pre-optimization tree.
         int largeCombTrunkLength = 50_000;
         TestWorld largeCombWorld = new TestWorld();
         largeCombWorld.tiles.putAll(buildComb(new BlockPos(0, 220, 0), largeCombTrunkLength));
@@ -441,9 +404,6 @@ class PipeNetBenchmark {
             world.addNode(base.add(i, 0, 0), new Object(), Node.DEFAULT_MARK, ALL_OPEN, false);
         }
 
-        // evenly spaced interior cut points -- each removal is a degree-2 node, forcing the full
-        // findAllConnectedBlocks-based split check (a degree<=1 removal would hit the cheap fast path instead
-        // and wouldn't stress the mechanism under test at all)
         long[] samples = new long[removals];
         for (int i = 0; i < removals; i++) {
             int x = (i + 1) * length / (removals + 1);
@@ -455,18 +415,6 @@ class PipeNetBenchmark {
         report("interior removals on length=" + length + " line, removals=" + removals, samples);
     }
 
-    /**
-     * Targets the specific pathological pattern a real playtest found (see {@code
-     * GTST-pipenet-optimization-design/README.md}): repeatedly trimming a tiny leaf off an otherwise huge net.
-     * A {@code ConnectivityInspector}-per-call implementation of {@code findAllConnectedBlocks} pays a cost
-     * proportional to the *whole* net's vertex count on every single call, no matter how small the leaf being
-     * cut off actually is (it partitions the entire graph into all of its connected components, not just the
-     * one asked about) -- {@link org.jgrapht.traverse.BreadthFirstIterator} pays only for the returned
-     * component's own size instead. Unlike {@link #nodeRemovalChurnBenchmark()} (which cuts the *only* net in
-     * half repeatedly, so the graph being searched is never much larger than the component returned), this
-     * scenario keeps a single big net intact and repeatedly attaches/detaches a 2-node leaf -- the exact shape
-     * that most starkly exposes the difference between "cost the query needs" and "cost the whole net has".
-     */
     @Test
     void trimmingALeafFromAHugeNetBenchmark() {
         int bigNetSize = 100_000;
@@ -491,13 +439,6 @@ class PipeNetBenchmark {
         }
         report("trim degree-1 leaf off bigNetSize=" + bigNetSize + " net, cycles=" + cycles, samples);
 
-        // now force an actual split-check, queried from the SMALL side: give the leaf two extra members of its
-        // own (so it's a genuine 3-node component, not just a single vertex) and block *its* connection back to
-        // the big net. PipeNet#updateBlockedConnections calls findAllConnectedBlocks(nodePos) where nodePos is
-        // whichever position the update was issued against -- issuing it from the leaf's own position is what
-        // makes the query resolve to the tiny 3-node component, not the ~100,000-node one, which is exactly the
-        // case a per-call ConnectivityInspector cannot answer cheaply (it computes every component in the
-        // graph, including the huge one, before handing back the tiny one actually asked for).
         BlockPos leafPos2 = bigBase.add(-1, 1, 0);
         BlockPos leafPos3 = bigBase.add(-1, 2, 0);
         world.addNode(leafPos, new Object(), Node.DEFAULT_MARK, ALL_OPEN, false);
@@ -529,13 +470,6 @@ class PipeNetBenchmark {
             world.addNode(bigBase.add(i, 0, 0), new Object(), Node.DEFAULT_MARK, ALL_OPEN, false);
         }
 
-        // bridgePos's WEST neighbour is the small (1-node) net, EAST neighbour is the big net -- WEST is
-        // checked before EAST in EnumFacing.VALUES, so on the pre-union-by-size tree, WorldPipeNet#addNode's
-        // merge loop always finds the small net FIRST and keeps IT as the survivor, copying the entire big net
-        // into it every single cycle (the exact O(size-of-big-net) per-merge cost union-by-size exists to
-        // avoid). On the current tree, mergeWithSizeOrdering picks the big net as survivor regardless of
-        // discovery order, so each cycle's cost should stay roughly constant instead of scaling with
-        // bigNetSize.
         BlockPos smallPos = bigBase.add(-2, 0, 0);
         BlockPos bridgePos = bigBase.add(-1, 0, 0);
 

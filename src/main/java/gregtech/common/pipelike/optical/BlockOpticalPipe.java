@@ -36,21 +36,6 @@ import java.util.Set;
 
 public class BlockOpticalPipe extends BlockPipe<OpticalPipeType, OpticalPipeProperties, WorldOpticalPipeNet> {
 
-    /**
-     * Extra capability types (beyond {@link GregtechTileCapabilities#CAPABILITY_DATA_ACCESS}/
-     * {@link GregtechTileCapabilities#CABABILITY_COMPUTATION_PROVIDER}) that a neighboring block can expose to
-     * have an Optical Cable connect to it -- lets addons reuse this pipe network for their own capability types
-     * without needing further changes here. Register via {@link #registerConnectableCapability(Capability)}
-     * during mod init.
-     * <p>
-     * Read from two places, both of which were hardcoded to just the two built-in types before this registry
-     * existed: {@link #canPipeConnectToBlock} (the physical/visual pipe-to-block connection decision) and
-     * {@code OpticalNetWalker#checkNeighbour} (via {@link #getExtraConnectableCapabilities()} -- the network
-     * walker's own "is this neighbor a valid route target" check, which a naive addon integration is easy to
-     * miss since {@code IRoutePath#getTargetCapability} is already fully generic and looks like the only piece
-     * that matters). Both were confirmed necessary by an actual addon integration (GregTech-Nuclear's reactor
-     * link hatch, 2026-09-20) that connected physically but never found a route until both were fixed.
-     */
     private static final Set<Capability<?>> EXTRA_CONNECTABLE_CAPABILITIES = new LinkedHashSet<>();
 
     public static void registerConnectableCapability(@NotNull Capability<?> capability) {
