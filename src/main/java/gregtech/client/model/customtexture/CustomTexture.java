@@ -17,10 +17,9 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.MultimapBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.util.vector.Vector;
-import org.lwjgl.util.vector.Vector2f;
-import org.lwjgl.util.vector.Vector3f;
 
+import javax.vecmath.Vector2f;
+import javax.vecmath.Vector3f;
 import java.util.List;
 
 @SideOnly(Side.CLIENT)
@@ -115,21 +114,23 @@ public class CustomTexture {
         }
 
         public Vector3f[] verts() {
-            return fromData(data.get(VertexFormatElement.EnumUsage.POSITION), 3);
+            List<float[]> positions = data.get(VertexFormatElement.EnumUsage.POSITION);
+            Vector3f[] ret = new Vector3f[positions.size()];
+            for (int i = 0; i < positions.size(); i++) {
+                float[] v = positions.get(i);
+                ret[i] = new Vector3f(v[0], v[1], v[2]);
+            }
+            return ret;
         }
 
         public Vector2f[] uvs() {
-            return fromData(data.get(VertexFormatElement.EnumUsage.UV), 2);
-        }
-
-        @SuppressWarnings("unchecked")
-        private static <T extends Vector> T[] fromData(List<float[]> data, int size) {
-            Vector[] ret = size == 2 ? new Vector2f[data.size()] : new Vector3f[data.size()];
-            for (int i = 0; i < data.size(); i++) {
-                ret[i] = size == 2 ? new Vector2f(data.get(i)[0], data.get(i)[1]) :
-                        new Vector3f(data.get(i)[0], data.get(i)[1], data.get(i)[2]);
+            List<float[]> coords = data.get(VertexFormatElement.EnumUsage.UV);
+            Vector2f[] ret = new Vector2f[coords.size()];
+            for (int i = 0; i < coords.size(); i++) {
+                float[] v = coords.get(i);
+                ret[i] = new Vector2f(v[0], v[1]);
             }
-            return (T[]) ret;
+            return ret;
         }
 
         @NotNull

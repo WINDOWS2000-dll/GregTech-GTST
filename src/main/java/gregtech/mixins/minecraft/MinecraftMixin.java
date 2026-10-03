@@ -1,6 +1,7 @@
 package gregtech.mixins.minecraft;
 
 import gregtech.api.items.toolitem.ItemGTToolbelt;
+import gregtech.api.util.input.LegacyKeyCodes;
 import gregtech.common.ConfigHolder;
 
 import net.minecraft.client.Minecraft;
@@ -8,7 +9,6 @@ import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.text.TextComponentTranslation;
 
-import org.lwjgl.input.Keyboard;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -21,7 +21,7 @@ public class MinecraftMixin {
 
     @Inject(method = "processKeyF3", at = @At("HEAD"))
     public void addGregTechDebugMessage(int auxKey, CallbackInfoReturnable<Boolean> cir) {
-        if (auxKey == Keyboard.KEY_H && !Minecraft.getMinecraft().gameSettings.advancedItemTooltips) {
+        if (auxKey == LegacyKeyCodes.KEY_H && !Minecraft.getMinecraft().gameSettings.advancedItemTooltips) {
             Minecraft.getMinecraft().ingameGUI.getChatGUI()
                     .printChatMessage(new TextComponentTranslation("gregtech.debug.f3_h.enabled"));
         }

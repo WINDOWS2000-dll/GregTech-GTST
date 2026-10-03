@@ -25,10 +25,10 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 import codechicken.lib.vec.Vector3;
+import gregtech.client.utils.GLUCompat;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.util.glu.GLU;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -185,13 +185,13 @@ public abstract class WorldSceneRenderer {
         GlStateManager.loadIdentity();
 
         float aspectRatio = width / (height * 1.0f);
-        GLU.gluPerspective(60.0f, aspectRatio, 0.1f, 10000.0f);
+        GLUCompat.gluPerspective(60.0f, aspectRatio, 0.1f, 10000.0f);
 
         // setup modelview matrix
         GlStateManager.matrixMode(GL11.GL_MODELVIEW);
         GlStateManager.pushMatrix();
         GlStateManager.loadIdentity();
-        GLU.gluLookAt(eyePos.x, eyePos.y, eyePos.z, lookAt.x, lookAt.y, lookAt.z, worldUp.x, worldUp.y, worldUp.z);
+        GLUCompat.gluLookAt(eyePos.x, eyePos.y, eyePos.z, lookAt.x, lookAt.y, lookAt.z, worldUp.x, worldUp.y, worldUp.z);
     }
 
     protected void clearView(int x, int y, int width, int height) {
@@ -310,9 +310,9 @@ public abstract class WorldSceneRenderer {
 
     public static Vector3f project(BlockPos pos) {
         // read current rendering parameters
-        GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, MODELVIEW_MATRIX_BUFFER);
-        GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, PROJECTION_MATRIX_BUFFER);
-        GL11.glGetInteger(GL11.GL_VIEWPORT, VIEWPORT_BUFFER);
+        GL11.glGetFloatv(GL11.GL_MODELVIEW_MATRIX, MODELVIEW_MATRIX_BUFFER);
+        GL11.glGetFloatv(GL11.GL_PROJECTION_MATRIX, PROJECTION_MATRIX_BUFFER);
+        GL11.glGetIntegerv(GL11.GL_VIEWPORT, VIEWPORT_BUFFER);
 
         // rewind buffers after write by OpenGL glGet calls
         MODELVIEW_MATRIX_BUFFER.rewind();
@@ -320,7 +320,7 @@ public abstract class WorldSceneRenderer {
         VIEWPORT_BUFFER.rewind();
 
         // call gluProject with retrieved parameters
-        GLU.gluProject(pos.getX() + 0.5f, pos.getY() + 0.5f, pos.getZ() + 0.5f, MODELVIEW_MATRIX_BUFFER,
+        GLUCompat.gluProject(pos.getX() + 0.5f, pos.getY() + 0.5f, pos.getZ() + 0.5f, MODELVIEW_MATRIX_BUFFER,
                 PROJECTION_MATRIX_BUFFER, VIEWPORT_BUFFER, OBJECT_POS_BUFFER);
 
         // rewind buffers after read by gluProject
@@ -356,9 +356,9 @@ public abstract class WorldSceneRenderer {
         PIXEL_DEPTH_BUFFER.rewind();
 
         // read current rendering parameters
-        GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, MODELVIEW_MATRIX_BUFFER);
-        GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, PROJECTION_MATRIX_BUFFER);
-        GL11.glGetInteger(GL11.GL_VIEWPORT, VIEWPORT_BUFFER);
+        GL11.glGetFloatv(GL11.GL_MODELVIEW_MATRIX, MODELVIEW_MATRIX_BUFFER);
+        GL11.glGetFloatv(GL11.GL_PROJECTION_MATRIX, PROJECTION_MATRIX_BUFFER);
+        GL11.glGetIntegerv(GL11.GL_VIEWPORT, VIEWPORT_BUFFER);
 
         // rewind buffers after write by OpenGL glGet calls
         MODELVIEW_MATRIX_BUFFER.rewind();
@@ -366,7 +366,7 @@ public abstract class WorldSceneRenderer {
         VIEWPORT_BUFFER.rewind();
 
         // call gluUnProject with retrieved parameters
-        GLU.gluUnProject(mouseX, mouseY, pixelDepth, MODELVIEW_MATRIX_BUFFER, PROJECTION_MATRIX_BUFFER, VIEWPORT_BUFFER,
+        GLUCompat.gluUnProject(mouseX, mouseY, pixelDepth, MODELVIEW_MATRIX_BUFFER, PROJECTION_MATRIX_BUFFER, VIEWPORT_BUFFER,
                 OBJECT_POS_BUFFER);
 
         // rewind buffers after read by gluUnProject

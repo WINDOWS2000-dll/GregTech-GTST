@@ -19,8 +19,6 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
-import org.lwjgl.input.Keyboard;
-import org.lwjgl.input.Mouse;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,11 +34,11 @@ public enum KeyBind {
     VANILLA_BACKWARD(() -> () -> Minecraft.getMinecraft().gameSettings.keyBindBack),
     VANILLA_LEFT(() -> () -> Minecraft.getMinecraft().gameSettings.keyBindLeft),
     VANILLA_RIGHT(() -> () -> Minecraft.getMinecraft().gameSettings.keyBindRight),
-    ARMOR_MODE_SWITCH("gregtech.key.armor_mode_switch", KeyConflictContext.IN_GAME, Keyboard.KEY_M),
-    ARMOR_HOVER("gregtech.key.armor_hover", KeyConflictContext.IN_GAME, Keyboard.KEY_H),
-    ARMOR_CANCEL_INERTIA("gregtech.key.armor_cancel_inertia", KeyConflictContext.IN_GAME, Keyboard.KEY_I),
-    ARMOR_CHARGING("gregtech.key.armor_charging", KeyConflictContext.IN_GAME, Keyboard.KEY_N),
-    TOOL_AOE_CHANGE("gregtech.key.tool_aoe_change", KeyConflictContext.IN_GAME, Keyboard.KEY_V);
+    ARMOR_MODE_SWITCH("gregtech.key.armor_mode_switch", KeyConflictContext.IN_GAME, LegacyKeyCodes.KEY_M),
+    ARMOR_HOVER("gregtech.key.armor_hover", KeyConflictContext.IN_GAME, LegacyKeyCodes.KEY_H),
+    ARMOR_CANCEL_INERTIA("gregtech.key.armor_cancel_inertia", KeyConflictContext.IN_GAME, LegacyKeyCodes.KEY_I),
+    ARMOR_CHARGING("gregtech.key.armor_charging", KeyConflictContext.IN_GAME, LegacyKeyCodes.KEY_N),
+    TOOL_AOE_CHANGE("gregtech.key.tool_aoe_change", KeyConflictContext.IN_GAME, LegacyKeyCodes.KEY_V);
 
     public static final KeyBind[] VALUES = values();
 
@@ -60,21 +58,6 @@ public enum KeyBind {
         if (!updating.isEmpty()) {
             GregTechAPI.networkHandler.sendToServer(new PacketKeysPressed(updating));
         }
-    }
-
-    @SideOnly(Side.CLIENT)
-    public static boolean scrollingUp() {
-        return Mouse.getEventDWheel() > 0;
-    }
-
-    @SideOnly(Side.CLIENT)
-    public static boolean notScrolling() {
-        return Mouse.getEventDWheel() == 0;
-    }
-
-    @SideOnly(Side.CLIENT)
-    public static boolean scrollingDown() {
-        return Mouse.getEventDWheel() < 0;
     }
 
     private final Map<EntityPlayerMP, Boolean> keysPressed = new WeakHashMap<>();

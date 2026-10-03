@@ -1,12 +1,12 @@
 package gregtech.client.utils;
 
 import gregtech.api.util.GTLog;
+import gregtech.api.util.input.LegacyKeyCodes;
 import gregtech.common.ConfigHolder;
 
+import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
-
-import org.lwjgl.input.Keyboard;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -66,12 +66,25 @@ public class TooltipHelper {
         }
     }
 
+    // Untracked (not registered with ClientRegistry, so invisible in the Controls menu) KeyBinding
+    // instances used purely to poll live Shift/Ctrl state via KeyBinding's own tracking, since
+    // referencing GuiScreen.isShiftKeyDown()/isCtrlKeyDown() breaks Unimined's Minecraft jar
+    // resolution under CleanroomMC (see LegacyKeyCodes).
+    private static final KeyBinding LSHIFT_PROBE = new KeyBinding("gregtech.key.internal.lshift_probe",
+            LegacyKeyCodes.KEY_LSHIFT, "gregtech.internal");
+    private static final KeyBinding RSHIFT_PROBE = new KeyBinding("gregtech.key.internal.rshift_probe",
+            LegacyKeyCodes.KEY_RSHIFT, "gregtech.internal");
+    private static final KeyBinding LCONTROL_PROBE = new KeyBinding("gregtech.key.internal.lcontrol_probe",
+            LegacyKeyCodes.KEY_LCONTROL, "gregtech.internal");
+    private static final KeyBinding RCONTROL_PROBE = new KeyBinding("gregtech.key.internal.rcontrol_probe",
+            LegacyKeyCodes.KEY_RCONTROL, "gregtech.internal");
+
     public static boolean isShiftDown() {
-        return Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT);
+        return LSHIFT_PROBE.isKeyDown() || RSHIFT_PROBE.isKeyDown();
     }
 
     public static boolean isCtrlDown() {
-        return Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL);
+        return LCONTROL_PROBE.isKeyDown() || RCONTROL_PROBE.isKeyDown();
     }
 
     public static class GTFormatCode {

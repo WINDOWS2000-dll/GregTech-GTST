@@ -12,6 +12,7 @@ import gregtech.api.util.BlockInfo;
 import gregtech.api.util.GTUtility;
 import gregtech.api.util.GregFakePlayer;
 import gregtech.api.util.ItemStackHashStrategy;
+import gregtech.api.util.input.LegacyMouseState;
 import gregtech.client.renderer.scene.ImmediateWorldSceneRenderer;
 import gregtech.client.renderer.scene.WorldSceneRenderer;
 import gregtech.client.utils.RenderUtil;
@@ -59,7 +60,6 @@ import mezz.jei.api.ingredients.VanillaTypes;
 import mezz.jei.api.recipe.IRecipeWrapper;
 import mezz.jei.gui.recipes.RecipeLayout;
 import org.jetbrains.annotations.NotNull;
-import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
 import java.util.*;
@@ -160,7 +160,7 @@ public class MultiblockInfoRecipeWrapper implements IRecipeWrapper {
 
         IDrawable border = layout.getRecipeCategory().getBackground();
         preparePlaceForParts(border.getHeight());
-        if (Mouse.getEventDWheel() == 0 || lastWrapper != this) {
+        if (LegacyMouseState.getEventDWheel() == 0 || lastWrapper != this) {
             selected = null;
             this.predicates.clear();
             this.father = null;
@@ -178,7 +178,7 @@ public class MultiblockInfoRecipeWrapper implements IRecipeWrapper {
             this.currentRendererPage = 0;
             setNextLayer(-1);
         } else {
-            zoom = (float) MathHelper.clamp(zoom + (Mouse.getEventDWheel() < 0 ? 0.5 : -0.5), 3, 999);
+            zoom = (float) MathHelper.clamp(zoom + (LegacyMouseState.getEventDWheel() < 0 ? 0.5 : -0.5), 3, 999);
             setNextLayer(getLayerIndex());
             if (predicates != null && predicates.size() > 0) {
                 setItemStackGroup();
@@ -320,8 +320,8 @@ public class MultiblockInfoRecipeWrapper implements IRecipeWrapper {
         RayTraceResult rayTraceResult = renderer.getLastTraceResult();
         boolean insideView = mouseX >= 0 && mouseY >= 0 &&
                 mouseX < recipeWidth && mouseY < sceneHeight;
-        boolean leftClickHeld = Mouse.isButtonDown(0);
-        boolean rightClickHeld = Mouse.isButtonDown(1);
+        boolean leftClickHeld = LegacyMouseState.isButtonDown(0);
+        boolean rightClickHeld = LegacyMouseState.isButtonDown(1);
         if (insideView) {
             for (GuiButton button : buttons.keySet()) {
                 if (button.isMouseOver()) {
@@ -459,7 +459,7 @@ public class MultiblockInfoRecipeWrapper implements IRecipeWrapper {
             return Arrays.asList(I18n.format("gregtech.multiblock.preview.zoom"),
                     I18n.format("gregtech.multiblock.preview.rotate"),
                     I18n.format("gregtech.multiblock.preview.select"));
-        } else if (tooltipBlockStack != null && !tooltipBlockStack.isEmpty() && !Mouse.isButtonDown(0)) {
+        } else if (tooltipBlockStack != null && !tooltipBlockStack.isEmpty() && !LegacyMouseState.isButtonDown(0)) {
             Minecraft minecraft = Minecraft.getMinecraft();
             ITooltipFlag flag = minecraft.gameSettings.advancedItemTooltips ? TooltipFlags.ADVANCED :
                     TooltipFlags.NORMAL;

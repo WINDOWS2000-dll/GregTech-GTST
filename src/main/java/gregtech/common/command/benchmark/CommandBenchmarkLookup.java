@@ -111,7 +111,8 @@ public class CommandBenchmarkLookup extends CommandBase {
             if (trialsCompleted == Integer.MIN_VALUE) return false;
             for (int i = 0; i < rate; i++) {
                 for (RecipeMap<?> map : RecipeMap.getRecipeMaps()) {
-                    if (recipeLists.computeIfAbsent(map, m -> new ObjectArrayList<>(m.getRecipeList())).isEmpty())
+                    if (recipeLists.computeIfAbsent(map, (RecipeMap<?> m) -> new ObjectArrayList<>(m.getRecipeList()))
+                            .isEmpty())
                         continue;
                     nsTrialTimes.computeIfAbsent(map, m -> new ObjectArrayList<>())
                             .add(trial(recipeLists.get(map), (v, it, f) -> {

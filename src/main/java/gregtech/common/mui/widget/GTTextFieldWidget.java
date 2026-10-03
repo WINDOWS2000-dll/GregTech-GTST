@@ -1,6 +1,7 @@
 package gregtech.common.mui.widget;
 
 import gregtech.api.util.GTLog;
+import gregtech.api.util.input.LegacyKeyCodes;
 
 import net.minecraft.util.math.MathHelper;
 
@@ -18,7 +19,6 @@ import com.cleanroommc.modularui.widgets.textfield.TextFieldHandler;
 import com.cleanroommc.modularui.widgets.textfield.TextFieldRenderer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.input.Keyboard;
 
 import java.text.ParsePosition;
 import java.util.function.Consumer;
@@ -98,7 +98,7 @@ public class GTTextFieldWidget extends BaseTextFieldWidget<GTTextFieldWidget> {
     public @NotNull Result onKeyPressed(char character, int keyCode) {
         Result result = super.onKeyPressed(character, keyCode);
         if (result == Result.SUCCESS) switch (keyCode) {
-            case Keyboard.KEY_RETURN, Keyboard.KEY_NUMPADENTER -> {
+            case LegacyKeyCodes.KEY_RETURN, LegacyKeyCodes.KEY_NUMPADENTER -> {
                 if (this.onTextAccept != null) {
                     this.onTextAccept.accept(getText());
                 }

@@ -109,6 +109,7 @@ public class ClientProxy extends CommonProxy {
         MetaEntities.initRenderers();
 
         MinecraftForge.EVENT_BUS.register(KeyBind.class);
+        MinecraftForge.EVENT_BUS.register(gregtech.api.util.input.LegacyMouseState.class);
     }
 
     @Override

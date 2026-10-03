@@ -7,6 +7,7 @@ import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.metatileentity.multiblock.MultiblockControllerBase;
 import gregtech.api.pattern.PatternMatchContext;
+import gregtech.api.util.input.LegacyMouseState;
 import gregtech.client.renderer.scene.FBOWorldSceneRenderer;
 import gregtech.client.renderer.scene.WorldSceneRenderer;
 import gregtech.client.utils.RenderUtil;
@@ -50,7 +51,6 @@ import com.cleanroommc.modularui.widget.ParentWidget;
 import com.cleanroommc.modularui.widgets.ToggleButton;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
 import java.util.*;
@@ -464,7 +464,7 @@ public class AdvancedMonitorPluginBehavior extends ProxyHolderPluginBehavior {
             if (currentMouse != null) {
                 worldSceneRenderer.render(0, 0, 1, 1, (float) currentMouse[0], (float) currentMouse[1]);
                 if (lastMouse != null) {
-                    if (Mouse.isButtonDown(0)) {
+                    if (LegacyMouseState.isButtonDown(0)) {
                         rotationPitch += (currentMouse[0] - lastMouse[0]) * 300;
                         rotationPitch = rotationPitch % 360;
                         rotationYaw = (int) MathHelper.clamp(rotationYaw + (currentMouse[1] - lastMouse[1]) * 300,

@@ -4,14 +4,12 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.util.ITooltipFlag;
 
-import mcp.MethodsReturnNonnullByDefault;
 import mezz.jei.api.ingredients.IIngredientRenderer;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.LinkedList;
 import java.util.List;
 
-@MethodsReturnNonnullByDefault
 public class CompositeRenderer<T> implements IIngredientRenderer<T> {
 
     private final TooltipSupplier<T> tooltipSupplier;

@@ -20,7 +20,6 @@ import net.minecraft.item.ItemStack;
 
 import com.google.common.base.Suppliers;
 import com.google.common.collect.Iterators;
-import mcp.MethodsReturnNonnullByDefault;
 import mezz.jei.api.IGuiHelper;
 import mezz.jei.api.gui.IDrawable;
 import mezz.jei.api.gui.IGuiItemStackGroup;
@@ -38,7 +37,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-@MethodsReturnNonnullByDefault
 public class IntCircuitCategory implements IRecipeCategory<IntCircuitRecipeWrapper> {
 
     public static final String UID = GTValues.MODID + "." + MetaItems.INTEGRATED_CIRCUIT.unlocalizedName;
